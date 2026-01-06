@@ -1,0 +1,7 @@
+{
+  "name": "Dermatology GOAP Orchestrator",
+  "description": "A fairness-aware, multi-agent skin analysis system using GOAP and AgentDB simulation.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
