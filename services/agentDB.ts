@@ -72,6 +72,12 @@ class AgentDB {
     this.causalEdges.push(edge);
     console.log('[AgentDB] Added Causal Edge:', edge);
   }
+  
+  public async learningFeedback(feedback: any) {
+    console.log('[AgentDB] Processing learning feedback:', feedback);
+    // In a real implementation, this would trigger the nightly learner batch
+    // and update causal graphs
+  }
 
   public async logAuditEvent(event: any) {
     this.auditLog.push({

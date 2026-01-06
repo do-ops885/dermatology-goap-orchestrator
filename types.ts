@@ -12,6 +12,8 @@ export interface WorldState {
   similarity_searched: boolean;
   risk_assessed: boolean;
   recommendations_generated: boolean;
+  learning_updated: boolean;
+  data_encrypted: boolean;
   audit_logged: boolean;
   confidence_score: number;
   fairness_score: number;
@@ -65,6 +67,8 @@ export const INITIAL_STATE: WorldState = {
   similarity_searched: false,
   risk_assessed: false,
   recommendations_generated: false,
+  learning_updated: false,
+  data_encrypted: false,
   audit_logged: false,
   confidence_score: 0,
   fairness_score: 0,
