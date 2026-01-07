@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import AgentDB from '../services/agentDB';
 import { FitzpatrickType } from '../types';
-import { ArrowUpRight, Info } from 'lucide-react';
+import { ArrowUpRight, Info, RefreshCw } from 'lucide-react';
 
 interface FairnessDashboardProps {
   onOpenReport?: () => void;
@@ -10,7 +10,22 @@ interface FairnessDashboardProps {
 
 const FairnessDashboard: React.FC<FairnessDashboardProps> = ({ onOpenReport }) => {
   const agentDB = AgentDB.getInstance();
-  const metrics = agentDB.getFairnessMetrics();
+  const [metrics, setMetrics] = useState(agentDB.getFairnessMetrics());
+  const [loading, setLoading] = useState(false);
+
+  const fetchMetrics = async () => {
+    setLoading(true);
+    const live = await agentDB.getLiveStats();
+    setMetrics(live);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchMetrics();
+    // Poll every 5s for updates during active sessions
+    const interval = setInterval(fetchMetrics, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const data = useMemo(() => {
     return Object.entries(metrics).map(([type, stats]) => ({
@@ -22,19 +37,22 @@ const FairnessDashboard: React.FC<FairnessDashboardProps> = ({ onOpenReport }) =
   }, [metrics]);
 
   return (
-    <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-stone-200 h-full flex flex-col">
-      <div className="flex justify-between items-start mb-6">
+    <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-stone-200 h-full flex flex-col relative overflow-hidden">
+      <div className="flex justify-between items-start mb-6 relative z-10">
         <div>
           <div className="flex items-center gap-2">
              <h3 className="text-lg font-bold font-grotesk text-stone-800">Equity Assurance</h3>
              <div className="group relative">
                 <Info className="w-3.5 h-3.5 text-stone-400 cursor-help" />
                 <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 p-2 bg-stone-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                   Monitors Demographic Parity across skin types to prevent algorithmic bias.
+                   Monitors Demographic Parity across skin types using live AgentDB patterns.
                 </div>
              </div>
           </div>
-          <p className="text-xs text-stone-500 mt-1">Live Bias Mitigation & Parity Check</p>
+          <p className="text-xs text-stone-500 mt-1 flex items-center gap-2">
+            Live Bias Mitigation 
+            {loading && <RefreshCw className="w-3 h-3 animate-spin text-terracotta-500" />}
+          </p>
         </div>
         
         {onOpenReport && (
@@ -48,7 +66,7 @@ const FairnessDashboard: React.FC<FairnessDashboardProps> = ({ onOpenReport }) =
         )}
       </div>
 
-      <div className="flex gap-4 text-xs font-mono mb-2 justify-end">
+      <div className="flex gap-4 text-xs font-mono mb-2 justify-end relative z-10">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-slate-600"></span> TPR
         </div>
@@ -57,7 +75,7 @@ const FairnessDashboard: React.FC<FairnessDashboardProps> = ({ onOpenReport }) =
         </div>
       </div>
 
-      <div className="flex-1 w-full min-h-[180px]">
+      <div className="flex-1 w-full min-h-[180px] relative z-10">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 5, right: 0, left: -25, bottom: 0 }}>
             <XAxis 
@@ -95,16 +113,22 @@ const FairnessDashboard: React.FC<FairnessDashboardProps> = ({ onOpenReport }) =
         </ResponsiveContainer>
       </div>
       
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <div className="mt-4 grid grid-cols-2 gap-3 relative z-10">
         <div className="p-3 bg-stone-100/50 rounded-lg border border-stone-100">
             <div className="text-[10px] text-stone-500 font-mono mb-1 uppercase tracking-wider">Max TPR Gap</div>
-            <div className="text-lg font-bold font-grotesk text-slate-700 leading-none">0.06</div>
+            <div className="text-lg font-bold font-grotesk text-slate-700 leading-none">
+                {(Math.max(...data.map(d => d.tpr)) - Math.min(...data.map(d => d.tpr))).toFixed(2)}
+            </div>
             <div className="text-[9px] text-green-600 font-medium mt-1">✓ Compliant (&lt;0.08)</div>
         </div>
         <div className="p-3 bg-stone-100/50 rounded-lg border border-stone-100">
-            <div className="text-[10px] text-stone-500 font-mono mb-1 uppercase tracking-wider">Calibration Err</div>
-            <div className="text-lg font-bold font-grotesk text-slate-700 leading-none">3.2%</div>
-            <div className="text-[9px] text-green-600 font-medium mt-1">✓ Optimal Range</div>
+            <div className="text-[10px] text-stone-500 font-mono mb-1 uppercase tracking-wider">Samples Learned</div>
+            <div className="text-lg font-bold font-grotesk text-slate-700 leading-none">
+                {data.reduce((acc, curr) => acc + curr.count, 0)}
+            </div>
+            <div className="text-[9px] text-stone-400 font-medium mt-1 flex items-center gap-1">
+                <RefreshCw className="w-2.5 h-2.5" /> Updating
+            </div>
         </div>
       </div>
     </div>

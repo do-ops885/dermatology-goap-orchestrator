@@ -1,5 +1,21 @@
 export type FitzpatrickType = 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI';
 
+export interface ReasoningPattern {
+  id: string;
+  taskType: string;
+  context: string; // e.g. "Fitzpatrick V, Lesion on arm"
+  approach: string; // e.g. "Used safety calibration"
+  outcome: string;
+  confidence: number;
+  timestamp: number;
+  score?: number; // Similarity score for search results
+  metadata?: {
+    fitzpatrick: FitzpatrickType;
+    risk: string;
+    verified: boolean;
+  };
+}
+
 export interface FeatureMetadata {
   agentId: string;
   bias_score: number;
