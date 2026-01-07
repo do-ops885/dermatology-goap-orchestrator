@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AgentLogEntry } from '../types';
-import { CheckCircle2, CircleDashed, Cpu, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, CircleDashed, Cpu, ShieldCheck, Activity } from 'lucide-react';
 
 interface AgentFlowProps {
   logs: AgentLogEntry[];
@@ -28,8 +28,8 @@ const AgentFlow: React.FC<AgentFlowProps> = ({ logs }) => {
     <div className="glass-panel rounded-xl h-full flex flex-col overflow-hidden">
       <div className="p-4 border-b border-white/50 bg-white/30 flex justify-between items-center">
         <h3 className="font-grotesk font-bold text-sm text-stone-700 flex items-center gap-2">
-          <Cpu className="w-4 h-4 text-slate-600" />
-          GOAP Orchestrator
+          <Activity className="w-4 h-4 text-slate-600" />
+          Agent Reasoning Stream
         </h3>
         <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-100 border border-green-200">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
@@ -83,7 +83,7 @@ const AgentFlow: React.FC<AgentFlowProps> = ({ logs }) => {
         {logs.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center text-stone-400 opacity-60">
                 <CircleDashed className="w-8 h-8 mb-2 animate-spin-slow" />
-                <span className="text-xs">Waiting for input...</span>
+                <span className="text-xs">Waiting for clinical data...</span>
             </div>
         )}
       </div>

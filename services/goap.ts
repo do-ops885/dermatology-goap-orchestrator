@@ -12,16 +12,32 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
   {
     name: 'Detect Skin Tone',
     agentId: 'Skin-Tone-Detection-Agent',
-    cost: 2, // Lowered cost to ensure it's prioritized early
+    cost: 2,
     preconditions: { image_verified: true },
     effects: { skin_tone_detected: true },
-    description: 'Classifying skin tone (Monk Scale/ITA) for fairness calibration.'
+    description: 'Classifying skin tone (Monk Scale/ITA) and measuring detection confidence.'
+  },
+  {
+    name: 'Standard Calibration',
+    agentId: 'Standard-Calibration-Agent',
+    cost: 1,
+    preconditions: { skin_tone_detected: true, is_low_confidence: false },
+    effects: { calibration_complete: true, safety_calibrated: false },
+    description: 'Applying standard fairness thresholds for high-confidence classification.'
+  },
+  {
+    name: 'Safety Calibration',
+    agentId: 'Safety-Calibration-Agent',
+    cost: 1,
+    preconditions: { skin_tone_detected: true, is_low_confidence: true },
+    effects: { calibration_complete: true, safety_calibrated: true },
+    description: 'Enforcing conservative safety margins due to low detection confidence.'
   },
   {
     name: 'Preprocess Image',
     agentId: 'Image-Preprocessing-Agent',
     cost: 2,
-    preconditions: { skin_tone_detected: true },
+    preconditions: { calibration_complete: true },
     effects: { image_preprocessed: true },
     description: 'Applying melanin-preserving histogram equalization.'
   },
@@ -31,7 +47,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 5,
     preconditions: { image_preprocessed: true },
     effects: { segmentation_complete: true },
-    description: 'Isolating skin regions using Fitzpatrick-calibrated thresholds.'
+    description: 'Isolating skin regions using calibrated thresholds.'
   },
   {
     name: 'Extract Features',
@@ -52,7 +68,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
   {
     name: 'Search Similar Cases',
     agentId: 'Similarity-Search-Agent',
-    cost: 1, // Cheap operation via AgentDB
+    cost: 1, 
     preconditions: { lesions_detected: true },
     effects: { similarity_searched: true },
     description: 'Querying AgentDB vector store for diverse historical cases.'
@@ -87,7 +103,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 2,
     preconditions: { recommendations_generated: true },
     effects: { learning_updated: true },
-    description: 'Updating cognitive patterns with bias monitoring (SMOTE/Reflexion).'
+    description: 'Updating cognitive patterns with bias monitoring.'
   },
   {
     name: 'Encrypt Data',
@@ -95,7 +111,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 2,
     preconditions: { learning_updated: true },
     effects: { data_encrypted: true },
-    description: 'Encrypting patient data with AES-256 and differential privacy.'
+    description: 'Encrypting patient data with AES-256.'
   },
   {
     name: 'Log Audit Trail',
@@ -111,49 +127,147 @@ interface PlannerNode {
   state: WorldState;
   parent: PlannerNode | null;
   action: AgentAction | null;
-  g: number; // Cost from start
-  h: number; // Heuristic cost to goal
-  f: number; // Total estimated cost (g + h)
+  g: number;
+  h: number;
+  f: number;
 }
 
 export class GOAPPlanner {
-  private minCostCache: Map<keyof WorldState, number> = new Map();
-
-  constructor() {
-    this.initializeHeuristics();
-  }
-
+  
   /**
-   * Pre-calculates the minimum cost to achieve any specific state property.
-   * This allows the heuristic to be admissible (never overestimates) but
-   * much more informative than a simple count.
+   * Main Planning Method: A* Search
+   * Finds the lowest-cost sequence of actions to transform startState to goalState.
    */
-  private initializeHeuristics() {
-    AVAILABLE_ACTIONS.forEach(action => {
-      for (const [key, _] of Object.entries(action.effects)) {
-        const k = key as keyof WorldState;
-        const currentMin = this.minCostCache.get(k) || Infinity;
-        if (action.cost < currentMin) {
-          this.minCostCache.set(k, action.cost);
+  public plan(startState: WorldState, goalState: Partial<WorldState>): AgentAction[] {
+    const openList: PlannerNode[] = [];
+    const closedSet = new Set<string>();
+    
+    // Initial Heuristic Calculation
+    const h = this.calculateRobustHeuristic(startState, goalState);
+    
+    openList.push({
+      state: startState,
+      parent: null,
+      action: null,
+      g: 0,
+      h: h,
+      f: h
+    });
+
+    // Safety break to prevent infinite loops in pathological cases
+    let iterations = 0;
+    const MAX_ITERATIONS = 5000;
+
+    while (openList.length > 0) {
+      if (iterations++ > MAX_ITERATIONS) {
+        throw new Error("GOAP Planner exceeded maximum iterations. No valid path found.");
+      }
+
+      // Sort by F-score (lowest first) - Mimics Priority Queue
+      openList.sort((a, b) => a.f - b.f);
+      const currentNode = openList.shift()!;
+
+      // Check if current state satisfies all goal conditions
+      if (this.satisfiesGoal(currentNode.state, goalState)) {
+        return this.reconstructPath(currentNode);
+      }
+
+      const stateKey = this.getStateKey(currentNode.state);
+      closedSet.add(stateKey);
+
+      // Expand Neighbors (Applicable Actions)
+      const neighbors = this.getApplicableActions(currentNode.state);
+      
+      for (const action of neighbors) {
+        const newState = this.applyEffects(currentNode.state, action.effects);
+        const newStateKey = this.getStateKey(newState);
+
+        if (closedSet.has(newStateKey)) continue;
+
+        const g = currentNode.g + action.cost;
+        const h = this.calculateRobustHeuristic(newState, goalState);
+        const f = g + h;
+
+        // Check if this state is already in open list with a better path
+        const existingNodeIndex = openList.findIndex(n => this.getStateKey(n.state) === newStateKey);
+
+        if (existingNodeIndex !== -1) {
+          if (g < openList[existingNodeIndex].g) {
+            // Found a better path to an existing node
+            openList[existingNodeIndex].g = g;
+            openList[existingNodeIndex].f = f;
+            openList[existingNodeIndex].parent = currentNode;
+            openList[existingNodeIndex].action = action;
+          }
+        } else {
+          // New node discovered
+          openList.push({
+            state: newState,
+            parent: currentNode,
+            action,
+            g,
+            h,
+            f
+          });
         }
       }
-    });
+    }
+
+    throw new Error("No plan found to satisfy the goal state.");
   }
 
   /**
-   * Improved Heuristic: Sum of minimum costs for all unsatisfied goal conditions.
+   * Backward-Chaining Heuristic
+   * Estimates cost by walking backwards from unsatisfied goals through the dependency chain.
+   * This provides a much more informed H-value than simple summation, as it accounts
+   * for the deep precondition tree (e.g., Audit needs Encryption, which needs Learning...).
    */
-  private calculateHeuristic(state: WorldState, goal: Partial<WorldState>): number {
-    let cost = 0;
-    for (const key in goal) {
-      const k = key as keyof WorldState;
-      if (goal[k] !== undefined && state[k] !== goal[k]) {
-        // Use the pre-calculated minimum cost to satisfy this specific condition
-        // If unknown, default to 1 to ensure progress
-        cost += this.minCostCache.get(k) || 1;
-      }
+  private calculateRobustHeuristic(currentState: WorldState, goalState: Partial<WorldState>): number {
+    let estimatedCost = 0;
+    const visited = new Set<string>();
+    const queue: { key: keyof WorldState, value: any }[] = [];
+
+    // Initialize queue with unsatisfied goals
+    for (const key in goalState) {
+        const k = key as keyof WorldState;
+        if (currentState[k] !== goalState[k]) {
+            queue.push({ key: k, value: goalState[k] });
+        }
     }
-    return cost;
+
+    while (queue.length > 0) {
+        const item = queue.shift()!;
+        const itemKeyStr = `${item.key}:${item.value}`;
+        
+        if (visited.has(itemKeyStr)) continue;
+        visited.add(itemKeyStr);
+
+        // Check if already satisfied in current state
+        if (currentState[item.key] === item.value) continue;
+
+        // Find best action to satisfy this requirement
+        // We filter for actions that produce the specific effect value we need
+        const relevantActions = AVAILABLE_ACTIONS.filter(action => action.effects[item.key] === item.value);
+        
+        if (relevantActions.length === 0) continue; // No action produces this state (should be error in well-formed domain)
+
+        // Optimistic: Pick the cheapest action
+        const bestAction = relevantActions.reduce((min, cur) => cur.cost < min.cost ? cur : min);
+        
+        estimatedCost += bestAction.cost;
+
+        // Add preconditions of this action to the queue
+        for (const preKey in bestAction.preconditions) {
+            const pk = preKey as keyof WorldState;
+            const requiredVal = bestAction.preconditions[pk];
+            
+            if (currentState[pk] !== requiredVal) {
+                queue.push({ key: pk, value: requiredVal });
+            }
+        }
+    }
+
+    return estimatedCost;
   }
 
   private satisfiesGoal(state: WorldState, goal: Partial<WorldState>): boolean {
@@ -166,14 +280,16 @@ export class GOAPPlanner {
     return true;
   }
 
-  private checkPreconditions(state: WorldState, preconditions: Partial<WorldState>): boolean {
-    for (const key in preconditions) {
-      const k = key as keyof WorldState;
-      if (preconditions[k] !== undefined && state[k] !== preconditions[k]) {
-        return false;
+  private getApplicableActions(state: WorldState): AgentAction[] {
+    return AVAILABLE_ACTIONS.filter(action => {
+      for (const key in action.preconditions) {
+        const k = key as keyof WorldState;
+        if (action.preconditions[k] !== undefined && state[k] !== action.preconditions[k]) {
+          return false;
+        }
       }
-    }
-    return true;
+      return true;
+    });
   }
 
   private applyEffects(state: WorldState, effects: Partial<WorldState>): WorldState {
@@ -181,93 +297,11 @@ export class GOAPPlanner {
   }
 
   private getStateKey(state: WorldState): string {
-    // We only care about boolean flags for the planning graph to reduce state space
-    // excluding dynamic numeric values like scores
-    const flags: Partial<Record<keyof WorldState, any>> = {};
-    for (const key of Object.keys(state) as Array<keyof WorldState>) {
-      if (typeof state[key] === 'boolean' || state[key] === null) {
-        flags[key] = state[key];
-      }
-    }
-    return JSON.stringify(flags, Object.keys(flags).sort());
-  }
-
-  /**
-   * Robust A* Planner
-   * Handles non-linear dependencies by exploring the state graph based on cost.
-   * Prioritizes low-cost, high-impact fairness gates via the cost definitions.
-   */
-  public plan(startState: WorldState, goalState: Partial<WorldState>): AgentAction[] {
-    const openList: PlannerNode[] = [];
-    const closedSet = new Set<string>();
-    const MAX_ITERATIONS = 1000; // Safety brake
-
-    const h = this.calculateHeuristic(startState, goalState);
-    openList.push({
-      state: startState,
-      parent: null,
-      action: null,
-      g: 0,
-      h: h,
-      f: h
-    });
-
-    let iterations = 0;
-
-    while (openList.length > 0) {
-      if (iterations++ > MAX_ITERATIONS) {
-        throw new Error("GOAP Planner exceeded maximum iterations. Complexity too high or no path found.");
-      }
-
-      // Sort by F score (lowest first)
-      // Optimization: In a real heavy-duty app, use a Binary Heap here
-      openList.sort((a, b) => a.f - b.f);
-      const currentNode = openList.shift()!;
-
-      if (this.satisfiesGoal(currentNode.state, goalState)) {
-        return this.reconstructPath(currentNode);
-      }
-
-      const stateKey = this.getStateKey(currentNode.state);
-      closedSet.add(stateKey);
-
-      for (const action of AVAILABLE_ACTIONS) {
-        if (this.checkPreconditions(currentNode.state, action.preconditions)) {
-          
-          const newState = this.applyEffects(currentNode.state, action.effects);
-          const newStateKey = this.getStateKey(newState);
-
-          if (closedSet.has(newStateKey)) continue;
-
-          const g = currentNode.g + action.cost;
-          const h = this.calculateHeuristic(newState, goalState);
-          const f = g + h;
-
-          const existingNodeIndex = openList.findIndex(n => this.getStateKey(n.state) === newStateKey);
-          
-          if (existingNodeIndex !== -1) {
-            if (g < openList[existingNodeIndex].g) {
-              // Found a better path to this state
-              openList[existingNodeIndex].g = g;
-              openList[existingNodeIndex].f = f;
-              openList[existingNodeIndex].parent = currentNode;
-              openList[existingNodeIndex].action = action;
-            }
-          } else {
-            openList.push({
-              state: newState,
-              parent: currentNode,
-              action,
-              g,
-              h,
-              f
-            });
-          }
-        }
-      }
-    }
-
-    throw new Error("No plan found to satisfy the goal state.");
+    // Generate a unique string key for the state to use in Sets/Maps
+    // We sort keys to ensure deterministic output
+    const relevantKeys = Object.keys(state).sort() as Array<keyof WorldState>;
+    const values = relevantKeys.map(k => `${k}:${state[k]}`);
+    return values.join('|');
   }
 
   private reconstructPath(node: PlannerNode): AgentAction[] {

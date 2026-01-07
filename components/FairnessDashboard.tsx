@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import AgentDB from '../services/agentDB';
 import { FitzpatrickType } from '../types';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Info } from 'lucide-react';
 
 interface FairnessDashboardProps {
   onOpenReport?: () => void;
@@ -25,8 +25,16 @@ const FairnessDashboard: React.FC<FairnessDashboardProps> = ({ onOpenReport }) =
     <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-stone-200 h-full flex flex-col">
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h3 className="text-lg font-bold font-grotesk text-stone-800">Fairness Monitor</h3>
-          <p className="text-xs text-stone-500 mt-1">Real-time Equalized Odds (AgentDB Stream)</p>
+          <div className="flex items-center gap-2">
+             <h3 className="text-lg font-bold font-grotesk text-stone-800">Equity Assurance</h3>
+             <div className="group relative">
+                <Info className="w-3.5 h-3.5 text-stone-400 cursor-help" />
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 p-2 bg-stone-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                   Monitors Demographic Parity across skin types to prevent algorithmic bias.
+                </div>
+             </div>
+          </div>
+          <p className="text-xs text-stone-500 mt-1">Live Bias Mitigation & Parity Check</p>
         </div>
         
         {onOpenReport && (

@@ -1,5 +1,14 @@
 export type FitzpatrickType = 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI';
 
+export interface FeatureMetadata {
+  agentId: string;
+  bias_score: number;
+  disentanglement_index: number;
+  fairness_validated: boolean;
+  fitzpatrick: FitzpatrickType | null;
+  model: string;
+}
+
 export interface WorldState {
   image_verified: boolean;
   skin_tone_detected: boolean;
@@ -17,6 +26,9 @@ export interface WorldState {
   audit_logged: boolean;
   confidence_score: number;
   fairness_score: number;
+  is_low_confidence: boolean;
+  safety_calibrated: boolean;
+  calibration_complete: boolean;
 }
 
 export interface AgentAction {
@@ -72,4 +84,7 @@ export const INITIAL_STATE: WorldState = {
   audit_logged: false,
   confidence_score: 0,
   fairness_score: 0,
+  is_low_confidence: false,
+  safety_calibrated: false,
+  calibration_complete: false,
 };

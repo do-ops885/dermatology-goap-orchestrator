@@ -3,11 +3,38 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Dermatology GOAP Orchestrator</title>
+    <title>Dermatology AI Orchestrator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              terracotta: {
+                50: '#fdf7f6',
+                100: '#faecea',
+                200: '#f4d5d1',
+                300: '#eab6af',
+                400: '#de8e83',
+                500: '#d96c5b',
+                600: '#c55240',
+                700: '#a54032',
+                800: '#88372c',
+                900: '#713028',
+                950: '#3d1612',
+              }
+            },
+            fontFamily: {
+              grotesk: ['Space Grotesk', 'sans-serif'],
+              sans: ['Inter', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Switzer:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
       :root {
         --color-bone: #FDFCF8;
@@ -17,7 +44,7 @@
         --color-soft-black: #1A1918;
       }
       body {
-        font-family: 'Switzer', sans-serif;
+        font-family: 'Inter', sans-serif;
         background-color: var(--color-bone);
         color: var(--color-soft-black);
       }

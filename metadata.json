@@ -1,6 +1,6 @@
 {
-  "name": "Dermatology GOAP Orchestrator",
-  "description": "A fairness-aware, multi-agent skin analysis system using GOAP and AgentDB simulation.",
+  "name": "Dermatology AI Orchestrator",
+  "description": "A fairness-aware, multi-agent skin analysis system using clinical orchestration and AgentDB simulation.",
   "requestFramePermissions": [
     "camera"
   ]

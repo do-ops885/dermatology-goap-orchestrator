@@ -1,4 +1,4 @@
-import { AnalysisResult, FitzpatrickType } from '../types';
+import { AnalysisResult, FitzpatrickType, FeatureMetadata } from '../types';
 
 // Simulating the WASM-based AgentDB
 class AgentDB {
@@ -41,6 +41,20 @@ class AgentDB {
     this.vectorStore.set(id, vector);
     // In a real app, this would index into HNSW/Vamana graph
     console.log(`[AgentDB] Inserted vector ${id} with metadata`, metadata);
+  }
+
+  public async storeFeatureVector(id: string, vector: Float32Array, metadata: FeatureMetadata) {
+    this.vectorStore.set(id, vector);
+    console.log(`[AgentDB] Stored FairDisCo vector ${id}`, metadata);
+    
+    // Automatic fairness check on ingestion
+    if (!metadata.fairness_validated || metadata.bias_score > 0.15) {
+        await this.logAuditEvent({
+            severity: 'medium',
+            message: `Bias detected in feature extraction (Score: ${metadata.bias_score.toFixed(2)})`,
+            mitigation: 'Triggering FairDisCo re-calibration'
+        });
+    }
   }
 
   public async similaritySearch(vector: Float32Array | null, fitzpatrickFilter: FitzpatrickType) {
@@ -117,21 +131,37 @@ class AgentDB {
         message: 'Under-representation in nightly batch (Type VI)',
         status: 'resolved',
         mitigation: 'SMOTE oversampling triggered'
-      }
+      },
+      ...this.auditLog.map((log, i) => ({
+          id: `live_alert_${i}`,
+          timestamp: log.timestamp,
+          severity: log.severity,
+          message: log.message,
+          status: 'active',
+          mitigation: log.mitigation
+      }))
     ];
   }
 
   public getCalibrationData() {
     // Mock calibration curve data (Expected vs Actual probability)
-    // A perfect model follows the diagonal (x=y)
     const points = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
     return points.map(prob => ({
       prob,
       perfect: prob,
-      // Type I is slightly overconfident
       TypeI: prob + (prob < 0.5 ? 0.02 : -0.01),
-      // Type VI has slight underestimation in mid-range due to contrast
       TypeVI: prob + (prob > 0.3 && prob < 0.7 ? -0.05 : 0.01) 
+    }));
+  }
+
+  public getHistoricalTrends() {
+    // Simulate 7-day fairness trend
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return days.map((day, i) => ({
+      day,
+      parity: 0.88 + (Math.random() * 0.07),
+      odds: 0.85 + (Math.random() * 0.1),
+      gap: 0.08 - (i * 0.005) // Simulating gap closing over time
     }));
   }
 

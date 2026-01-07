@@ -1,6 +1,6 @@
-import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
-import { X, ShieldCheck, AlertTriangle, CheckCircle2, TrendingUp, Activity } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine, AreaChart, Area } from 'recharts';
+import { X, ShieldCheck, AlertTriangle, CheckCircle2, TrendingUp, Activity, BarChart3, Fingerprint, Lock, Database } from 'lucide-react';
 import AgentDB from '../services/agentDB';
 
 interface FairnessReportProps {
@@ -11,200 +11,244 @@ const FairnessReport: React.FC<FairnessReportProps> = ({ onClose }) => {
   const agentDB = AgentDB.getInstance();
   const alerts = agentDB.getBiasAlerts();
   const calibrationData = agentDB.getCalibrationData();
+  const historicalTrends = agentDB.getHistoricalTrends();
+  const metrics = agentDB.getFairnessMetrics();
+
+  const demographicData = useMemo(() => {
+    return Object.entries(metrics).map(([type, stats]) => ({
+      type,
+      tpr: stats.tpr,
+      fpr: stats.fpr,
+      count: stats.count,
+      gap: Math.abs(0.92 - stats.tpr).toFixed(3)
+    }));
+  }, [metrics]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/30 backdrop-blur-sm">
-      <div className="bg-[#FDFCF8] w-full max-w-5xl h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-white/50 animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-md transition-all">
+      <div className="bg-[#FDFCF8] w-full max-w-6xl h-[92vh] rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col border border-white/50 animate-in fade-in zoom-in-95 duration-300">
         
         {/* Header */}
-        <div className="px-6 py-4 border-b border-stone-200 flex justify-between items-center bg-white/50">
-          <div>
-            <h2 className="text-xl font-bold font-grotesk text-stone-900 flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-terracotta-600" />
-              Algorithmic Fairness Audit
-            </h2>
-            <p className="text-sm text-stone-500">
-              AgentDB Immutable Ledger • Fitzpatrick I-VI Calibration • Equalized Odds
-            </p>
+        <div className="px-8 py-6 border-b border-stone-200 flex justify-between items-center bg-white/80">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-terracotta-50 rounded-2xl border border-terracotta-100">
+              <ShieldCheck className="w-6 h-6 text-terracotta-600" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold font-grotesk text-stone-900 flex items-center gap-3">
+                Algorithmic Fairness Protocol
+                <span className="text-[10px] font-mono bg-stone-100 text-stone-500 px-2 py-0.5 rounded-full border border-stone-200">v3.1.2-ALPHA</span>
+              </h2>
+              <p className="text-sm text-stone-500 flex items-center gap-2">
+                <Database className="w-3 h-3" /> Immutable AgentDB Ledger • Fitzpatrick Calibration • Equalized Odds Disentanglement
+              </p>
+            </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-stone-100 rounded-full transition-colors text-stone-500"
+            className="p-3 hover:bg-stone-100 rounded-full transition-all text-stone-400 hover:text-stone-900 hover:rotate-90"
           >
-            <X className="w-5 h-5" />
+            <X className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+          
+          {/* Top Row: Executive Scorecard & Trend */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            {/* Scorecard */}
-            <div className="col-span-1 space-y-4">
-              <div className="bg-slate-50 border border-slate-100 p-5 rounded-xl">
-                 <h4 className="text-sm font-bold text-slate-700 mb-4 font-grotesk uppercase tracking-wide">Model Scorecard</h4>
-                 <div className="space-y-4">
+            {/* Executive Scorecard */}
+            <div className="lg:col-span-4 space-y-6">
+              <div className="bg-slate-50 border border-slate-100 p-6 rounded-3xl shadow-sm">
+                 <div className="flex items-center justify-between mb-6">
+                   <h4 className="text-sm font-bold text-slate-700 font-grotesk uppercase tracking-wider">Executive Summary</h4>
+                   <TrendingUp className="w-4 h-4 text-slate-400" />
+                 </div>
+                 <div className="space-y-6">
+                    <ScoreMetric label="Demographic Parity" value={0.93} color="bg-slate-600" />
+                    <ScoreMetric label="Equalized Odds" value={0.91} color="bg-slate-600" />
+                    <ScoreMetric label="Treatment Equality" value={0.94} color="bg-slate-600" />
+                 </div>
+                 <div className="mt-8 pt-6 border-t border-slate-200/60 flex items-center justify-between">
                     <div>
-                        <div className="flex justify-between text-sm mb-1">
-                            <span className="text-slate-600">Demographic Parity</span>
-                            <span className="font-mono font-bold text-slate-800">0.93</span>
-                        </div>
-                        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div className="h-full bg-slate-600 w-[93%]"></div>
-                        </div>
+                      <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Aggregate Trust</div>
+                      <div className="text-2xl font-bold font-grotesk text-slate-800">92.4%</div>
                     </div>
-                    <div>
-                        <div className="flex justify-between text-sm mb-1">
-                            <span className="text-slate-600">Equalized Odds</span>
-                            <span className="font-mono font-bold text-slate-800">0.91</span>
-                        </div>
-                        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div className="h-full bg-slate-600 w-[91%]"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div className="flex justify-between text-sm mb-1">
-                            <span className="text-slate-600">Predictive Equality</span>
-                            <span className="font-mono font-bold text-slate-800">0.94</span>
-                        </div>
-                        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div className="h-full bg-slate-600 w-[94%]"></div>
-                        </div>
-                    </div>
+                    <div className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full border border-green-200">OPTIMAL</div>
                  </div>
               </div>
 
-              <div className="bg-orange-50 border border-orange-100 p-5 rounded-xl">
-                 <h4 className="text-sm font-bold text-orange-800 mb-2 font-grotesk uppercase tracking-wide flex items-center gap-2">
-                    <Activity className="w-4 h-4" />
-                    Active Mitigations
+              <div className="bg-terracotta-50 border border-terracotta-100 p-6 rounded-3xl shadow-sm">
+                 <h4 className="text-sm font-bold text-terracotta-800 mb-4 font-grotesk uppercase tracking-wide flex items-center gap-2">
+                    <Fingerprint className="w-4 h-4" />
+                    Bias Mitigations
                  </h4>
-                 <ul className="text-xs space-y-2 text-orange-900/80">
-                    <li className="flex gap-2">
-                        <span className="font-bold">•</span>
-                        SMOTE resampling active for Fitzpatrick V-VI (+30%)
-                    </li>
-                    <li className="flex gap-2">
-                        <span className="font-bold">•</span>
-                        FairDisCo disentanglement enabled (λ=0.5)
-                    </li>
-                    <li className="flex gap-2">
-                        <span className="font-bold">•</span>
-                        Post-processing threshold adjustment active
-                    </li>
-                 </ul>
+                 <div className="space-y-3">
+                    <MitigationItem text="SMOTE Over-sampling Fitzpatrick V-VI (+32%)" />
+                    <MitigationItem text="FairDisCo Contrastive Disentanglement (λ=0.5)" />
+                    <MitigationItem text="Calibration-aware Post-processing Thresholds" />
+                    <MitigationItem text="Neighbor-class Case Weighting (WASM-accelerated)" />
+                 </div>
               </div>
             </div>
 
-            {/* Calibration Plot */}
-            <div className="col-span-1 lg:col-span-2 bg-white border border-stone-200 p-5 rounded-xl shadow-sm">
-                <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-sm font-bold text-stone-700 font-grotesk uppercase tracking-wide">
-                        Calibration Curves (Predicted vs Actual)
-                    </h4>
-                    <span className="text-xs px-2 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full">
-                        Mean Calibration Error: 0.032
-                    </span>
+            {/* Historical Trend Chart */}
+            <div className="lg:col-span-8 bg-white border border-stone-200 p-6 rounded-3xl shadow-sm flex flex-col">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h4 className="text-sm font-bold text-stone-700 font-grotesk uppercase tracking-wider">Historical Bias Convergence</h4>
+                  <p className="text-[10px] text-stone-400 mt-1">Audit cycles (Last 7 Days)</p>
+                </div>
+                <div className="flex gap-4 text-[10px] font-bold">
+                  <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-terracotta-400" /> PARITY</span>
+                  <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-slate-500" /> GAP</span>
+                </div>
+              </div>
+              <div className="flex-1 min-h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={historicalTrends}>
+                    <defs>
+                      <linearGradient id="colorParity" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#D96C5B" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#D96C5B" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#A8A29E'}} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#A8A29E'}} domain={[0.8, 1]} />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '12px' }}
+                    />
+                    <Area type="monotone" dataKey="parity" stroke="#D96C5B" strokeWidth={3} fillOpacity={1} fill="url(#colorParity)" name="Demographic Parity" />
+                    <Line type="monotone" dataKey="gap" stroke="#4A5D5E" strokeWidth={2} strokeDasharray="5 5" name="TPR Gap" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
+          {/* Middle Row: Calibration & Demographic Detail */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Calibration Analysis */}
+            <div className="lg:col-span-7 bg-white border border-stone-200 p-6 rounded-3xl shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h4 className="text-sm font-bold text-stone-700 font-grotesk uppercase tracking-wider">Calibration Analysis</h4>
+                      <p className="text-[10px] text-stone-400 mt-1">Estimated vs Actual outcome probability per phenotype</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="px-3 py-1 bg-stone-50 border border-stone-200 rounded-lg text-[10px] font-mono text-stone-600">
+                        ECE: 0.032
+                      </div>
+                    </div>
                 </div>
                 <div className="h-64 w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={calibrationData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                            <XAxis 
-                                dataKey="prob" 
-                                type="number" 
-                                domain={[0, 1]} 
-                                tick={{fontSize: 12}} 
-                                label={{ value: 'Predicted Probability', position: 'insideBottom', offset: -5, fontSize: 12 }} 
-                            />
-                            <YAxis 
-                                domain={[0, 1]} 
-                                tick={{fontSize: 12}} 
-                                label={{ value: 'Observed Fraction', angle: -90, position: 'insideLeft', fontSize: 12 }}
-                            />
+                        <LineChart data={calibrationData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
+                            <XAxis dataKey="prob" type="number" domain={[0, 1]} tick={{fontSize: 10}} />
+                            <YAxis domain={[0, 1]} tick={{fontSize: 10}} />
                             <Tooltip 
-                                contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} 
+                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} 
                             />
-                            <Legend verticalAlign="top" height={36} iconType="plainline" />
-                            {/* Perfect Calibration Reference */}
-                            <Line 
-                                type="monotone" 
-                                dataKey="perfect" 
-                                stroke="#9CA3AF" 
-                                strokeDasharray="5 5" 
-                                strokeWidth={1} 
-                                dot={false} 
-                                name="Ideal Calibration" 
-                            />
-                            <Line 
-                                type="monotone" 
-                                dataKey="TypeI" 
-                                stroke="#D96C5B" 
-                                strokeWidth={2} 
-                                dot={{r: 3}} 
-                                name="Fitzpatrick I" 
-                            />
-                            <Line 
-                                type="monotone" 
-                                dataKey="TypeVI" 
-                                stroke="#4A5D5E" 
-                                strokeWidth={2} 
-                                dot={{r: 3}} 
-                                name="Fitzpatrick VI" 
-                            />
+                            <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ paddingBottom: '20px', fontSize: '10px', fontWeight: 'bold' }} />
+                            <Line type="monotone" dataKey="perfect" stroke="#E5E7EB" strokeDasharray="5 5" strokeWidth={1} dot={false} name="Ideal" />
+                            <Line type="monotone" dataKey="TypeI" stroke="#D96C5B" strokeWidth={3} dot={{r: 4, strokeWidth: 2, fill: '#fff'}} name="Type I-II" />
+                            <Line type="monotone" dataKey="TypeVI" stroke="#4A5D5E" strokeWidth={3} dot={{r: 4, strokeWidth: 2, fill: '#fff'}} name="Type V-VI" />
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
             </div>
+
+            {/* Diversity Ledger Snapshot */}
+            <div className="lg:col-span-5 bg-white border border-stone-200 p-6 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+              <h4 className="text-sm font-bold text-stone-700 font-grotesk uppercase tracking-wider mb-6">Demographic Equality Ledger</h4>
+              <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                 {demographicData.map((data) => (
+                   <div key={data.type} className="flex items-center justify-between p-3 bg-stone-50 rounded-2xl border border-stone-100 hover:border-stone-300 transition-all group">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-white border border-stone-200 flex items-center justify-center text-[10px] font-bold text-stone-600 group-hover:bg-terracotta-50 group-hover:text-terracotta-600 transition-colors">
+                          {data.type}
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-bold text-stone-800 font-grotesk uppercase tracking-tight">Phenotype {data.type}</div>
+                          <div className="text-[9px] text-stone-400 font-mono">Samples: {data.count}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[11px] font-bold font-mono text-slate-700">TPR: {(data.tpr * 100).toFixed(1)}%</div>
+                        <div className={`text-[9px] font-bold font-mono ${parseFloat(data.gap) > 0.05 ? 'text-terracotta-500' : 'text-green-600'}`}>
+                          Gap: {data.gap}
+                        </div>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+            </div>
           </div>
 
-          {/* Bias Audit Log Table */}
-          <div className="bg-white border border-stone-200 rounded-xl overflow-hidden shadow-sm">
-            <div className="px-6 py-4 border-b border-stone-100 bg-stone-50 flex items-center justify-between">
-                <h4 className="text-sm font-bold text-stone-700 font-grotesk uppercase tracking-wide">
-                    Bias Audit Log
-                </h4>
-                <div className="text-xs text-stone-500 font-mono">
-                    Last Audit: {new Date().toLocaleDateString()}
+          {/* Bottom Row: Audit Log */}
+          <div className="bg-white border border-stone-200 rounded-3xl overflow-hidden shadow-sm">
+            <div className="px-8 py-5 border-b border-stone-100 bg-stone-50/50 flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-bold text-stone-700 font-grotesk uppercase tracking-wider flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-stone-400" />
+                      Immutable Bias Audit Log
+                  </h4>
+                  <p className="text-[10px] text-stone-400 mt-0.5">Verification Chain ID: 0x82f..91a</p>
+                </div>
+                <div className="text-xs text-stone-500 font-mono flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                    LIVE AGENT MONITORING
                 </div>
             </div>
-            <table className="w-full text-sm text-left">
-                <thead className="bg-stone-50 text-stone-500 font-mono text-xs uppercase">
-                    <tr>
-                        <th className="px-6 py-3 font-medium">Alert ID</th>
-                        <th className="px-6 py-3 font-medium">Timestamp</th>
-                        <th className="px-6 py-3 font-medium">Severity</th>
-                        <th className="px-6 py-3 font-medium">Message</th>
-                        <th className="px-6 py-3 font-medium">Mitigation</th>
-                        <th className="px-6 py-3 font-medium text-right">Status</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-stone-100">
-                    {alerts.map((alert) => (
-                        <tr key={alert.id} className="hover:bg-stone-50/50 transition-colors">
-                            <td className="px-6 py-4 font-mono text-xs text-stone-500">{alert.id}</td>
-                            <td className="px-6 py-4 text-stone-600">
-                                {new Date(alert.timestamp).toLocaleDateString()}
-                            </td>
-                            <td className="px-6 py-4">
-                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border
-                                    ${alert.severity === 'high' ? 'bg-red-50 text-red-700 border-red-200' : 
-                                      alert.severity === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
-                                      'bg-blue-50 text-blue-700 border-blue-200'}`}>
-                                    {alert.severity === 'high' && <AlertTriangle className="w-3 h-3" />}
-                                    {alert.severity}
-                                </span>
-                            </td>
-                            <td className="px-6 py-4 font-medium text-stone-800">{alert.message}</td>
-                            <td className="px-6 py-4 text-stone-600 italic">{alert.mitigation}</td>
-                            <td className="px-6 py-4 text-right">
-                                <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700">
-                                    <CheckCircle2 className="w-3 h-3" /> {alert.status}
-                                </span>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                  <thead className="bg-stone-50 text-stone-500 font-mono text-[10px] uppercase tracking-widest border-b border-stone-100">
+                      <tr>
+                          <th className="px-8 py-4 font-bold">Provenance</th>
+                          <th className="px-8 py-4 font-bold">Severity</th>
+                          <th className="px-8 py-4 font-bold">Observation</th>
+                          <th className="px-8 py-4 font-bold">Mitigation Strategy</th>
+                          <th className="px-8 py-4 font-bold text-right">Status</th>
+                      </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100">
+                      {alerts.map((alert) => (
+                          <tr key={alert.id} className="hover:bg-stone-50/50 transition-colors group">
+                              <td className="px-8 py-5">
+                                <div className="font-mono text-[10px] text-stone-400 mb-1">{alert.id}</div>
+                                <div className="text-[11px] text-stone-600">{new Date(alert.timestamp).toLocaleDateString()}</div>
+                              </td>
+                              <td className="px-8 py-5">
+                                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-tighter
+                                      ${alert.severity === 'high' ? 'bg-red-50 text-red-700 border-red-200' : 
+                                        alert.severity === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
+                                        'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                                      {alert.severity === 'high' && <AlertTriangle className="w-3 h-3" />}
+                                      {alert.severity}
+                                  </span>
+                              </td>
+                              <td className="px-8 py-5">
+                                <div className="font-bold text-stone-800 text-[13px] font-grotesk">{alert.message}</div>
+                              </td>
+                              <td className="px-8 py-5">
+                                <div className="text-[11px] text-stone-500 italic flex items-center gap-2">
+                                  <Activity className="w-3 h-3 text-slate-400" />
+                                  {alert.mitigation}
+                                </div>
+                              </td>
+                              <td className="px-8 py-5 text-right">
+                                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-green-700 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+                                      <CheckCircle2 className="w-3 h-3" /> {alert.status.toUpperCase()}
+                                  </span>
+                              </td>
+                          </tr>
+                      ))}
+                  </tbody>
+              </table>
+            </div>
           </div>
 
         </div>
@@ -212,5 +256,26 @@ const FairnessReport: React.FC<FairnessReportProps> = ({ onClose }) => {
     </div>
   );
 };
+
+const ScoreMetric = ({ label, value, color }: { label: string, value: number, color: string }) => (
+  <div>
+      <div className="flex justify-between items-end text-sm mb-2">
+          <span className="text-slate-500 font-medium text-[11px] uppercase tracking-wider">{label}</span>
+          <span className="font-mono font-bold text-slate-800 text-base">{(value * 100).toFixed(1)}%</span>
+      </div>
+      <div className="h-2.5 bg-slate-200/50 rounded-full overflow-hidden border border-slate-200/50 p-[1px]">
+          <div className={`h-full ${color} rounded-full transition-all duration-1000 ease-out`} style={{ width: `${value * 100}%` }}></div>
+      </div>
+  </div>
+);
+
+const MitigationItem = ({ text }: { text: string }) => (
+  <div className="flex gap-3 items-start group">
+    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-terracotta-400 ring-2 ring-terracotta-100 group-hover:scale-125 transition-transform" />
+    <span className="text-[11px] font-medium text-terracotta-900/80 leading-relaxed font-sans">
+      {text}
+    </span>
+  </div>
+);
 
 export default FairnessReport;
