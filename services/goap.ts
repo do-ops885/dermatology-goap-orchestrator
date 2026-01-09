@@ -90,10 +90,18 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     description: 'Checking TPR/FPR gaps against thresholds.'
   },
   {
+    name: 'Verify Diagnosis (Web)',
+    agentId: 'Web-Verification-Agent',
+    cost: 4,
+    preconditions: { fairness_validated: true },
+    effects: { web_verified: true },
+    description: 'Grounding diagnosis with real-time medical literature search.'
+  },
+  {
     name: 'Generate Recommendations',
     agentId: 'Recommendation-Agent',
     cost: 4,
-    preconditions: { fairness_validated: true },
+    preconditions: { web_verified: true },
     effects: { recommendations_generated: true },
     description: 'Synthesizing actionable advice calibrated for skin tone.'
   },
@@ -133,6 +141,11 @@ interface PlannerNode {
 }
 
 export class GOAPPlanner {
+  private actions: AgentAction[];
+
+  constructor(actions: AgentAction[] = AVAILABLE_ACTIONS) {
+    this.actions = actions;
+  }
   
   /**
    * Main Planning Method: A* Search
@@ -247,7 +260,7 @@ export class GOAPPlanner {
 
         // Find best action to satisfy this requirement
         // We filter for actions that produce the specific effect value we need
-        const relevantActions = AVAILABLE_ACTIONS.filter(action => action.effects[item.key] === item.value);
+        const relevantActions = this.actions.filter(action => action.effects[item.key] === item.value);
         
         if (relevantActions.length === 0) continue; // No action produces this state (should be error in well-formed domain)
 
@@ -281,7 +294,7 @@ export class GOAPPlanner {
   }
 
   private getApplicableActions(state: WorldState): AgentAction[] {
-    return AVAILABLE_ACTIONS.filter(action => {
+    return this.actions.filter(action => {
       for (const key in action.preconditions) {
         const k = key as keyof WorldState;
         if (action.preconditions[k] !== undefined && state[k] !== action.preconditions[k]) {

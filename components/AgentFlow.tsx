@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AgentLogEntry } from '../types';
 import { CheckCircle2, CircleDashed, Cpu, ShieldCheck, Activity } from 'lucide-react';
@@ -7,16 +7,19 @@ interface AgentFlowProps {
   logs: AgentLogEntry[];
 }
 
+// Format timestamp utility
 const formatTimestamp = (timestamp: number) => {
   const date = new Date(timestamp);
-  // Manual formatting to avoid TS error with fractionalSecondDigits
   const timeStr = date.toLocaleTimeString([], { hour12: false });
   const ms = date.getMilliseconds().toString().padStart(3, '0').slice(0, 2);
   return `${timeStr}.${ms}`;
 };
 
-const AgentFlow: React.FC<AgentFlowProps> = ({ logs }) => {
+const AgentFlow = forwardRef<HTMLDivElement, AgentFlowProps>(({ logs }, ref) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -25,7 +28,12 @@ const AgentFlow: React.FC<AgentFlowProps> = ({ logs }) => {
   }, [logs]);
 
   return (
-    <div className="glass-panel rounded-xl h-full flex flex-col overflow-hidden">
+    <div 
+        ref={containerRef}
+        className="glass-panel rounded-xl h-full flex flex-col overflow-hidden outline-none ring-offset-2 focus:ring-2 focus:ring-blue-400"
+        tabIndex={-1} // Allow programmatic focus
+        aria-label="Agent Reasoning Log"
+    >
       <div className="p-4 border-b border-white/50 bg-white/30 flex justify-between items-center">
         <h3 className="font-grotesk font-bold text-sm text-stone-700 flex items-center gap-2">
           <Activity className="w-4 h-4 text-slate-600" />
@@ -37,7 +45,13 @@ const AgentFlow: React.FC<AgentFlowProps> = ({ logs }) => {
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4 space-y-3" ref={scrollRef}>
+      <div 
+        className="flex-1 overflow-y-auto p-4 space-y-3" 
+        ref={scrollRef}
+        role="log" 
+        aria-live="polite"
+        aria-atomic="false"
+      >
         <AnimatePresence mode='popLayout'>
           {logs.map((log) => (
             <motion.div
@@ -71,9 +85,16 @@ const AgentFlow: React.FC<AgentFlowProps> = ({ logs }) => {
                <div className="font-medium text-stone-800 font-grotesk">{log.agent}</div>
                <div className="text-stone-600 text-xs mt-0.5">{log.message}</div>
                
-               {log.metadata && (
-                 <div className="mt-2 p-2 bg-black/5 rounded text-[10px] font-mono text-stone-600 overflow-x-auto">
-                    <pre>{JSON.stringify(log.metadata, null, 2)}</pre>
+               {log.metadata && Object.keys(log.metadata).length > 0 && (
+                 <div className="mt-2 grid grid-cols-2 gap-1">
+                    {Object.entries(log.metadata).map(([key, val]) => (
+                        <div key={key} className="bg-white/50 px-2 py-1 rounded text-[9px] border border-stone-100/50 flex flex-col">
+                            <span className="text-stone-400 uppercase tracking-wider text-[8px] mb-0.5">{key}</span>
+                            <span className="font-mono text-stone-700 truncate" title={String(val)}>
+                                {typeof val === 'object' ? '...' : String(val)}
+                            </span>
+                        </div>
+                    ))}
                  </div>
                )}
             </motion.div>
@@ -89,7 +110,7 @@ const AgentFlow: React.FC<AgentFlowProps> = ({ logs }) => {
       </div>
     </div>
   );
-};
+});
 
 const StatusIcon = ({ status }: { status: string }) => {
     if (status === 'completed') return <CheckCircle2 className="w-4 h-4 text-green-600" />;

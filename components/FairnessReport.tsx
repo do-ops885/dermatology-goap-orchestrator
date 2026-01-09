@@ -49,7 +49,7 @@ const FairnessReport: React.FC<FairnessReportProps> = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-md transition-all">
-      <div className="bg-[#FDFCF8] w-full max-w-6xl h-[92vh] rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col border border-white/50 animate-in fade-in zoom-in-95 duration-300">
+      <div className="bg-stone-50 w-full max-w-6xl h-[92vh] rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col border border-white/50 animate-in fade-in zoom-in-95 duration-300">
         
         {/* Header */}
         <div className="px-8 py-6 border-b border-stone-200 flex justify-between items-center bg-white/80">

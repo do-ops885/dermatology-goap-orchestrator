@@ -3,16 +3,18 @@ export type FitzpatrickType = 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI';
 export interface ReasoningPattern {
   id: string;
   taskType: string;
-  context: string; // e.g. "Fitzpatrick V, Lesion on arm"
-  approach: string; // e.g. "Used safety calibration"
-  outcome: string;
-  confidence: number;
+  context?: string; // Optional for generic patterns
+  approach?: string; // Optional
+  outcome?: string; // Optional
+  confidence?: number; // Optional
+  successRate?: number; // Alias for confidence/success metric
   timestamp: number;
   score?: number; // Similarity score for search results
   metadata?: {
-    fitzpatrick: FitzpatrickType;
-    risk: string;
-    verified: boolean;
+    fitzpatrick?: FitzpatrickType;
+    risk?: string;
+    verified?: boolean;
+    [key: string]: any;
   };
 }
 
@@ -36,6 +38,7 @@ export interface WorldState {
   fairness_validated: boolean;
   similarity_searched: boolean;
   risk_assessed: boolean;
+  web_verified: boolean;
   recommendations_generated: boolean;
   learning_updated: boolean;
   data_encrypted: boolean;
@@ -72,6 +75,19 @@ export interface AnalysisResult {
   };
   recommendations: string[];
   signature: string;
+  webVerification?: {
+    verified: boolean;
+    sources: Array<{ title: string; uri: string }>;
+    summary: string;
+  };
+  securityContext?: {
+    encrypted: boolean;
+    algorithm: string;
+    timestamp: number;
+    iv: number[]; // Array from Uint8Array
+    payloadSize: number;
+    ciphertext?: string; // Base64 encoded ciphertext
+  };
 }
 
 export interface AgentLogEntry {
@@ -94,6 +110,7 @@ export const INITIAL_STATE: WorldState = {
   fairness_validated: false,
   similarity_searched: false,
   risk_assessed: false,
+  web_verified: false,
   recommendations_generated: false,
   learning_updated: false,
   data_encrypted: false,
