@@ -14,6 +14,7 @@
 ### 2.1 Tasks
 - [x] **Backend Selection:** Robust WebGPU -> WebGL -> CPU logic implemented.
 - [ ] **Model Artifacts:**
+- [ ] **Orchestration Hook:** Ensure `goap-agent` routes execution to `Safety-Calibration-Agent` when `is_low_confidence` is detected and that preconditions are clearly documented in the agent registry.
     - Currently fetching from Google Storage.
     - **Goal:** Host quantized models within the app's `public/models/` directory for true offline support.
 - [ ] **Explainability (Grad-CAM):**

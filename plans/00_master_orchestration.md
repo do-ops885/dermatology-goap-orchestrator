@@ -2,7 +2,9 @@
 
 **Status:** RELEASE CANDIDATE (RC-1)
 **Objective:** Harden Dermatology AI Orchestrator for Production Deployment.
-**Orchestrator:** System-Core
+**Orchestrator:** `goap-agent` (System Orchestrator)
+
+**Orchestrator Plan:** See `07_goap_agent_orchestration.md` for runtime responsibilities, tracing, and testing.
 
 ## 1. World State Analysis
 - **Current State:** Feature Complete. Observability, Accessibility, and Testing coverage met. Bundle optimized.
@@ -18,6 +20,7 @@
 | `Sec-Ops` | Security | `04_security_audit.md` | **COMPLETED** - Encrypted. |
 | `UX-A11y-Lead` | Frontend/PWA | `05_ux_pwa_strategy.md` | **COMPLETED** - A11y Focus Mgmt. |
 | `Reliability-Architect` | Observability | `06_reliability_observability.md` | **COMPLETED** - Vitals Active. |
+| `GOAP-Agent` | Orchestrator | `07_goap_agent_orchestration.md` | **IN PROGRESS** - Orchestration plan drafted and initial implementation + unit tests added. Test execution pending environment validation. |
 
 ## 3. Dependency Graph (DAG)
 ```mermaid
@@ -25,9 +28,12 @@ graph TD
     A[00_Master] --> D[02_Edge_ML]
     A --> E[04_Security]
     A --> G[06_Reliability]
+    A --> J[07_GOAP_Agent]
+    A --> H[08_Fairness]
     D --> C[01_Testing]
     E --> C
     G --> C
+    J --> C[01_Testing]
     C --> F[05_UX_PWA]
     F --> B[03_DevOps]
 ```

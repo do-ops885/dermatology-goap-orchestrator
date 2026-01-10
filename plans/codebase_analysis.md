@@ -4,8 +4,8 @@
 The **Dermatology AI Orchestrator** is a production-grade Progressive Web App (PWA) for clinical skin analysis. It leverages a **Goal-Oriented Action Planning (GOAP)** architecture to orchestrate a hybrid team of AI agents (Cloud + Edge).
 
 ## 2. Core Architecture: GOAP Orchestrator
-- **Planner:** `services/goap.ts` (A* Search, Robust Heuristics).
-- **Controller:** `hooks/useClinicalAnalysis.ts`. Handles the main loop, state updates, and service coordination.
+- **Planner:** `services/goap.ts` (A* Search, Robust Heuristics). Consider adding a `GoapAgent` wrapper to expose orchestrator APIs and traceability.
+- **Controller:** `hooks/useClinicalAnalysis.ts`. Handles the main loop, state updates, and service coordination (should call `goap-agent` APIs rather than embedding planner logic directly).
 
 ## 3. Key Technical Components
 

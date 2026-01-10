@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "test": "vitest run --threads=false --run",
+    "agentdb:init": "npx agentdb init"
   },
   "dependencies": {
     "react": "^19.2.3",
@@ -23,9 +26,10 @@
     "stream": "3.0.0",
     "util": "0.12.5",
     "events": "3.3.0",
+    "uuid": "^9.0.0",
     "@tensorflow/tfjs": "4.17.0",
     "@tensorflow/tfjs-backend-webgpu": "4.17.0",
-    "agentdb": "0.0.6",
+    "agentdb": "2.0.0-alpha.3.3",
     "vitest": "^4.0.16",
     "@playwright/test": "^1.57.0",
     "vite": "^7.3.1",

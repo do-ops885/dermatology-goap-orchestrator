@@ -649,65 +649,52 @@ export const useClinicalAnalysis = () => {
         const requiredSpecialist = routerRef.current.getRequiredSpecialist(intent);
         addLog('Router-Agent', `Routed intent: ${intent} -> ${requiredSpecialist}`, 'completed', { intent });
 
-        let plan: AgentAction[] = planner.current.plan(currentState, goalState);
-        let planIndex = 0;
+        // Use the GoapAgent wrapper to execute the plan and collect a structured trace
+        const { GoapAgent } = await import('../services/goap/agent');
+        const goapAgent = new GoapAgent(planner.current, AGENT_EXECUTORS, { perAgentTimeoutMs: 10000 });
 
-        while (planIndex < plan.length) {
-            const action = plan[planIndex];
-            const logId = addLog(action.agentId, action.description, 'running');
-            actionTrace.push(action.agentId);
-            
-            const executor = AGENT_EXECUTORS[action.agentId];
-            if (!executor) {
-              throw new Error(`No executor found for agent: ${action.agentId}`);
-            }
+        // Map UI logs to agent records via returned uiLogId
+        const uiLogMap = new Map<string, string>();
 
-            const localLLM = localLLMRef.current;
-            const visionSpecialist = visionSpecialistRef.current;
-            const agentDB = agentDBRef.current;
-            const reasoningBank = reasoningBankRef.current;
+        const trace = await goapAgent.execute(currentState, goalState, {
+          ai,
+          agentDB: agentDBRef.current,
+          reasoningBank: reasoningBankRef.current,
+          localLLM: localLLMRef.current,
+          visionSpecialist: visionSpecialistRef.current,
+          router: routerRef.current,
+          file,
+          base64Image,
+          imageHash,
+          setResult,
+          setWarning,
+          analysisPayload,
+          encryptionKey: encryptionKeyRef.current,
+          lastAuditHashRef,
+          privacyMode,
+          onAgentStart: (action: AgentAction) => {
+              const logId = addLog(action.agentId, action.description, 'running');
+              uiLogMap.set(action.agentId + '|' + action.name, logId);
+              return logId;
+          },
+          onAgentEnd: (action: AgentAction, record: any) => {
+              const key = action.agentId + '|' + action.name;
+              const logId = uiLogMap.get(key);
+              if (logId) updateLog(logId, record.status === 'completed' ? 'completed' : 'failed', record.metadata);
+              // Update world state progressively
+              if (record.metadata?.newStateUpdates) {
+                 // no-op; GoapAgent already applied updates and returned final state
+              }
+          }
+        });
 
-            if (!agentDB || !reasoningBank || !localLLM || !visionSpecialist) {
-                 throw new Error("Critical AI Services not yet initialized.");
-            }
-
-            const response = await executor({
-              ai,
-              agentDB: agentDB,
-              reasoningBank: reasoningBank,
-              localLLM: localLLM,
-              visionSpecialist: visionSpecialist,
-              router: routerRef.current,
-              file,
-              base64Image,
-              imageHash,
-              currentState,
-              actionTrace,
-              setResult,
-              setWarning,
-              analysisPayload,
-              encryptionKey: encryptionKeyRef.current,
-              lastAuditHashRef: lastAuditHashRef.current as any,
-              privacyMode
-            });
-
-            if (response.newStateUpdates) {
-              currentState = { ...currentState, ...response.newStateUpdates };
-            }
-            currentState = { ...currentState, ...action.effects };
-            setWorldState(currentState);
-            
-            updateLog(logId, 'completed', response.metadata);
-
-            if (response.shouldReplan) {
-               addLog('GOAP-Planner', 'Re-calibrating strategy based on new state...', 'running');
-               plan = planner.current.plan(currentState, goalState);
-               planIndex = -1; 
-               addLog('GOAP-Planner', `New Plan: ${plan.map(a => a.name).join(' -> ')}`, 'completed');
-            }
-            
-            planIndex++;
-        }
+        // Apply the final world state from trace
+        currentState = trace.finalWorldState;
+        setWorldState(currentState);
+        // Surface action trace
+        actionTrace.push(...trace.agents.map(a => a.agentId));
+        // Log plan summary
+        addLog('GOAP-Agent', `Plan ${trace.runId} completed in ${trace.endTime! - trace.startTime}ms`, 'completed', { runId: trace.runId, agents: trace.agents.map(a => ({ agent: a.agentId, status: a.status })) });
     } catch (e: any) {
         let errorCategory = "System Failure";
         let userMessage = `Orchestration halted: ${e.message}`;

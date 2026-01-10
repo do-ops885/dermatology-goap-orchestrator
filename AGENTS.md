@@ -11,10 +11,11 @@ This repository implements a **Goal-Oriented Action Planning (GOAP)** system. Un
 ---
 
 ## 2. Runtime Agents (Clinical Pipeline)
-These agents execute within the user's browser, orchestrated by `services/goap.ts`.
+These agents execute within the user's browser, orchestrated by the `GOAP-Agent` (implemented in `services/goap.ts`).
 
 | Agent ID | Role | Tooling | Precondition |
 |:---|:---|:---|:---|
+| **GOAP-Agent** | Central orchestrator (plan & execution). See `plans/07_goap_agent_orchestration.md`. | `services/goap.ts` | None |
 | **Image-Verification-Agent** | Validates file signatures (Magic Bytes) & calculates SHA-256 hash. | `crypto.subtle` | None |
 | **Skin-Tone-Detection-Agent** | Classifies Fitzpatrick/Monk scale & outputs confidence score. | Gemini 3 Flash | `image_verified` |
 | **Standard-Calibration-Agent** | Sets standard decision thresholds (0.65) for high-confidence inputs. | Logic | `skin_tone_detected` |
