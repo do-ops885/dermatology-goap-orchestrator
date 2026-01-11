@@ -11,33 +11,172 @@
 ### 2.1 Client-Side Encryption Service
 **Status:** ✅ IMPLEMENTED
 
-- **Objective:** Encrypt the `AnalysisResult` JSON payload before it interacts with any persistence layer.
+- **Objective:** Encrypt `AnalysisResult` JSON payload before it interacts with any persistence layer.
 - **Specification:**
     - **Algorithm:** AES-GCM (256-bit).
     - **Key Generation:** `window.crypto.subtle.generateKey`.
     - **IV:** Random 12 bytes per encryption.
-    - **Key Storage:** **Ephemeral**. Keys should exist in memory only (React State/Context). If the user closes the tab, the data is effectively "locked" until re-analysis.
+    - **Key Storage:** **Ephemeral**. Keys exist in memory only (React State/Context).
 
-### 2.2 Privacy Preservation (Data Minimization)
+### 2.2 2025: Enhanced Input Validation with Zod
+- [ ] **Implement Runtime Validation:**
+    ```typescript
+    import { z } from 'zod';
+
+    const FileUploadSchema = z.object({
+      name: z.string().max(255).regex(/^[a-zA-Z0-9._-]+$/),
+      type: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+      size: z.number().max(10 * 1024 * 1024)
+    });
+
+    const WorldStateSchema = z.object({
+      image_verified: z.boolean(),
+      confidence_score: z.number().min(0).max(1),
+      fitzpatrick_type: z.enum(['I', 'II', 'III', 'IV', 'V', 'VI']).nullable(),
+    });
+    ```
+
+### 2.3 2025: Content Security Policy Enhancement
+- [ ] **Implement CSP Headers in Vite Config:**
+    ```typescript
+    // vite.config.ts
+    export default defineConfig({
+      server: {
+        headers: {
+          'Content-Security-Policy': [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+            "connect-src 'self' https://generativelanguage.googleapis.com https://www.googleapis.com",
+            "img-src 'self' data: blob:",
+            "worker-src 'self' blob:",
+            "frame-src 'none'",
+            "object-src 'none'",
+            "base-uri 'self'",
+            "form-action 'self'"
+          ].join('; ')
+        }
+      }
+    });
+    ```
+
+### 2.4 Privacy Preservation (Data Minimization)
 - **Vision Inference:** Confirmed running `tf.browser.fromPixels`. Data stays in GPU memory.
 - **AgentDB:** Confirmed running locally via `agentdb` (IndexedDB/SQLite WASM).
 - **Gemini API:** Image data is sent to cloud.
     - **Action:** ✅ Add a "Privacy Mode" toggle. If enabled, skip `Skin-Tone-Detection-Agent` (Cloud) and rely solely on `VisionSpecialist` (Local) + Manual Skin Tone selection.
 
+### 2.5 2025: PII Redaction
+- [ ] **Implement PII Detection:**
+    ```typescript
+    // services/piiRedactor.ts
+    const PIIPatterns = [
+      /\b\d{3}-\d{2}-\d{4}\b/g, // SSN
+      /\b\d{10,12}\b/g, // Phone numbers
+      /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g // Email
+    ];
+
+    export function redactPII(text: string): string {
+      return PIIPatterns.reduce((redacted, pattern) => {
+        return redacted.replace(pattern, '[REDACTED]');
+      }, text);
+    }
+    ```
+- [ ] **Redact from:** Agent logs, AI responses, user inputs
+
 ## 3. Compliance Verification & GDPR
 
 ### 3.1 Right to Erasure (Article 17)
 - **Mechanism:** ✅ The "Reset Memory" button in `FairnessReport` executes `AgentDB.resetMemory()`.
-- **Validation:** This must physically drop the IndexedDB/SQLite tables and clear `localStorage` keys related to cached patterns.
+- **Validation:** This must physically drop all IndexedDB/SQLite tables and clear `localStorage` keys related to cached patterns.
 
 ### 3.2 Data Sovereignty (Local-First)
 - **Policy:** No patient data is ever sent to a centralized backend server managed by the app owner.
-- **Exception:** Ephemeral processing via Google Gemini API (Cloud). Users must be informed via a "Processing Consent" modal that data leaves the device temporarily for inference only.
+- **Exception:** Ephemeral processing via Google Gemini API (Cloud). Users must be informed via a "Processing Consent" modal that data leaves device temporarily for inference only.
 
-### 3.3 Audit Trail Integrity
+### 3.3 2025: Enhanced Consent Management
+- [ ] **Implement Granular Consent:**
+    ```typescript
+    interface ConsentState {
+      localProcessing: boolean; // Always true
+      cloudGemini: boolean; // For skin tone detection
+      offlineAnalysis: boolean; // For local-only mode
+      dataStorage: boolean; // For IndexedDB
+      analytics: boolean; // For anonymous telemetry
+    }
+    ```
+- [ ] **Add Consent Modal:** Show on first use, allow users to configure preferences
+- [ ] **Persist Consent:** Store in localStorage, allow revocation at any time
+
+### 3.4 Audit Trail Integrity
 - **Audit Log:** The Merkle Root in `Audit-Trail-Agent` must use `SHA-256` chaining.
-- **Tamper Evidence:** Any modification to the local DB file breaks the hash chain, invalidating the audit log.
+- **Tamper Evidence:** Any modification to the local DB file breaks hash chain, invalidating audit log.
+
+### 3.5 2025: Audit Trail Enhancement
+- [ ] **Immutable Append-Only Log:** Use Web Crypto API for hash chaining
+- [ ] **Tamper Detection:** Verify hash chain on load, alert if corrupted
+- [ ] **Export Capability:** Allow users to download audit log as JSON
 
 ## 4. Memory Safety & Leaks
-- **Credential Scavenging:** Ensure `API_KEY` is not reachable via global window object (it is currently `process.env`).
-- **Buffer Clearing:** Overwrite memory containing the decrypted payload (`AnalysisResult`) with zeros before garbage collection when the session ends.
+- **Credential Scavenging:** Ensure `API_KEY` is not reachable via the global window object (it is currently `process.env`).
+- **Buffer Clearing:** Overwrite memory containing decrypted payload (`AnalysisResult`) with zeros before garbage collection when session ends.
+
+### 4.1 2025: Secure Key Management
+- [ ] **Implement Ephemeral Key Generation:**
+    ```typescript
+    class SecureKeyManager {
+      private key: CryptoKey | null = null;
+
+      async generateKey() {
+        this.key = await crypto.subtle.generateKey(
+          { name: 'AES-GCM', length: 256 },
+          true,
+          ['encrypt', 'decrypt']
+        );
+      }
+
+      async clearKey() {
+        if (this.key) {
+          // Overwrite key in memory
+          const exported = await crypto.subtle.exportKey('raw', this.key);
+          exported.fill(0);
+          this.key = null;
+        }
+      }
+    }
+    ```
+- [ ] **Auto-Cleanup:** Clear keys on page unload, timeout, or user logout
+
+### 4.2 2025: Zero-Knowledge Architecture
+- [ ] **Client-Side Only:** All encryption/decryption happens client-side
+- [ ] **Server-Side Blind:** Server never sees decrypted data
+- [ ] **End-to-End Encryption:** Even if intercepted, data remains encrypted
+
+## 5. 2025: Security Headers & Best Practices
+
+### 5.1 HTTP Security Headers
+- [ ] **X-Content-Type-Options:** nosniff
+- [ ] **X-Frame-Options:** DENY
+- [ ] **X-XSS-Protection:** 1; mode=block
+- [ ] **Referrer-Policy:** strict-origin-when-cross-origin
+- [ ] **Permissions-Policy:** Limit camera, microphone, geolocation
+
+### 5.2 Subresource Integrity (SRI)
+- [ ] **Add SRI for CDN Resources:**
+    ```html
+    <script
+      src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"
+      integrity="sha384-..."
+      crossorigin="anonymous"></script>
+    ```
+
+### 5.3 Security Testing
+- [ ] **Automated Security Scanning:** Use `npm audit` in CI/CD
+- [ ] **OWASP ZAP:** Run periodic vulnerability scans
+- [ ] **Fuzz Testing:** Test input validation with malformed inputs
+- [ ] **Penetration Testing:** Annual security assessment
+
+## 6. Incident Response
+- [ ] **Incident Log:** Track security events in immutable log
+- [ ] **Breach Notification:** Auto-notify affected users
+- [ ] **Incident Response Plan:** Documented procedure for security incidents
+- [ ] **Security Hotline:** Contact method for security researchers

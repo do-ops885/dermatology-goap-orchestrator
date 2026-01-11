@@ -1,5 +1,7 @@
 # Agent Registry & Directives
 
+Current year: 2026
+
 ## 1. System Architecture: GOAP Orchestrator
 This repository implements a **Goal-Oriented Action Planning (GOAP)** system. Unlike traditional procedural code, the logic is driven by autonomous agents satisfying specific state transitions to reach a goal (e.g., `{ audit_logged: true }`).
 
@@ -90,3 +92,65 @@ These meta-agents define the SDLC process, represented by plan files in `plans/`
 ### 4.4 Global Error Handling
 1.  **Graceful Degradation**: Agents must catch internal errors. If a non-critical agent fails (e.g., `Web-Verification`), it should return a "skipped" status rather than crashing the whole orchestrator.
 2.  **Structured Logs**: Use the standardized JSON logging format defined in `plans/06_reliability_observability.md`.
+
+---
+
+## 5. Build, Lint, Test Commands
+
+| Command | Purpose |
+|---------|---------|
+| `npm run dev` | Start Vite dev server (http://localhost:5173) |
+| `npm run build` | Production bundle with manual chunks |
+| `npm run preview` | Preview production build |
+| `npm run lint` | ESLint on all TS/TSX/JS/JSX files |
+| `npm run test` | Run Vitest suite (jsdom, non-threaded) |
+| `npm run test -- path/to/test.test.ts` | Run single test file |
+| `npx playwright test` | Run E2E tests (Playwright) |
+| `npx playwright test --ui` | Run E2E with UI mode |
+| `npm run agentdb:init` | Initialize AgentDB vector store |
+
+**Test Locations:**
+- Unit tests: `tests/unit/*.test.ts` - use Vitest + @testing-library/react
+- E2E tests: `tests/e2e/*.spec.ts` - use Playwright
+- Test setup: `tests/setup.ts` (polyfills crypto, ResizeObserver, etc.)
+
+---
+
+## 6. Code Style Guidelines
+
+### 6.1 TypeScript & Imports
+- **Strict Mode**: `no-explicit-any` warning enabled - use interfaces from `types.ts`
+- **Import Order**: External libs → internal modules (`@/...`) → relative paths
+- **Type Imports**: Use `import type { ... }` for type-only imports
+- **File Extensions**: `.ts` for logic, `.tsx` for React components
+
+### 6.2 Naming Conventions
+- **Variables/Functions**: `camelCase` (e.g., `calculateImageHash`)
+- **Types/Interfaces**: `PascalCase` (e.g., `WorldState`, `AgentAction`)
+- **Constants**: `UPPER_SNAKE_CASE` (e.g., `INITIAL_STATE`, `MAX_SIZE`)
+- **Components**: `PascalCase` (e.g., `DiagnosticSummary`, `AnalysisIntake`)
+- **Private Methods**: `private` prefix or `_` prefix (e.g., `_sanitize`)
+
+### 6.3 React & Hooks
+- **Component Structure**: State → Refs → Effects → Handlers → Return
+- **useEffect Cleanup**: Always remove event listeners, dispose TF.js tensors
+- **Custom Hooks**: Prefix with `use` (e.g., `useClinicalAnalysis`)
+- **Dependencies Array**: Always include all reactive dependencies
+
+### 6.4 Error Handling
+- **Try-Catch**: Wrap all async operations in try-catch blocks
+- **Logging**: Use `Logger.error/warn/info/debug` from `services/logger.ts`
+- **User Messages**: Provide user-friendly error messages, log technical details separately
+- **Graceful Degradation**: Return "skipped" status for non-critical failures
+
+### 6.5 Code Organization
+- **Max 500 LOC** per file - refactor to `services/executors/` if exceeded
+- **Business Logic**: Lives in `services/`, not React components
+- **Types**: Shared interfaces in `types.ts`
+- **Services**: Single responsibility per file (crypto, vision, router, logger)
+
+### 6.6 AI/ML Safety
+- **Confidence Scores**: All inference must return confidence (0-1)
+- **Tensor Cleanup**: Use `tf.tidy()` or `.dispose()` for all TF.js operations
+- **Heavy Models**: Lazy load on user interaction, expose `unload()` method
+- **Privacy Mode**: Always provide offline/local fallback for cloud services
