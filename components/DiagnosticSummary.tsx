@@ -1,12 +1,32 @@
-import React from 'react';
-import { Lock, Fingerprint, MessageSquareText, Share2, Gauge, History, Globe, ExternalLink, Cpu, ListTree, ShieldCheck, KeyRound } from 'lucide-react';
+import React, { useState } from 'react';
+import { Lock, Fingerprint, MessageSquareText, Share2, Gauge, History, Globe, ExternalLink, Cpu, ListTree, ShieldCheck, KeyRound, MessageSquareHeart } from 'lucide-react';
 import { AnalysisResult } from '../types';
+import { ClinicianFeedback } from './ClinicianFeedback';
 
 interface DiagnosticSummaryProps {
   result: AnalysisResult | null;
 }
 
 export const DiagnosticSummary: React.FC<DiagnosticSummaryProps> = ({ result }) => {
+  const [showFeedback, setShowFeedback] = useState(false);
+  
+  const handleFeedback = async (feedback: any) => {
+    console.log('Clinician feedback submitted:', feedback);
+    try {
+      await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...feedback,
+          analysisId: result?.id,
+          fitzpatrickType: result?.fitzpatrickType
+        })
+      });
+    } catch (e) {
+      console.warn('Failed to submit feedback to API, continuing...');
+    }
+    setShowFeedback(false);
+  };
   
   const handleExport = () => {
     if (!result) return;
@@ -191,9 +211,25 @@ export const DiagnosticSummary: React.FC<DiagnosticSummaryProps> = ({ result }) 
                     </div>
                 )}
 
+                {showFeedback && result?.lesions?.[0]?.type && (
+                  <ClinicianFeedback
+                    analysisId={result.id}
+                    currentDiagnosis={result.lesions[0].type}
+                    onSubmit={handleFeedback}
+                    onDismiss={() => setShowFeedback(false)}
+                  />
+                )}
+
+                <button 
+                  onClick={() => setShowFeedback(true)}
+                  className="w-full py-2.5 border border-terracotta-200 rounded-xl text-xs font-bold text-terracotta-600 hover:bg-terracotta-50 transition-all flex items-center justify-center gap-2"
+                >
+                    <MessageSquareHeart className="w-3.5 h-3.5" /> Provide Feedback
+                </button>
+                
                 <button 
                   onClick={handleExport}
-                  className="w-full py-3 border border-stone-200 rounded-xl text-xs font-bold text-stone-600 hover:bg-stone-50 hover:border-terracotta-200 hover:text-terracotta-600 transition-all flex items-center justify-center gap-2 mt-auto"
+                  className="w-full py-3 border border-stone-200 rounded-xl text-xs font-bold text-stone-600 hover:bg-stone-50 hover:border-terracotta-200 hover:text-terracotta-600 transition-all flex items-center justify-center gap-2 mt-2"
                 >
                     <Share2 className="w-3.5 h-3.5" /> Export Encrypted Report
                 </button>

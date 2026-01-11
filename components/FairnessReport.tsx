@@ -1,6 +1,6 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine, AreaChart, Area } from 'recharts';
-import { X, ShieldCheck, AlertTriangle, CheckCircle2, TrendingUp, Activity, BarChart3, Fingerprint, Lock, Database, RefreshCcw, BrainCircuit } from 'lucide-react';
+import { X, ShieldCheck, AlertTriangle, CheckCircle2, TrendingUp, Activity, Fingerprint, Lock, Database, RefreshCcw, BrainCircuit } from 'lucide-react';
 import AgentDB from '../services/agentDB';
 
 interface FairnessReportProps {
@@ -10,25 +10,28 @@ interface FairnessReportProps {
 const FairnessReport: React.FC<FairnessReportProps> = ({ onClose }) => {
   const agentDB = AgentDB.getInstance();
   const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState(agentDB.getFairnessMetrics());
+  const [metrics, setMetrics] = useState<Record<string, { tpr: number; fpr: number; count: number }>>(() => agentDB.getFairnessMetrics());
   const [auditLog, setAuditLog] = useState<any[]>([]);
   const calibrationData = agentDB.getCalibrationData();
   const historicalTrends = agentDB.getHistoricalTrends();
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
       setLoading(true);
-      const [liveMetrics, liveLog] = await Promise.all([
-          agentDB.getLiveStats(),
-          agentDB.getUnifiedAuditLog()
-      ]);
-      setMetrics(liveMetrics);
-      setAuditLog(liveLog);
-      setLoading(false);
-  };
+      try {
+        const [liveMetrics, liveLog] = await Promise.all([
+            agentDB.getLiveStats(),
+            agentDB.getUnifiedAuditLog()
+        ]);
+        setMetrics(liveMetrics);
+        setAuditLog(liveLog);
+      } finally {
+        setLoading(false);
+      }
+  }, [agentDB]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
   
   const handleReset = async () => {
       if(confirm('Are you sure you want to wipe the AgentDB memory? This will reset all learned patterns.')) {

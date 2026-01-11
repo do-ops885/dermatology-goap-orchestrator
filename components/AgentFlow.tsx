@@ -1,122 +1,227 @@
-import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AgentLogEntry } from '../types';
-import { CheckCircle2, CircleDashed, Cpu, ShieldCheck, Activity } from 'lucide-react';
+import { 
+  CheckCircle2, 
+  XCircle, 
+  MinusCircle, 
+  Clock, 
+  Activity, 
+  PlayCircle,
+  ChevronRight
+} from 'lucide-react';
+import type { ExecutionTrace, ExecutionAgentRecord } from '../services/goap/agent';
 
 interface AgentFlowProps {
-  logs: AgentLogEntry[];
+  trace: ExecutionTrace | null;
+  currentAgent?: string;
 }
 
-// Format timestamp utility
-const formatTimestamp = (timestamp: number) => {
-  const date = new Date(timestamp);
-  const timeStr = date.toLocaleTimeString([], { hour12: false });
-  const ms = date.getMilliseconds().toString().padStart(3, '0').slice(0, 2);
-  return `${timeStr}.${ms}`;
+const formatDuration = (startTime: number, endTime?: number): string => {
+  if (!endTime) return '...';
+  const duration = endTime - startTime;
+  if (duration < 1000) return `${duration}ms`;
+  if (duration < 60000) return `${(duration / 1000).toFixed(1)}s`;
+  return `${Math.floor(duration / 60000)}m ${((duration % 60000) / 1000).toFixed(0)}s`;
 };
 
-const AgentFlow = forwardRef<HTMLDivElement, AgentFlowProps>(({ logs }, ref) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+const formatTime = (timestamp: number): string => {
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+};
 
-  useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
+const StatusIcon: React.FC<{ status: ExecutionAgentRecord['status']; className?: string }> = ({ status, className = "w-5 h-5" }) => {
+  switch (status) {
+    case 'running':
+      return <PlayCircle className={`${className} text-blue-500 animate-pulse`} />;
+    case 'completed':
+      return <CheckCircle2 className={`${className} text-green-500`} />;
+    case 'failed':
+      return <XCircle className={`${className} text-red-500`} />;
+    case 'skipped':
+      return <MinusCircle className={`${className} text-yellow-500`} />;
+    default:
+      return <Clock className={`${className} text-gray-400`} />;
+  }
+};
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [logs]);
+const StatusBadge: React.FC<{ status: ExecutionAgentRecord['status'] }> = ({ status }) => {
+  const variants: Record<string, string> = {
+    running: 'bg-blue-100 text-blue-700 border-blue-200',
+    completed: 'bg-green-100 text-green-700 border-green-200',
+    failed: 'bg-red-100 text-red-700 border-red-200',
+    skipped: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  };
 
   return (
-    <div 
-        ref={containerRef}
-        className="glass-panel rounded-xl h-full flex flex-col overflow-hidden outline-none ring-offset-2 focus:ring-2 focus:ring-blue-400"
-        tabIndex={-1} // Allow programmatic focus
-        aria-label="Agent Reasoning Log"
-    >
-      <div className="p-4 border-b border-white/50 bg-white/30 flex justify-between items-center">
-        <h3 className="font-grotesk font-bold text-sm text-stone-700 flex items-center gap-2">
-          <Activity className="w-4 h-4 text-slate-600" />
-          Agent Reasoning Stream
-        </h3>
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-100 border border-green-200">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-            <span className="text-[10px] font-mono text-green-800 font-medium">LIVE</span>
+    <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border uppercase tracking-wide ${variants[status] || variants.default}`}>
+      {status}
+    </span>
+  );
+};
+
+export const AgentFlow: React.FC<AgentFlowProps> = ({ trace, currentAgent }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (currentAgent && scrollRef.current) {
+      const element = scrollRef.current.querySelector(`[data-agent="${currentAgent}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [currentAgent]);
+
+  if (!trace) {
+    return (
+      <div className="glass-panel rounded-xl p-6 h-full flex flex-col items-center justify-center text-stone-400">
+        <Activity className="w-8 h-8 mb-3 opacity-50" />
+        <p className="text-sm">Waiting for execution trace...</p>
+      </div>
+    );
+  }
+
+  const completedCount = trace.agents.filter(a => a.status === 'completed').length;
+  const failedCount = trace.agents.filter(a => a.status === 'failed').length;
+  const skippedCount = trace.agents.filter(a => a.status === 'skipped').length;
+  const runningCount = trace.agents.filter(a => a.status === 'running').length;
+
+  return (
+    <div className="glass-panel rounded-xl h-full flex flex-col overflow-hidden">
+      <div className="p-4 border-b border-white/50 bg-white/30">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="font-grotesk font-bold text-sm text-stone-700 flex items-center gap-2">
+            <Activity className="w-4 h-4 text-slate-600" />
+            Execution Trace
+          </h3>
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-100 border border-green-200">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-[10px] font-mono text-green-800 font-medium">RUN {trace.runId}</span>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-between text-[10px] text-stone-500">
+          <span>Started: {formatTime(trace.startTime)}</span>
+          <span className="font-mono">Total: {formatDuration(trace.startTime, trace.endTime)}</span>
         </div>
       </div>
-      
+
       <div 
-        className="flex-1 overflow-y-auto p-4 space-y-3" 
         ref={scrollRef}
+        className="flex-1 overflow-y-auto p-4 relative"
         role="log" 
         aria-live="polite"
-        aria-atomic="false"
       >
-        <AnimatePresence mode='popLayout'>
-          {logs.map((log) => (
+        <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-stone-200" />
+        
+        <AnimatePresence mode="popLayout">
+          {trace.agents.map((agent, index) => (
             <motion.div
-              key={log.id}
+              key={agent.id}
+              data-agent={agent.agentId}
               initial={{ opacity: 0, x: -20, scale: 0.95 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className={`relative p-3 rounded-lg border text-sm ${
-                log.status === 'running' 
+              className={`relative pl-10 pr-3 py-3 mb-2 rounded-lg border transition-all ${
+                agent.agentId === currentAgent 
                   ? 'bg-blue-50/80 border-blue-200 shadow-sm' 
-                  : log.status === 'completed'
-                  ? 'bg-white/60 border-stone-200'
-                  : 'bg-red-50 border-red-200'
+                  : agent.status === 'running'
+                  ? 'bg-white border-stone-200 shadow-sm'
+                  : agent.status === 'failed'
+                  ? 'bg-red-50/50 border-red-100'
+                  : agent.status === 'skipped'
+                  ? 'bg-yellow-50/50 border-yellow-100'
+                  : 'bg-white/60 border-stone-100'
               }`}
             >
-               {log.status === 'running' && (
-                  <motion.div 
-                    layoutId="active-indicator"
-                    className="absolute -left-1 top-4 w-1 h-6 bg-blue-500 rounded-r-full"
-                  />
-               )}
-               
-               <div className="flex justify-between items-start mb-1">
-                 <span className="font-mono text-[10px] text-stone-400">
-                    {formatTimestamp(log.timestamp)}
-                 </span>
-                 <StatusIcon status={log.status} />
-               </div>
-               
-               <div className="font-medium text-stone-800 font-grotesk">{log.agent}</div>
-               <div className="text-stone-600 text-xs mt-0.5">{log.message}</div>
-               
-               {log.metadata && Object.keys(log.metadata).length > 0 && (
-                 <div className="mt-2 grid grid-cols-2 gap-1">
-                    {Object.entries(log.metadata).map(([key, val]) => (
-                        <div key={key} className="bg-white/50 px-2 py-1 rounded text-[9px] border border-stone-100/50 flex flex-col">
-                            <span className="text-stone-400 uppercase tracking-wider text-[8px] mb-0.5">{key}</span>
-                            <span className="font-mono text-stone-700 truncate" title={String(val)}>
-                                {typeof val === 'object' ? '...' : String(val)}
-                            </span>
-                        </div>
-                    ))}
-                 </div>
-               )}
+              {agent.agentId === currentAgent && (
+                <motion.div 
+                  layoutId="active-indicator"
+                  className="absolute -left-0.5 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-500 rounded-r-full"
+                />
+              )}
+              
+              <div className="absolute left-[11px] top-1/2 -translate-y-1/2 z-10">
+                <StatusIcon status={agent.status} className="w-5 h-5" />
+              </div>
+              
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-sm text-stone-800 font-grotesk truncate">
+                      {agent.name || agent.agentId}
+                    </span>
+                    <StatusBadge status={agent.status} />
+                  </div>
+                  
+                  {agent.metadata && Object.keys(agent.metadata).length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {Object.entries(agent.metadata).slice(0, 3).map(([key, value]) => (
+                        <span 
+                          key={key} 
+                          className="inline-flex items-center px-1.5 py-0.5 bg-stone-100 border border-stone-200 rounded text-[9px] text-stone-600 font-mono"
+                          title={`${key}: ${JSON.stringify(value)}`}
+                        >
+                          {key}: {typeof value === 'object' ? '...' : String(value)}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {agent.error && (
+                    <div className="mt-2 text-[10px] text-red-600 bg-red-50 border border-red-100 rounded px-2 py-1">
+                      Error: {agent.error}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="text-right flex-shrink-0">
+                  <div className="text-[10px] font-mono text-stone-500">
+                    {formatDuration(agent.startTime, agent.endTime)}
+                  </div>
+                  <div className="text-[9px] text-stone-400">
+                    {formatTime(agent.startTime)}
+                  </div>
+                </div>
+              </div>
+              
+              {index < trace.agents.length - 1 && (
+                <ChevronRight className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-stone-300 rotate-0" />
+              )}
             </motion.div>
           ))}
         </AnimatePresence>
         
-        {logs.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-stone-400 opacity-60">
-                <CircleDashed className="w-8 h-8 mb-2 animate-spin-slow" />
-                <span className="text-xs">Waiting for clinical data...</span>
-            </div>
+        {trace.agents.length === 0 && (
+          <div className="h-full flex flex-col items-center justify-center text-stone-400 opacity-60">
+            <Clock className="w-8 h-8 mb-2" />
+            <span className="text-xs">No agents executed yet...</span>
+          </div>
         )}
+      </div>
+
+      <div className="p-4 border-t border-white/50 bg-white/30">
+        <div className="grid grid-cols-4 gap-2 text-center">
+          <div className="p-2 rounded-lg bg-green-50/50 border border-green-100">
+            <div className="text-lg font-bold text-green-600">{completedCount}</div>
+            <div className="text-[9px] text-stone-500 uppercase tracking-wide">Completed</div>
+          </div>
+          <div className="p-2 rounded-lg bg-red-50/50 border border-red-100">
+            <div className="text-lg font-bold text-red-600">{failedCount}</div>
+            <div className="text-[9px] text-stone-500 uppercase tracking-wide">Failed</div>
+          </div>
+          <div className="p-2 rounded-lg bg-yellow-50/50 border border-yellow-100">
+            <div className="text-lg font-bold text-yellow-600">{skippedCount}</div>
+            <div className="text-[9px] text-stone-500 uppercase tracking-wide">Skipped</div>
+          </div>
+          <div className="p-2 rounded-lg bg-blue-50/50 border border-blue-100">
+            <div className="text-lg font-bold text-blue-600">{runningCount}</div>
+            <div className="text-[9px] text-stone-500 uppercase tracking-wide">Running</div>
+          </div>
+        </div>
       </div>
     </div>
   );
-});
-
-const StatusIcon = ({ status }: { status: string }) => {
-    if (status === 'completed') return <CheckCircle2 className="w-4 h-4 text-green-600" />;
-    if (status === 'running') return <CircleDashed className="w-4 h-4 text-blue-600 animate-spin" />;
-    if (status === 'failed') return <div className="w-4 h-4 text-red-600 font-bold">!</div>;
-    return <div className="w-4 h-4 rounded-full border-2 border-stone-300" />;
 };
 
 export default AgentFlow;

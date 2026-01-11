@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
+      external: [/(.*)\.node$/, /node_modules\/@ruvector/],
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'framer-motion'],
@@ -21,6 +22,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./tests/setup.ts']
+    setupFiles: ['./tests/setup.ts'],
+    exclude: ['tests/e2e/**', 'node_modules/**']
   }
 });

@@ -1,7 +1,6 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import AgentDB from '../services/agentDB';
-import { FitzpatrickType } from '../types';
 import { ArrowUpRight, Info, RefreshCw } from 'lucide-react';
 
 interface FairnessDashboardProps {
@@ -10,22 +9,27 @@ interface FairnessDashboardProps {
 
 const FairnessDashboard: React.FC<FairnessDashboardProps> = ({ onOpenReport }) => {
   const agentDB = AgentDB.getInstance();
-  const [metrics, setMetrics] = useState(agentDB.getFairnessMetrics());
+  const [metrics, setMetrics] = useState<Record<string, { tpr: number; fpr: number; count: number }>>(() => agentDB.getFairnessMetrics());
   const [loading, setLoading] = useState(false);
 
-  const fetchMetrics = async () => {
+  const fetchMetrics = useCallback(async () => {
     setLoading(true);
-    const live = await agentDB.getLiveStats();
-    setMetrics(live);
-    setLoading(false);
-  };
+    try {
+      const live = await agentDB.getLiveStats();
+      setMetrics(live);
+    } finally {
+      setLoading(false);
+    }
+  }, [agentDB]);
 
   useEffect(() => {
     fetchMetrics();
     // Poll every 5s for updates during active sessions
-    const interval = setInterval(fetchMetrics, 5000);
+    const interval = setInterval(() => {
+      fetchMetrics();
+    }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchMetrics]);
 
   const data = useMemo(() => {
     return Object.entries(metrics).map(([type, stats]) => ({
@@ -119,7 +123,7 @@ const FairnessDashboard: React.FC<FairnessDashboardProps> = ({ onOpenReport }) =
             <div className="text-lg font-bold font-grotesk text-slate-700 leading-none">
                 {(Math.max(...data.map(d => d.tpr)) - Math.min(...data.map(d => d.tpr))).toFixed(2)}
             </div>
-            <div className="text-[9px] text-green-600 font-medium mt-1">✓ Compliant (&lt;0.08)</div>
+            <div className="text-[9px] text-green-600 font-medium mt-1">✓ Compliant (&lt;0.10)</div>
         </div>
         <div className="p-3 bg-stone-100/50 rounded-lg border border-stone-100">
             <div className="text-[10px] text-stone-500 font-mono mb-1 uppercase tracking-wider">Samples Learned</div>

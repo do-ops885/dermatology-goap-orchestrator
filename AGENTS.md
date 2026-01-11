@@ -77,7 +77,9 @@ These meta-agents define the SDLC process, represented by plan files in `plans/`
 ### 4.1 Code Quality
 1.  **Strict Types**: `no-explicit-any` warning is enabled. Use defined interfaces in `types.ts`.
 2.  **Modular Services**: Business logic lives in `services/`, not React components.
-3.  **File Size**: **MAX 500 LINES**. If `hooks/useClinicalAnalysis.ts` grows too large, refactor agent executors into `services/executors/`.
+3.  **File Size**: **MAX 500 LINES**.
+    - ⚠️ **VIOLATION:** `hooks/useClinicalAnalysis.ts` is **739 lines** (needs immediate refactor)
+    - Extract agent executors to `services/executors/` per `plans/13_code_organization_refactor.md`
 
 ### 4.2 AI Safety Protocols
 1.  **Confidence Check**: All visual inference must return a confidence score.

@@ -153,7 +153,7 @@ export class VisionSpecialist {
             const x = tf.linspace(-1, 1, w);
             const y = tf.linspace(-1, 1, h);
             const [xx, yy] = tf.meshgrid(x, y);
-            const gaussian = tf.exp(xx.square().add(yy.square()).neg().mul(2)); // Sigma=0.5
+            const gaussian = tf.exp(xx.square().add(yy.square()).neg().mul(2));
             
             // Combined Activation Map
             let activation = inverted.mul(gaussian);
@@ -181,5 +181,22 @@ export class VisionSpecialist {
             
             return canvas.toDataURL();
         });
+    }
+
+    public getTensorStats() {
+        const mem = tf.memory();
+        return {
+            numTensors: mem.numTensors,
+            numDataBuffers: mem.numDataBuffers,
+            numBytes: mem.numBytes
+        };
+    }
+
+    public dispose() {
+        if (this.model) {
+            this.model.dispose();
+            this.model = null;
+        }
+        this.isBackendReady = false;
     }
 }

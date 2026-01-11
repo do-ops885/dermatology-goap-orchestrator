@@ -39,6 +39,23 @@ export default class ClinicalAgentDB {
 
   public getFairnessMetrics() { return this.fairnessStats; }
 
+   public async getAllPatterns(): Promise<any[]> {
+     if (!this.reasoningBank) return [];
+     try {
+       // @ts-expect-error - Dynamic access to library internals for aggregation
+       if (typeof this.reasoningBank.getAllPatterns === 'function') {
+         // @ts-expect-error - Dynamic method call on reasoning bank
+         return await this.reasoningBank.getAllPatterns();
+      } else if (this.reasoningBank['db'] && typeof this.reasoningBank['db'].getAll === 'function') {
+        const records = await this.reasoningBank['db'].getAll();
+        return records.map((r: any) => r.data || r);
+      }
+    } catch (e) {
+      Logger.error("AgentDB", "Failed to get all patterns", { error: e });
+    }
+    return [];
+  }
+
   /**
    * Retrieves live statistics by aggregating data directly from the Vector DB.
    * No simulation or mock data is returned.
@@ -49,13 +66,13 @@ export default class ClinicalAgentDB {
     let patterns: any[] = [];
     
     // Production Access Pattern:
-    // Attempt to access internal DB to scan all records for aggregation.
-    // This relies on the library exposing the underlying storage or a getAll method.
-    try {
-        // @ts-ignore - Dynamic access to library internals for aggregation
-        if (typeof this.reasoningBank.getAllPatterns === 'function') {
-            // @ts-ignore
-            patterns = await this.reasoningBank.getAllPatterns();
+     // Attempt to access internal DB to scan all records for aggregation.
+     // This relies on the library exposing the underlying storage or a getAll method.
+      try {
+         // @ts-expect-error - Dynamic access to library internals for aggregation
+         if (typeof this.reasoningBank.getAllPatterns === 'function') {
+             // @ts-expect-error - Dynamic method call on reasoning bank
+             patterns = await this.reasoningBank.getAllPatterns();
         } else if (this.reasoningBank['db'] && typeof this.reasoningBank['db'].getAll === 'function') {
              const records = await this.reasoningBank['db'].getAll();
              patterns = records.map((r: any) => r.data || r);
@@ -116,12 +133,12 @@ export default class ClinicalAgentDB {
   public async getUnifiedAuditLog() {
      if (!this.reasoningBank) return [];
      
-     let patterns: any[] = [];
-     try {
-        // @ts-ignore
-        if (typeof this.reasoningBank.getAllPatterns === 'function') {
-            // @ts-ignore
-            patterns = await this.reasoningBank.getAllPatterns();
+      let patterns: any[] = [];
+       try {
+          // @ts-expect-error - Dynamic access to library internals for aggregation
+          if (typeof this.reasoningBank.getAllPatterns === 'function') {
+              // @ts-expect-error - Dynamic method call on reasoning bank
+              patterns = await this.reasoningBank.getAllPatterns();
         } else if (this.reasoningBank['db']) {
             const records = await this.reasoningBank['db'].getAll();
             patterns = records.map((r: any) => r.data || r);
@@ -156,11 +173,11 @@ export default class ClinicalAgentDB {
         });
   }
 
-  public async resetMemory() { 
-      // @ts-ignore
-      if(this.reasoningBank && typeof this.reasoningBank.clear === 'function') {
-          // @ts-ignore
-          await this.reasoningBank.clear(); 
+   public async resetMemory() { 
+       // @ts-expect-error - Dynamic method check on reasoning bank
+       if(this.reasoningBank && typeof this.reasoningBank.clear === 'function') {
+           // @ts-expect-error - Dynamic clear method call
+           await this.reasoningBank.clear();
       } else if (this.reasoningBank && this.reasoningBank['db']) {
           await this.reasoningBank['db'].clear();
       }

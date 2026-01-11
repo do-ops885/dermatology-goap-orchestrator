@@ -1,4 +1,25 @@
 export type FitzpatrickType = 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI';
+export type SafetyLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export interface NotificationAction {
+  type: 'review' | 'callback' | 'escalate' | 'dismiss';
+  timestamp: number;
+  clinicianId?: string;
+  notes?: string;
+}
+
+export interface ClinicianNotification {
+  id: string;
+  timestamp: number;
+  safetyLevel: SafetyLevel;
+  analysisId: string;
+  patientId?: string;
+  triggerReason: string;
+  diagnosis?: string;
+  riskLevel?: 'Low' | 'Medium' | 'High';
+  actions: NotificationAction[];
+  status: 'pending' | 'acknowledged' | 'dismissed';
+}
 
 export interface ReasoningPattern {
   id: string;

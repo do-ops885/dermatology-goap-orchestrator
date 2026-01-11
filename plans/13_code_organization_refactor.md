@@ -1,5 +1,27 @@
 # Agent Plan: Code Organization Refactor
 **Focus:** 500 LOC Limit, Modular Architecture, Maintainability
+**Last Updated:** 2026-01-11
+
+## 0. Critical Alert (2026-01-11)
+
+### 0.1 Violation Status
+| File | Current Lines | Limit | Status |
+|------|---------------|-------|--------|
+| `hooks/useClinicalAnalysis.ts` | **739** | 500 | ❌ **CRITICAL** (+239 lines) |
+| `services/agentDB.ts` | 291 | 500 | ✅ OK |
+| `services/goap.ts` | 329 | 500 | ✅ OK |
+| `services/vision.ts` | 185 | 500 | ✅ OK |
+
+### 0.2 Impact
+- Violates AGENTS.md section 4.1
+- All 16 agent executors embedded in single file
+- Difficult to maintain and test
+- Violates single responsibility principle
+
+### 0.3 Immediate Actions Required
+1. Create `services/executors/` directory
+2. Extract each agent executor to separate file
+3. Refactor `useClinicalAnalysis.ts` to <300 LOC
 
 ## 1. Critical Issue: 500 LOC Violation
 **File:** `hooks/useClinicalAnalysis.ts` (739 lines)
@@ -288,7 +310,7 @@ services/executors/
 - [ ] Extract all 16 agent executors to separate files
 - [ ] Create `services/executors/types.ts` with common interfaces
 - [ ] Create `services/executors/index.ts` for exports
-- [ ] Refactor `useClinicalAnalysis.ts` to use executors
+- [ ] Refactor `hooks/useClinicalAnalysis.ts` to use executors (target: <300 LOC)
 - [ ] Extract utility functions to `services/utils/`
 - [ ] Create `services/serviceRegistry.ts`
 - [ ] Create `config/constants.ts`

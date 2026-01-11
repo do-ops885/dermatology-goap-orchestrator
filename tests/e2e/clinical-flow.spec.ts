@@ -175,4 +175,93 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     await expect(page.locator('button', { hasText: 'Run Clinical Analysis' })).toBeDisabled();
   });
 
+  test('Scenario D: Offline Mode - Local Inference Fallback', async ({ page }) => {
+    // Intercept and block external API calls to simulate offline mode
+    await page.route('**/models/*:generateContent?key=*', (route) => route.abort('internet'));
+
+    // Set up local WebLLM mock for offline inference
+    await page.route('**/api/webllm/**', async (route) => {
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'loaded',
+          model: 'SmolLM2-360M-Instruct-Local'
+        })
+      });
+    });
+
+    // Upload and Run
+    const buffer = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'test-sample.jpg',
+      mimeType: 'image/jpeg',
+      buffer: buffer
+    });
+    await page.locator('button', { hasText: 'Run Clinical Analysis' }).click();
+
+    // Verify offline mode indicator
+    await expect(page.locator('text=OFFLINE MODE ACTIVE')).toBeVisible({ timeout: 10000 });
+
+    // Verify local model was used
+    const logs = page.locator('[role="log"]');
+    await expect(logs).toContainText('Local Inference');
+    await expect(logs).toContainText('SmolLM2');
+
+    // Verify analysis still completes successfully
+    await expect(page.locator('h2', { hasText: 'Diagnostic Summary' })).toBeVisible({ timeout: 30000 });
+  });
+
+  test('Scenario E: Memory Leak Prevention - Sequential Analyses', async ({ page }) => {
+    // Track initial memory state if available
+    const initialMemoryCheck = await page.evaluate(() => {
+      if ('gc' in window) {
+        (window as any).gc();
+      }
+      return { 
+        heapUsed: performance.memory?.usedJSHeapSize || 0,
+        heapLimit: performance.memory?.totalJSHeapSize || 0 
+      };
+    });
+
+    // Run 10 sequential analyses
+    for (let i = 0; i < 10; i++) {
+      const buffer = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
+      await page.locator('input[type="file"]').setInputFiles({
+        name: `sample-${i}.jpg`,
+        mimeType: 'image/jpeg',
+        buffer: buffer
+      });
+      
+      const runBtn = page.locator('button', { hasText: 'Run Clinical Analysis' });
+      await runBtn.click();
+      
+      // Wait for each analysis to complete
+      await expect(page.locator('text=Diagnostic Summary')).toBeVisible({ timeout: 30000 });
+      
+      // Clear file input for next iteration
+      await page.locator('input[type="file"]').setInputFiles([]);
+    }
+
+    // Check for tensor cleanup logs
+    const logs = page.locator('[role="log"]');
+    await expect(logs).toContainText('Tensors disposed');
+    
+    // Memory check after 10 analyses
+    const finalMemoryCheck = await page.evaluate(() => {
+      if ('gc' in window) {
+        (window as any).gc();
+      }
+      return { 
+        heapUsed: performance.memory?.usedJSHeapSize || 0,
+        heapLimit: performance.memory?.totalJSHeapSize || 0 
+      };
+    });
+
+    // Memory should not have grown significantly (> 50% increase indicates leak)
+    const memoryGrowth = finalMemoryCheck.heapUsed - initialMemoryCheck.heapUsed;
+    const growthRatio = initialMemoryCheck.heapUsed > 0 ? memoryGrowth / initialMemoryCheck.heapUsed : 0;
+    
+    expect(growthRatio).toBeLessThan(0.5);
+  });
+
 });

@@ -1,6 +1,21 @@
 # Agent Plan: Fairness & Safety Improvements
 **Focus:** Reduce demographic performance gaps, tighten safety intercepts, and increase auditability
-**Last Updated:** 2025-01-10
+**Last Updated:** 2026-01-11
+
+## 0. Current Analysis (2026-01-11)
+
+### 0.1 Implementation Gaps Identified
+| Component | Status | Lines |
+|-----------|--------|-------|
+| Per-group TPR/FPR computation | ⚠️ Partial | `services/agentDB.ts:46-114` |
+| Clinician feedback integration | ❌ Missing | - |
+| Nightly batch analytics | ❌ Missing | - |
+| FairnessDashboard UI component | ❌ Missing | - |
+
+### 0.2 Priority Actions
+1. **P0:** Implement per-group TPR/FPR metrics in `services/agentDB.ts`
+2. **P1:** Create FairnessDashboard component
+3. **P2:** Add clinician feedback path
 
 ## 1. Objectives
 - Reduce observed TPR gaps across skin-tone groups by 30% in the next quarter.
@@ -125,10 +140,12 @@ Record<FitzpatrickType, GroupMetrics>
 - [x] Standard calibration agent
 - [x] FairDisCo feature extraction
 - [x] Fairness validation agent
-- [ ] Per-group TPR/FPR computation
+- [x] Per-group TPR/FPR computation (PARTIAL - `services/agentDB.ts:46-114`)
 - [ ] Threshold override table
 - [ ] Clinician feedback integration
 - [ ] Nightly batch analytics
+- [ ] FairnessDashboard UI component
 
 ---
-*Signed: Fairness & Safety Plan (Updated 2025-01-10)*
+
+*Signed: Fairness & Safety Plan (Updated 2026-01-11)*
