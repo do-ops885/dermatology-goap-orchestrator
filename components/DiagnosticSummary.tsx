@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Lock, Fingerprint, MessageSquareText, Share2, Gauge, History, Globe, ExternalLink, Cpu, ListTree, ShieldCheck, KeyRound, MessageSquareHeart } from 'lucide-react';
-import { AnalysisResult } from '../types';
+import { AnalysisResult, ClinicianFeedback as ClinicianFeedbackType } from '../types';
 import { ClinicianFeedback } from './ClinicianFeedback';
+import AgentDB from '../services/agentDB';
+import { Logger } from '../services/logger';
 
 interface DiagnosticSummaryProps {
   result: AnalysisResult | null;
@@ -9,23 +11,60 @@ interface DiagnosticSummaryProps {
 
 export const DiagnosticSummary: React.FC<DiagnosticSummaryProps> = ({ result }) => {
   const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const agentDB = AgentDB.getInstance();
   
-  const handleFeedback = async (feedback: any) => {
-    console.log('Clinician feedback submitted:', feedback);
+  const handleFeedback = async (feedback: {
+    diagnosis: string;
+    correctedDiagnosis?: string;
+    confidence: number;
+    notes: string;
+    timestamp: number;
+  }) => {
+    if (!result) return;
+
+    const feedbackData: ClinicianFeedbackType = {
+      id: `feedback_${Math.random().toString(36).substr(2, 9)}`,
+      analysisId: result.id,
+      diagnosis: feedback.diagnosis,
+      correctedDiagnosis: feedback.correctedDiagnosis,
+      confidence: feedback.confidence,
+      notes: feedback.notes,
+      timestamp: feedback.timestamp,
+      fitzpatrickType: result.fitzpatrickType,
+      isCorrection: !!feedback.correctedDiagnosis && feedback.correctedDiagnosis !== feedback.diagnosis
+    };
+
     try {
-      await fetch('/api/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...feedback,
-          analysisId: result?.id,
-          fitzpatrickType: result?.fitzpatrickType
-        })
+      // Store in AgentDB for learning
+      await agentDB.storeClinicianFeedback(feedbackData);
+      
+      Logger.info('DiagnosticSummary', 'Clinician feedback processed', {
+        feedbackId: feedbackData.id,
+        isCorrection: feedbackData.isCorrection,
+        fitzpatrick: feedbackData.fitzpatrickType
       });
-    } catch (e) {
-      console.warn('Failed to submit feedback to API, continuing...');
+
+      setFeedbackSubmitted(true);
+      
+      // Optional: Also send to API if available
+      try {
+        await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(feedbackData)
+        });
+      } catch (apiError) {
+        Logger.warn('DiagnosticSummary', 'API feedback submission failed (non-critical)', { error: apiError });
+      }
+    } catch (error) {
+      Logger.error('DiagnosticSummary', 'Failed to store feedback', { error });
     }
-    setShowFeedback(false);
+    
+    setTimeout(() => {
+      setShowFeedback(false);
+      setFeedbackSubmitted(false);
+    }, 2000);
   };
   
   const handleExport = () => {

@@ -80,6 +80,19 @@ export interface AgentAction {
   agentId: string;
 }
 
+export interface ClinicianFeedback {
+  id: string;
+  analysisId: string;
+  diagnosis: string;
+  correctedDiagnosis?: string;
+  confidence: number;
+  notes: string;
+  timestamp: number;
+  fitzpatrickType?: FitzpatrickType;
+  clinicianId?: string;
+  isCorrection: boolean;
+}
+
 export interface AnalysisResult {
   id: string;
   timestamp: number;
@@ -109,6 +122,7 @@ export interface AnalysisResult {
     payloadSize: number;
     ciphertext?: string; // Base64 encoded ciphertext
   };
+  clinicianFeedback?: ClinicianFeedback;
 }
 
 export interface AgentLogEntry {

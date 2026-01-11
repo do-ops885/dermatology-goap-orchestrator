@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect, useState, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import AgentDB from '../services/agentDB';
-import { ArrowUpRight, Info, RefreshCw } from 'lucide-react';
+import { ArrowUpRight, Info, RefreshCw, MessageSquareHeart } from 'lucide-react';
 
 interface FairnessDashboardProps {
   onOpenReport?: () => void;
@@ -10,13 +10,28 @@ interface FairnessDashboardProps {
 const FairnessDashboard: React.FC<FairnessDashboardProps> = ({ onOpenReport }) => {
   const agentDB = AgentDB.getInstance();
   const [metrics, setMetrics] = useState<Record<string, { tpr: number; fpr: number; count: number }>>(() => agentDB.getFairnessMetrics());
+  const [feedbackStats, setFeedbackStats] = useState<{
+    totalFeedback: number;
+    corrections: number;
+    confirmations: number;
+    avgConfidence: number;
+  }>({ totalFeedback: 0, corrections: 0, confirmations: 0, avgConfidence: 0 });
   const [loading, setLoading] = useState(false);
 
   const fetchMetrics = useCallback(async () => {
     setLoading(true);
     try {
-      const live = await agentDB.getLiveStats();
+      const [live, feedback] = await Promise.all([
+        agentDB.getLiveStats(),
+        agentDB.getFeedbackStats()
+      ]);
       setMetrics(live);
+      setFeedbackStats({
+        totalFeedback: feedback.totalFeedback,
+        corrections: feedback.corrections,
+        confirmations: feedback.confirmations,
+        avgConfidence: feedback.avgConfidence
+      });
     } finally {
       setLoading(false);
     }
@@ -135,6 +150,38 @@ const FairnessDashboard: React.FC<FairnessDashboardProps> = ({ onOpenReport }) =
             </div>
         </div>
       </div>
+
+      {/* Clinician Feedback Stats */}
+      {feedbackStats.totalFeedback > 0 && (
+        <div className="mt-3 p-3 bg-terracotta-50/30 rounded-lg border border-terracotta-100 relative z-10">
+          <div className="flex items-center gap-2 mb-2">
+            <MessageSquareHeart className="w-3.5 h-3.5 text-terracotta-600" />
+            <div className="text-[10px] text-terracotta-700 font-bold font-mono uppercase tracking-wider">
+              Human Feedback
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div>
+              <div className="text-xs font-bold font-grotesk text-terracotta-800">
+                {feedbackStats.totalFeedback}
+              </div>
+              <div className="text-[9px] text-terracotta-600">Total</div>
+            </div>
+            <div>
+              <div className="text-xs font-bold font-grotesk text-terracotta-800">
+                {feedbackStats.corrections}
+              </div>
+              <div className="text-[9px] text-terracotta-600">Corrections</div>
+            </div>
+            <div>
+              <div className="text-xs font-bold font-grotesk text-terracotta-800">
+                {(feedbackStats.avgConfidence * 100).toFixed(0)}%
+              </div>
+              <div className="text-[9px] text-terracotta-600">Avg Conf.</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

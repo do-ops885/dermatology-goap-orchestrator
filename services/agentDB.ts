@@ -42,13 +42,22 @@ export default class ClinicalAgentDB {
    public async getAllPatterns(): Promise<any[]> {
      if (!this.reasoningBank) return [];
      try {
+       // Try multiple access patterns for the underlying database
        // @ts-expect-error - Dynamic access to library internals for aggregation
        if (typeof this.reasoningBank.getAllPatterns === 'function') {
          // @ts-expect-error - Dynamic method call on reasoning bank
          return await this.reasoningBank.getAllPatterns();
-      } else if (this.reasoningBank['db'] && typeof this.reasoningBank['db'].getAll === 'function') {
-        const records = await this.reasoningBank['db'].getAll();
-        return records.map((r: any) => r.data || r);
+      } else if (this.reasoningBank['db']) {
+        // Access the underlying database directly
+        const db = this.reasoningBank['db'];
+        if (typeof db.getAll === 'function') {
+          const records = await db.getAll();
+          return records.map((r: any) => r.data || r);
+        } else if (typeof db.all === 'function') {
+          // SQL-based database
+          const records = await db.all('SELECT * FROM patterns ORDER BY timestamp DESC');
+          return records;
+        }
       }
     } catch (e) {
       Logger.error("AgentDB", "Failed to get all patterns", { error: e });
@@ -208,6 +217,128 @@ export default class ClinicalAgentDB {
           } as any);
       } catch (err) {
           Logger.error("AgentDB", "Failed to write to audit ledger", { error: err });
+      }
+  }
+
+  public async storeClinicianFeedback(feedback: {
+      id: string;
+      analysisId: string;
+      diagnosis: string;
+      correctedDiagnosis?: string;
+      confidence: number;
+      notes: string;
+      timestamp: number;
+      fitzpatrickType?: FitzpatrickType;
+      clinicianId?: string;
+      isCorrection: boolean;
+  }): Promise<void> {
+      if (!this.reasoningBank) {
+          Logger.warn("AgentDB", "Cannot store feedback: ReasoningBank not initialized");
+          return;
+      }
+
+      try {
+          // Store feedback as a high-value pattern for future learning
+          await this.reasoningBank.storePattern({
+              taskType: 'clinician_feedback',
+              approach: feedback.isCorrection ? 'correction' : 'confirmation',
+              outcome: feedback.correctedDiagnosis || feedback.diagnosis,
+              successRate: feedback.confidence,
+              timestamp: feedback.timestamp,
+              metadata: {
+                  feedbackId: feedback.id,
+                  analysisId: feedback.analysisId,
+                  originalDiagnosis: feedback.diagnosis,
+                  correctedDiagnosis: feedback.correctedDiagnosis,
+                  fitzpatrick: feedback.fitzpatrickType || 'I',
+                  clinicianId: feedback.clinicianId,
+                  notes: feedback.notes,
+                  isCorrection: feedback.isCorrection,
+                  verified: true, // Human-verified data is gold standard
+                  feedback_source: 'clinician'
+              }
+          } as any);
+
+          Logger.info("AgentDB", "Clinician feedback stored", { 
+              feedbackId: feedback.id, 
+              isCorrection: feedback.isCorrection 
+          });
+      } catch (err) {
+          Logger.error("AgentDB", "Failed to store clinician feedback", { error: err });
+          throw err;
+      }
+  }
+
+  public async getFeedbackStats(): Promise<{
+      totalFeedback: number;
+      corrections: number;
+      confirmations: number;
+      avgConfidence: number;
+      byFitzpatrick: Record<FitzpatrickType, { count: number; corrections: number }>;
+  }> {
+      if (!this.reasoningBank) {
+          return {
+              totalFeedback: 0,
+              corrections: 0,
+              confirmations: 0,
+              avgConfidence: 0,
+              byFitzpatrick: {
+                  'I': { count: 0, corrections: 0 },
+                  'II': { count: 0, corrections: 0 },
+                  'III': { count: 0, corrections: 0 },
+                  'IV': { count: 0, corrections: 0 },
+                  'V': { count: 0, corrections: 0 },
+                  'VI': { count: 0, corrections: 0 }
+              }
+          };
+      }
+
+      try {
+          const patterns = await this.getAllPatterns();
+          const feedbackPatterns = patterns.filter(p => p.taskType === 'clinician_feedback');
+
+          const stats = {
+              totalFeedback: feedbackPatterns.length,
+              corrections: feedbackPatterns.filter(p => p.metadata?.isCorrection).length,
+              confirmations: feedbackPatterns.filter(p => !p.metadata?.isCorrection).length,
+              avgConfidence: feedbackPatterns.reduce((sum, p) => sum + (p.successRate || 0), 0) / (feedbackPatterns.length || 1),
+              byFitzpatrick: {
+                  'I': { count: 0, corrections: 0 },
+                  'II': { count: 0, corrections: 0 },
+                  'III': { count: 0, corrections: 0 },
+                  'IV': { count: 0, corrections: 0 },
+                  'V': { count: 0, corrections: 0 },
+                  'VI': { count: 0, corrections: 0 }
+              } as Record<FitzpatrickType, { count: number; corrections: number }>
+          };
+
+          feedbackPatterns.forEach(p => {
+              const fitzpatrick = p.metadata?.fitzpatrick as FitzpatrickType;
+              if (fitzpatrick && stats.byFitzpatrick[fitzpatrick]) {
+                  stats.byFitzpatrick[fitzpatrick].count++;
+                  if (p.metadata?.isCorrection) {
+                      stats.byFitzpatrick[fitzpatrick].corrections++;
+                  }
+              }
+          });
+
+          return stats;
+      } catch (err) {
+          Logger.error("AgentDB", "Failed to get feedback stats", { error: err });
+          return {
+              totalFeedback: 0,
+              corrections: 0,
+              confirmations: 0,
+              avgConfidence: 0,
+              byFitzpatrick: {
+                  'I': { count: 0, corrections: 0 },
+                  'II': { count: 0, corrections: 0 },
+                  'III': { count: 0, corrections: 0 },
+                  'IV': { count: 0, corrections: 0 },
+                  'V': { count: 0, corrections: 0 },
+                  'VI': { count: 0, corrections: 0 }
+              }
+          };
       }
   }
 }

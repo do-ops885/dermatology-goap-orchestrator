@@ -69,7 +69,49 @@ const validateImageSignature = async (file: File): Promise<boolean> => {
   return false;
 };
 
-export const useClinicalAnalysis = () => {
+interface ClinicalAnalysisResult {
+  skinTone?: string;
+  confidence?: number;
+  lesions?: Array<{
+    type: string;
+    confidence: number;
+    heatmap?: string;
+  }>;
+  riskLevel?: string;
+  recommendation?: string;
+  fairnessMetrics?: any;
+  similarCases?: any[];
+  webVerification?: any;
+  encryptedPayload?: string;
+  auditHash?: string;
+}
+
+interface UseClinicalAnalysisReturn {
+  file: File | null;
+  preview: string | null;
+  logs: AgentLogEntry[];
+  worldState: WorldState;
+  result: ClinicalAnalysisResult | null;
+  error: string | null;
+  warning: string | null;
+  modelProgress: { text: string; percent: number } | null;
+  analyzing: boolean;
+  dbReady: boolean;
+  isPending: boolean;
+  pending: boolean;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
+  executeAnalysis: () => Promise<{ success: boolean; data?: any; error?: string } | null>;
+  privacyMode: boolean;
+  setPrivacyMode: (mode: boolean) => void;
+  action: (payload: FormData) => void;
+  actionState: null;
+  trace: ExecutionTrace | null;
+  currentAgent: string | undefined;
+}
+
+export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
   const [dbReady, setDbReady] = useState(false);
   const [aiReady, setAiReady] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -77,7 +119,7 @@ export const useClinicalAnalysis = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [logs, setLogs] = useState<AgentLogEntry[]>([]);
   const [worldState, setWorldState] = useState<WorldState>(INITIAL_STATE);
-  const [result, setResult] = useState<any | null>(null);
+  const [result, setResult] = useState<ClinicalAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [modelProgress, setModelProgress] = useState<{ text: string; percent: number } | null>(null);
