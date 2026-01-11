@@ -75,11 +75,12 @@ These meta-agents define the SDLC process, represented by plan files in `plans/`
 ## 4. Operational Constraints & Best Practices
 
 ### 4.1 Code Quality
-1.  **Strict Types**: `no-explicit-any` warning is enabled. Use defined interfaces in `types.ts`.
+1.  **Strict Types**: `no-explicit-any` is enforced as error (2025 best practice). Use defined interfaces in `types.ts` or `unknown` for uncertain types.
 2.  **Modular Services**: Business logic lives in `services/`, not React components.
 3.  **File Size**: **MAX 500 LINES**.
     - ⚠️ **VIOLATION:** `hooks/useClinicalAnalysis.ts` is **739 lines** (needs immediate refactor)
     - Extract agent executors to `services/executors/` per `plans/13_code_organization_refactor.md`
+4.  **Type Safety**: TypeScript strict mode enabled with `strictTypeChecked` and `stylisticTypeChecked` configs (2025 best practice).
 
 ### 4.2 AI Safety Protocols
 1.  **Confidence Check**: All visual inference must return a confidence score.
@@ -104,7 +105,7 @@ These meta-agents define the SDLC process, represented by plan files in `plans/`
 | `npm run dev` | Start Vite dev server (http://localhost:5173) |
 | `npm run build` | Production bundle with manual chunks |
 | `npm run preview` | Preview production build |
-| `npm run lint` | ESLint on all TS/TSX/JS/JSX files |
+ | `npm run lint` | ESLint with TypeScript strict mode, security rules, and SonarJS |
 | `npm run test` | Run Vitest suite (jsdom, non-threaded) |
 | `npm run test -- path/to/test.test.ts` | Run single test file |
 | `npx playwright test` | Run E2E tests (Playwright) |
@@ -121,10 +122,11 @@ These meta-agents define the SDLC process, represented by plan files in `plans/`
 ## 6. Code Style Guidelines
 
 ### 6.1 TypeScript & Imports
-- **Strict Mode**: `no-explicit-any` warning enabled - use interfaces from `types.ts`
+- **Strict Mode**: `no-explicit-any` enforced as error (2025 best practice) - use interfaces from `types.ts` or `unknown`
 - **Import Order**: External libs → internal modules (`@/...`) → relative paths
 - **Type Imports**: Use `import type { ... }` for type-only imports
 - **File Extensions**: `.ts` for logic, `.tsx` for React components
+- **Type-Aware Linting**: Enabled with `strictTypeChecked` and `stylisticTypeChecked` configs
 
 ### 6.2 Naming Conventions
 - **Variables/Functions**: `camelCase` (e.g., `calculateImageHash`)

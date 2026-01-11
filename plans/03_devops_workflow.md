@@ -7,13 +7,23 @@
 ### 1.1 Enhanced Static Analysis
 - **eslint-plugin-react-hooks:** ✅ Enforced in config.
 - **no-console:** ✅ Configured to allow only `warn` and `error`.
-- **typescript-eslint:** ✅ Integrated for type safety.
+- **typescript-eslint:** ✅ Integrated with strict mode and type checking.
+- **eslint-plugin-security:** ✅ Added for security hotspot detection.
+- **eslint-plugin-sonarjs:** ✅ Added for code quality and bug detection.
 
-### 1.2 2025: Enhanced ESLint Configuration
-- [ ] **Add `@typescript-eslint/no-explicit-any`**: Enforce strict typing
-- [ ] **Add `@typescript-eslint/no-unsafe-assignment`**: Catch unsafe type assignments
-- [ ] **Add `@typescript-eslint/no-floating-promises`**: Prevent unhandled promises
-- [ ] **Add `react-hooks/exhaustive-deps`**: Catch missing dependencies
+### 1.2 2025: Enhanced ESLint Configuration (Updated 2026-01-11)
+- [x] **Add `@typescript-eslint/no-explicit-any`**: Enforce strict typing (error)
+- [x] **Add `@typescript-eslint/no-unsafe-assignment`**: Catch unsafe type assignments (warn)
+- [x] **Add `@typescript-eslint/no-unsafe-member-access`**: Catch unsafe member access (warn)
+- [x] **Add `@typescript-eslint/no-unsafe-call`**: Catch unsafe function calls (warn)
+- [x] **Add `@typescript-eslint/no-floating-promises`**: Prevent unhandled promises (warn)
+- [x] **Add `@typescript-eslint/await-thenable`**: Detect await on non-thenables (error)
+- [x] **Add `@typescript-eslint/no-misused-promises`**: Prevent promise misuse (error)
+- [x] **Add `@typescript-eslint/prefer-nullish-coalescing`**: Prefer `??` over `||` (warn)
+- [x] **Add `@typescript-eslint/strict-boolean-expressions`**: Strict boolean checking (warn)
+- [x] **Enable typescript-eslint strict mode**: `strictTypeChecked` and `stylisticTypeChecked`
+- [x] **Add security rules**: `eslint-plugin-security` for security hotspot detection
+- [x] **Add SonarJS rules**: `eslint-plugin-sonarjs` for code quality and bug detection
 
 ## 2. Bundle Analysis & Optimization
 **Status:** IMPLEMENTED (via `vite.config.ts`)
@@ -69,16 +79,24 @@
     plugins: [viteImagemin()]
     ```
 
-## 3. CI/CD Pipeline (`.github/workflows/main.yml`)
-**Status:** PENDING (Waiting for Repo Integration)
+## 3. CI/CD Pipeline (`.github/workflows/ci.yml`)
+**Status:** ✅ IMPLEMENTED (Basic CI)
 
-### 3.1 Pipeline Stages
-1.  **Checkout & Cache:** Standard.
-2.  **Lint:** `npm run lint`.
-3.  **Unit Tests:** `npm run test` (Vitest).
-4.  **Build:** `npm run build`.
-5.  **Size Check:** Fail build if main entry chunk exceeds 800kB.
-6.  **License Scan:** Scan dependencies for non-compliant licenses (e.g., AGPL).
+### 3.1 Current Pipeline Stages (2026-01-11)
+1.  **Checkout & Cache:** ✅ Using `@v4` actions with npm caching (lines 14-21)
+2.  **AgentDB init:** ✅ Optional initialization (lines 25-29)
+3.  **Lint:** ✅ `npm run lint` with TypeScript strict mode (line 32)
+4.  **Unit Tests:** ✅ `npm run test` (Vitest) (line 35)
+5.  **Build:** ✅ `npm run build` (line 38)
+6.  **Coverage Upload:** ⚠️ Optional artifact upload (lines 40-45)
+
+### 3.2 Missing Features in CI/CD
+- [ ] Size Check: Fail build if main entry chunk exceeds 800kB
+- [ ] License Scan: Scan dependencies for non-compliant licenses (e.g., AGPL)
+- [ ] Coverage Report Upload to Codecov
+- [ ] Bundle Size Monitoring
+- [ ] Security Scanning (`npm audit`)
+- [ ] Lighthouse CI
 
 ### 3.2 2025: Enhanced CI/CD
 - [ ] **Add Coverage Report Upload:**

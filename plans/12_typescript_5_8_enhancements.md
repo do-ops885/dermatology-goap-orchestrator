@@ -378,25 +378,47 @@
     }
     ```
 
-## 9. ESLint TypeScript Configuration
-- [ ] **Enhance ESLint Rules:**
+## 9. ESLint TypeScript Configuration (Updated 2026-01-11)
+- [x] **Enhance ESLint Rules with 2025 Best Practices:**
     ```javascript
     // eslint.config.js
-    export default [
+    import tseslint from 'typescript-eslint';
+    import eslintPluginSecurity from 'eslint-plugin-security';
+    import sonarjs from 'eslint-plugin-sonarjs';
+
+    export default tseslint.config(
       {
-        files: ['**/*.ts', '**/*.tsx'],
+        extends: [
+          ...tseslint.configs.strictTypeChecked,
+          ...tseslint.configs.stylisticTypeChecked
+        ],
+        languageOptions: {
+          parserOptions: {
+            project: './tsconfig.json',
+            tsconfigRootDir: import.meta.dirname,
+          },
+        },
+        plugins: {
+          'security': eslintPluginSecurity,
+          'sonarjs': sonarjs,
+        },
         rules: {
           '@typescript-eslint/no-explicit-any': 'error',
-          '@typescript-eslint/no-unsafe-assignment': 'error',
-          '@typescript-eslint/no-unsafe-member-access': 'error',
-          '@typescript-eslint/no-unsafe-call': 'error',
-          '@typescript-eslint/no-floating-promises': 'error',
-          '@typescript-eslint/explicit-function-return-type': 'warn',
+          '@typescript-eslint/no-unsafe-assignment': 'warn',
+          '@typescript-eslint/no-unsafe-member-access': 'warn',
+          '@typescript-eslint/no-unsafe-call': 'warn',
+          '@typescript-eslint/no-floating-promises': 'warn',
+          '@typescript-eslint/await-thenable': 'error',
+          '@typescript-eslint/no-misused-promises': 'error',
+          '@typescript-eslint/prefer-nullish-coalescing': 'warn',
+          '@typescript-eslint/strict-boolean-expressions': 'warn',
           '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
         }
       }
-    ];
+    );
     ```
+- [x] **Add Security Plugin**: `eslint-plugin-security` for security hotspot detection
+- [x] **Add SonarJS Plugin**: `eslint-plugin-sonarjs` for code quality and bug detection
 
 ## 10. Migration Checklist
 - [x] TypeScript 5.8.2 installed
