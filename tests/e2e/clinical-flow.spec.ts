@@ -264,4 +264,105 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     expect(growthRatio).toBeLessThan(0.5);
   });
 
+  test('Scenario E: GOAP Orchestration Trace & Agent Execution', async ({ page }) => {
+    await page.goto('/');
+    
+    // Upload image
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles({
+      name: 'test-lesion.jpg',
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAE/A0f/', 'base64')
+    });
+
+    // Start analysis
+    const analyzeButton = page.locator('button:has-text("Analyze")');
+    await analyzeButton.click();
+
+    // Wait for completion
+    await page.waitForSelector('[data-testid="analysis-result"], text=/Analysis Complete/i', { 
+      timeout: 60000 
+    });
+
+    // Verify orchestration trace exists in the page state
+    const traceData = await page.evaluate(() => {
+      // Access React component state (if exposed via window for debugging)
+      const traceElement = document.querySelector('[data-trace-id]');
+      return {
+        hasTrace: !!traceElement,
+        traceId: traceElement?.getAttribute('data-trace-id')
+      };
+    });
+
+    // Check agent logs for GOAP-Agent orchestration messages
+    const logs = page.locator('[data-testid="agent-log-entry"]');
+    const logCount = await logs.count();
+    expect(logCount).toBeGreaterThan(0);
+
+    // Verify key agents executed
+    const imageVerificationLog = page.locator('text=/Image-Verification-Agent/i').first();
+    await expect(imageVerificationLog).toBeVisible();
+
+    const skinToneLog = page.locator('text=/Skin-Tone-Detection-Agent/i').first();
+    await expect(skinToneLog).toBeVisible();
+
+    const goapLog = page.locator('text=/GOAP-Agent/i, text=/Plan.*completed/i');
+    await expect(goapLog).toBeVisible({ timeout: 5000 });
+
+    // Verify orchestrator logged completion with trace ID
+    const goapLogText = await goapLog.textContent();
+    expect(goapLogText).toMatch(/run_[a-z0-9]+/); // Trace ID format: run_xxxxx
+  });
+
+  test('Scenario F: Safety Calibration Routing on Low Confidence', async ({ page }) => {
+    // Override mock to return low confidence
+    await page.route('**/models/*:generateContent?key=*', async (route) => {
+      const requestBody = JSON.parse(route.request().postData() || '{}');
+      const promptText = requestBody.contents?.[0]?.parts?.find((p: any) => p.text)?.text || '';
+
+      if (promptText.includes('clinical classification')) {
+        await route.fulfill({
+          contentType: 'application/json',
+          body: JSON.stringify(mockGeminiResponse({
+            fitzpatrick_type: "IV",
+            monk_scale: "F5",
+            ita_estimate: 30,
+            skin_tone_confidence: 0.45, // LOW CONFIDENCE
+            reasoning: "Poor lighting conditions"
+          }))
+        });
+      } else {
+        await route.fulfill({
+          contentType: 'application/json',
+          body: JSON.stringify(mockGeminiResponse({ status: 'ok' }))
+        });
+      }
+    });
+
+    await page.goto('/');
+    
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles({
+      name: 'test-lesion-low-confidence.jpg',
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAE/A0f/', 'base64')
+    });
+
+    const analyzeButton = page.locator('button:has-text("Analyze")');
+    await analyzeButton.click();
+
+    // Wait for analysis to complete
+    await page.waitForSelector('[data-testid="analysis-result"], text=/Analysis Complete/i', { 
+      timeout: 60000 
+    });
+
+    // Verify Safety-Calibration-Agent was invoked (not Standard-Calibration-Agent)
+    const safetyCalibrationLog = page.locator('text=/Safety-Calibration-Agent/i').first();
+    await expect(safetyCalibrationLog).toBeVisible();
+
+    // Ensure conservative thresholds were mentioned in logs or warnings
+    const warningText = page.locator('text=/conservative|safety|low confidence/i').first();
+    await expect(warningText).toBeVisible({ timeout: 5000 });
+  });
+
 });

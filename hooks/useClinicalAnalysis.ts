@@ -9,24 +9,7 @@ import { AgentLogEntry, INITIAL_STATE, WorldState, AgentAction } from '../types'
 import { CryptoService } from '../services/crypto';
 import { Logger } from '../services/logger';
 import { ExecutionTrace } from '../services/goap/agent';
-import {
-  imageVerificationExecutor,
-  skinToneDetectionExecutor,
-  calibrationExecutor,
-  preprocessingExecutor,
-  segmentationExecutor,
-  featureExtractionExecutor,
-  lesionDetectionExecutor,
-  similaritySearchExecutor,
-  riskAssessmentExecutor,
-  fairnessAuditExecutor,
-  webVerificationExecutor,
-  recommendationExecutor,
-  learningExecutor,
-  privacyEncryptionExecutor,
-  auditTrailExecutor,
-  type AgentContext
-} from '../services/executors';
+import { EXECUTOR_REGISTRY } from '../services/goap/registry';
 
 const GEMINI_API_KEY = process.env.API_KEY || '';
 
@@ -84,25 +67,6 @@ const validateImageSignature = async (file: File): Promise<boolean> => {
   if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) return true;
   if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46) return true;
   return false;
-};
-
-const AGENT_EXECUTORS: Record<string, (ctx: AgentContext) => Promise<any>> = {
-  'Image-Verification-Agent': imageVerificationExecutor,
-  'Skin-Tone-Detection-Agent': skinToneDetectionExecutor,
-  'Standard-Calibration-Agent': calibrationExecutor,
-  'Safety-Calibration-Agent': calibrationExecutor,
-  'Image-Preprocessing-Agent': preprocessingExecutor,
-  'Segmentation-Agent': segmentationExecutor,
-  'Feature-Extraction-Agent': featureExtractionExecutor,
-  'Lesion-Detection-Agent': lesionDetectionExecutor,
-  'Similarity-Search-Agent': similaritySearchExecutor,
-  'Risk-Assessment-Agent': riskAssessmentExecutor,
-  'Fairness-Audit-Agent': fairnessAuditExecutor,
-  'Web-Verification-Agent': webVerificationExecutor,
-  'Recommendation-Agent': recommendationExecutor,
-  'Learning-Agent': learningExecutor,
-  'Privacy-Encryption-Agent': privacyEncryptionExecutor,
-  'Audit-Trail-Agent': auditTrailExecutor
 };
 
 export const useClinicalAnalysis = () => {
@@ -288,7 +252,7 @@ export const useClinicalAnalysis = () => {
       addLog('Router-Agent', `Routed intent: ${intent} -> ${requiredSpecialist}`, 'completed', { intent });
 
       const { GoapAgent } = await import('../services/goap/agent');
-      const goapAgent = new GoapAgent(planner.current, AGENT_EXECUTORS, { perAgentTimeoutMs: 10000 });
+      const goapAgent = new GoapAgent(planner.current, EXECUTOR_REGISTRY, { perAgentTimeoutMs: 10000 });
       const uiLogMap = new Map<string, string>();
 
       const trace = await goapAgent.execute(currentState, goalState, {

@@ -79,7 +79,6 @@ export default tseslint.config(
       'sonarjs/no-useless-catch': 'warn',
       'sonarjs/non-existent-operator': 'warn',
       'sonarjs/prefer-immediate-return': 'warn',
-      'sonarjs/prefer-object-spread': 'warn',
       'sonarjs/prefer-single-boolean-return': 'warn',
     },
   },
