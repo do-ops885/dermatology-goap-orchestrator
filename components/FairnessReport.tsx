@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState, useCallback } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine, AreaChart, Area } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
 import { X, ShieldCheck, AlertTriangle, CheckCircle2, TrendingUp, Activity, Fingerprint, Lock, Database, RefreshCcw, BrainCircuit } from 'lucide-react';
 import AgentDB from '../services/agentDB';
 
@@ -11,7 +11,7 @@ const FairnessReport: React.FC<FairnessReportProps> = ({ onClose }) => {
   const agentDB = AgentDB.getInstance();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<Record<string, { tpr: number; fpr: number; count: number }>>(() => agentDB.getFairnessMetrics());
-  const [auditLog, setAuditLog] = useState<any[]>([]);
+  const [auditLog, setAuditLog] = useState<{ id: string; timestamp: number; type: string; severity?: string; [key: string]: unknown }[]>([]);
   const calibrationData = agentDB.getCalibrationData();
   const historicalTrends = agentDB.getHistoricalTrends();
 
@@ -30,7 +30,7 @@ const FairnessReport: React.FC<FairnessReportProps> = ({ onClose }) => {
   }, [agentDB]);
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, [loadData]);
   
   const handleReset = async () => {
@@ -72,7 +72,7 @@ const FairnessReport: React.FC<FairnessReportProps> = ({ onClose }) => {
           </div>
           <div className="flex items-center gap-3">
              <button 
-                onClick={handleReset}
+                onClick={() => { void handleReset(); }}
                 className="px-4 py-2 bg-stone-100 hover:bg-red-50 hover:text-red-600 hover:border-red-200 border border-stone-200 rounded-xl text-xs font-bold text-stone-600 transition-all flex items-center gap-2"
               >
                 <RefreshCcw className="w-3.5 h-3.5" />
@@ -280,7 +280,7 @@ const FairnessReport: React.FC<FairnessReportProps> = ({ onClose }) => {
                               </td>
                               <td className="px-8 py-5 text-right">
                                   <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-green-700 bg-green-50 px-3 py-1 rounded-full border border-green-200">
-                                      <CheckCircle2 className="w-3 h-3" /> {item.status.toUpperCase()}
+                                      <CheckCircle2 className="w-3 h-3" /> {typeof item.status === 'string' ? item.status.toUpperCase() : 'COMPLETED'}
                                   </span>
                               </td>
                           </tr>
@@ -303,7 +303,7 @@ const ScoreMetric = ({ label, value, color }: { label: string, value: number, co
           <span className="font-mono font-bold text-slate-800 text-base">{(value * 100).toFixed(1)}%</span>
       </div>
       <div className="h-2.5 bg-slate-200/50 rounded-full overflow-hidden border border-slate-200/50 p-[1px]">
-          <div className={`h-full ${color} rounded-full transition-all duration-1000 ease-out`} style={{ width: `${value * 100}%` }}></div>
+          <div className={`h-full ${color} rounded-full transition-all duration-1000 ease-out`} style={{ width: `${(value * 100).toString()}%` }}></div>
       </div>
   </div>
 );
