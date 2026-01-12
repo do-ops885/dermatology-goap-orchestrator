@@ -16,7 +16,7 @@ interface ClinicianFeedbackProps {
   onDismiss: () => void;
 }
 
-export function ClinicianFeedback({ analysisId, currentDiagnosis, onSubmit, onDismiss }: ClinicianFeedbackProps) {
+export function ClinicianFeedback({ currentDiagnosis, onSubmit, onDismiss }: ClinicianFeedbackProps) {
   const [correctedDiagnosis, setCorrectedDiagnosis] = useState('');
   const [confidence, setConfidence] = useState(0.8);
   const [notes, setNotes] = useState('');

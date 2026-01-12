@@ -13,7 +13,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 export default function App() {
   const [showFairnessReport, setShowFairnessReport] = useState(false);
   const agentFlowRef = useRef<HTMLDivElement>(null);
-  
+
   const {
     file,
     preview,
@@ -32,7 +32,7 @@ export default function App() {
   } = useClinicalAnalysis();
 
   const handleExecute = () => {
-    executeAnalysis();
+    void executeAnalysis();
     // A11y: Move focus to the live agent logs so screen readers follow the action
     setTimeout(() => {
       agentFlowRef.current?.focus();
@@ -49,11 +49,11 @@ export default function App() {
         </ErrorBoundary>
 
         <main className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-[700px]">
-          
+
           {/* Left Column: Intake & Dashboard */}
           <div className="lg:col-span-4 flex flex-col gap-6">
             <ErrorBoundary componentName="Intake Module">
-                <AnalysisIntake 
+                <AnalysisIntake
                 error={error}
                 warning={warning}
                 modelProgress={modelProgress}

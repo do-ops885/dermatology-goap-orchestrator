@@ -43,7 +43,7 @@ const FairnessDashboard: React.FC<FairnessDashboardProps> = ({ onOpenReport }) =
     const interval = setInterval(() => {
       fetchMetrics();
     }, 5000);
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); };
   }, [fetchMetrics]);
 
   const data = useMemo(() => {

@@ -312,7 +312,7 @@ export class GOAPPlanner {
   private getStateKey(state: WorldState): string {
     // Generate a unique string key for the state to use in Sets/Maps
     // We sort keys to ensure deterministic output
-    const relevantKeys = Object.keys(state).sort() as Array<keyof WorldState>;
+    const relevantKeys = Object.keys(state).sort() as (keyof WorldState)[];
     const values = relevantKeys.map(k => `${k}:${state[k]}`);
     return values.join('|');
   }

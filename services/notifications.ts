@@ -4,7 +4,7 @@ import type { ClinicianNotification } from '../types';
 export class NotificationService {
   private static instance: NotificationService;
   private notifications: ClinicianNotification[] = [];
-  private listeners: Set<(notification: ClinicianNotification) => void> = new Set();
+  private listeners = new Set<(notification: ClinicianNotification) => void>();
 
   static getInstance(): NotificationService {
     if (!NotificationService.instance) {
@@ -41,7 +41,7 @@ export class NotificationService {
       triggerReason: params.triggerReason
     });
 
-    this.listeners.forEach(listener => listener(notification));
+    this.listeners.forEach(listener => { listener(notification); });
 
     const { AgentDB } = await import('./agentDB');
     await AgentDB.getInstance().logAuditEvent({

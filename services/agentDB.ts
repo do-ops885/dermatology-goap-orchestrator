@@ -47,16 +47,15 @@ export default class ClinicalAgentDB {
        if (typeof this.reasoningBank.getAllPatterns === 'function') {
          // @ts-expect-error - Dynamic method call on reasoning bank
          return await this.reasoningBank.getAllPatterns();
-      } else if (this.reasoningBank['db']) {
+      } else if (this.reasoningBank.db) {
         // Access the underlying database directly
-        const db = this.reasoningBank['db'];
+        const db = this.reasoningBank.db;
         if (typeof db.getAll === 'function') {
           const records = await db.getAll();
           return records.map((r: any) => r.data || r);
         } else if (typeof db.all === 'function') {
           // SQL-based database
-          const records = await db.all('SELECT * FROM patterns ORDER BY timestamp DESC');
-          return records;
+          return await db.all('SELECT * FROM patterns ORDER BY timestamp DESC');
         }
       }
     } catch (e) {
@@ -82,8 +81,8 @@ export default class ClinicalAgentDB {
          if (typeof this.reasoningBank.getAllPatterns === 'function') {
              // @ts-expect-error - Dynamic method call on reasoning bank
              patterns = await this.reasoningBank.getAllPatterns();
-        } else if (this.reasoningBank['db'] && typeof this.reasoningBank['db'].getAll === 'function') {
-             const records = await this.reasoningBank['db'].getAll();
+        } else if (this.reasoningBank.db && typeof this.reasoningBank.db.getAll === 'function') {
+             const records = await this.reasoningBank.db.getAll();
              patterns = records.map((r: any) => r.data || r);
         }
     } catch (e) {
@@ -148,8 +147,8 @@ export default class ClinicalAgentDB {
           if (typeof this.reasoningBank.getAllPatterns === 'function') {
               // @ts-expect-error - Dynamic method call on reasoning bank
               patterns = await this.reasoningBank.getAllPatterns();
-        } else if (this.reasoningBank['db']) {
-            const records = await this.reasoningBank['db'].getAll();
+        } else if (this.reasoningBank.db) {
+            const records = await this.reasoningBank.db.getAll();
             patterns = records.map((r: any) => r.data || r);
         }
      } catch (e) { return []; }
@@ -187,8 +186,8 @@ export default class ClinicalAgentDB {
        if(this.reasoningBank && typeof this.reasoningBank.clear === 'function') {
            // @ts-expect-error - Dynamic clear method call
            await this.reasoningBank.clear();
-      } else if (this.reasoningBank && this.reasoningBank['db']) {
-          await this.reasoningBank['db'].clear();
+      } else if (this.reasoningBank?.db) {
+          await this.reasoningBank.db.clear();
       }
       Logger.info("AgentDB", "Memory Reset Completed");
   }
@@ -394,7 +393,7 @@ export class LocalLLMService {
         return this.initializationPromise;
     }
 
-    async generate(prompt: string, systemPrompt: string = ""): Promise<string> {
+    async generate(prompt: string, systemPrompt = ""): Promise<string> {
         this.resetIdleTimer();
         if (!this.engine || !this.isReady) {
             Logger.warn("LocalLLMService", "Generate requested but engine not ready");

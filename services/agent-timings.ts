@@ -1,5 +1,5 @@
 export class AgentTimings {
-  private static timings: Map<string, number[]> = new Map();
+  private static timings = new Map<string, number[]>();
 
   static record(agentId: string, duration: number) {
     const timings = this.timings.get(agentId) || [];

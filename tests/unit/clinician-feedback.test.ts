@@ -143,8 +143,8 @@ describe('Clinician Feedback Integration', () => {
       const stats = await agentDB.getFeedbackStats();
 
       // May be 0 if database doesn't support querying yet
-      expect(stats.byFitzpatrick['V']).toBeDefined();
-      expect(typeof stats.byFitzpatrick['V'].count).toBe('number');
+      expect(stats.byFitzpatrick.V).toBeDefined();
+      expect(typeof stats.byFitzpatrick.V.count).toBe('number');
     });
   });
 

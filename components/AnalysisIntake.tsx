@@ -87,16 +87,16 @@ export const AnalysisIntake: React.FC<AnalysisIntakeProps> = ({
                     )}
                   </AnimatePresence>
 
-                  {/* Toggle Button */}
-                  {heatmapOverlay && (
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setShowHeatmap(!showHeatmap); }}
-                        className="absolute bottom-3 right-3 p-2 bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white rounded-full transition-all z-10"
-                        title="Toggle AI Focus Heatmap"
-                      >
-                          {showHeatmap ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                      </button>
-                  )}
+                   {/* Toggle Button */}
+                   {heatmapOverlay && (
+                       <button
+                         onClick={(e: React.MouseEvent) => { e.stopPropagation(); setShowHeatmap(!showHeatmap); }}
+                         className="absolute bottom-3 right-3 p-2 bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white rounded-full transition-all z-10"
+                         title="Toggle AI Focus Heatmap"
+                       >
+                           {showHeatmap ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                       </button>
+                   )}
               </div>
           ) : (
               <div className="text-center p-6">

@@ -19,9 +19,9 @@ interface AgentFlowProps {
 const formatDuration = (startTime: number, endTime?: number): string => {
   if (!endTime) return '...';
   const duration = endTime - startTime;
-  if (duration < 1000) return `${duration}ms`;
+  if (duration < 1000) return `${String(duration)}ms`;
   if (duration < 60000) return `${(duration / 1000).toFixed(1)}s`;
-  return `${Math.floor(duration / 60000)}m ${((duration % 60000) / 1000).toFixed(0)}s`;
+  return `${String(Math.floor(duration / 60000))}m ${((duration % 60000) / 1000).toFixed(0)}s`;
 };
 
 const formatTime = (timestamp: number): string => {

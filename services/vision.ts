@@ -177,7 +177,7 @@ export class VisionSpecialist {
             const canvas = document.createElement('canvas');
             canvas.width = w;
             canvas.height = h;
-            tf.browser.toPixels(resized as any, canvas);
+            tf.browser.toPixels(resized, canvas);
             
             return canvas.toDataURL();
         });

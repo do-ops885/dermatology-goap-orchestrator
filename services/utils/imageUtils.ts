@@ -34,9 +34,9 @@ export const optimizeImage = (file: File): Promise<string> => {
         const dataUrl = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.85);
         resolve(dataUrl.split(',')[1]);
       };
-      img.onerror = (err) => reject(err);
+      img.onerror = (err) => { reject(err); };
     };
-    reader.onerror = (err) => reject(err);
+    reader.onerror = (err) => { reject(err); };
   });
 };
 
@@ -44,7 +44,7 @@ export const loadImageElement = (file: File): Promise<HTMLImageElement> => {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.src = URL.createObjectURL(file);
-        img.onload = () => resolve(img);
+        img.onload = () => { resolve(img); };
         img.onerror = reject;
     });
 };

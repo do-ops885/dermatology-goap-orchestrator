@@ -32,18 +32,18 @@ describe('AgentDB', () => {
     const stats = await agentDB.getLiveStats();
 
     // Type I: 1 Pass, 1 Fail. Initial TPR assumption might drift
-    expect(stats['I'].count).toBe(2);
-    expect(stats['VI'].count).toBe(1);
-    expect(stats['II'].count).toBe(0);
+    expect(stats.I.count).toBe(2);
+    expect(stats.VI.count).toBe(1);
+    expect(stats.II.count).toBe(0);
     
     // Check if TPR calculation logic ran (stats should not be 0)
-    expect(stats['I'].tpr).toBeGreaterThan(0);
+    expect(stats.I.tpr).toBeGreaterThan(0);
   });
 
   it('should return default stats if db is empty or error occurs', async () => {
     mockGetAllPatterns.mockRejectedValue(new Error("DB Error"));
     const stats = await agentDB.getLiveStats();
-    expect(stats['I'].count).toBe(0);
+    expect(stats.I.count).toBe(0);
   });
 
   it('should format unified audit log correctly', async () => {

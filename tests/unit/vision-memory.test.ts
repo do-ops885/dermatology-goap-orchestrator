@@ -6,7 +6,7 @@ vi.mock('@tensorflow/tfjs', async () => {
   const actual = await vi.importActual('@tensorflow/tfjs') as any;
 
   const createMockTensor = () => {
-    const mock = {
+    return {
       square: vi.fn().mockReturnThis(),
       add: vi.fn().mockReturnThis(),
       neg: vi.fn().mockReturnThis(),
@@ -18,7 +18,6 @@ vi.mock('@tensorflow/tfjs', async () => {
       max: vi.fn().mockReturnThis(),
       dispose: vi.fn()
     };
-    return mock;
   };
 
   return {

@@ -21,6 +21,13 @@ export interface ClinicianNotification {
   status: 'pending' | 'acknowledged' | 'dismissed';
 }
 
+export interface ReasoningPatternMetadata {
+  fitzpatrick?: FitzpatrickType;
+  risk?: string;
+  verified?: boolean;
+  [key: string]: string | number | boolean | undefined;
+}
+
 export interface ReasoningPattern {
   id: string;
   taskType: string;
@@ -31,12 +38,7 @@ export interface ReasoningPattern {
   successRate?: number; // Alias for confidence/success metric
   timestamp: number;
   score?: number; // Similarity score for search results
-  metadata?: {
-    fitzpatrick?: FitzpatrickType;
-    risk?: string;
-    verified?: boolean;
-    [key: string]: any;
-  };
+  metadata?: ReasoningPatternMetadata;
 }
 
 export interface FeatureMetadata {
@@ -97,11 +99,11 @@ export interface AnalysisResult {
   id: string;
   timestamp: number;
   fitzpatrickType: FitzpatrickType;
-  lesions: Array<{
+  lesions: {
     type: string;
     confidence: number;
     risk: 'Low' | 'Medium' | 'High';
-  }>;
+  }[];
   fairnessMetrics: {
     tpr: number;
     fpr: number;
@@ -111,7 +113,7 @@ export interface AnalysisResult {
   signature: string;
   webVerification?: {
     verified: boolean;
-    sources: Array<{ title: string; uri: string }>;
+    sources: { title: string; uri: string }[];
     summary: string;
   };
   securityContext?: {
@@ -131,7 +133,7 @@ export interface AgentLogEntry {
   status: 'pending' | 'running' | 'completed' | 'failed';
   message: string;
   timestamp: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, string | number | boolean | undefined>;
 }
 
 export const INITIAL_STATE: WorldState = {

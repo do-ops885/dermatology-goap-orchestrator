@@ -46,9 +46,9 @@ const optimizeImage = (file: File): Promise<string> => {
         const dataUrl = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.85);
         resolve(dataUrl.split(',')[1]);
       };
-      img.onerror = (err) => reject(err);
+      img.onerror = (err) => { reject(err); };
     };
-    reader.onerror = (err) => reject(err);
+    reader.onerror = (err) => { reject(err); };
   });
 };
 
@@ -72,11 +72,11 @@ const validateImageSignature = async (file: File): Promise<boolean> => {
 interface ClinicalAnalysisResult {
   skinTone?: string;
   confidence?: number;
-  lesions?: Array<{
+  lesions?: {
     type: string;
     confidence: number;
     heatmap?: string;
-  }>;
+  }[];
   riskLevel?: string;
   recommendation?: string;
   fairnessMetrics?: any;
@@ -217,7 +217,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     setWarning(null);
     initAIServices();
 
-    if (e.target.files && e.target.files[0]) {
+    if (e.target.files?.[0]) {
       const f = e.target.files[0];
       const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
       if (!validTypes.includes(f.type)) {
@@ -257,8 +257,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
   }, [initAIServices]);
 
   async function submitAnalysis(prev: any, formData: FormData) {
-    const result = await executeAnalysis();
-    return result;
+    return await executeAnalysis();
   }
 
   const [, action, pending] = useActionState(submitAnalysis, null);

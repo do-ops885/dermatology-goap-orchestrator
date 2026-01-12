@@ -1,8 +1,8 @@
 export async function detectLesions(features: Float32Array): Promise<{
-  lesions: Array<{ type: string; confidence: number; risk: 'Low' | 'Medium' | 'High' }>;
+  lesions: { type: string; confidence: number; risk: 'Low' | 'Medium' | 'High' }[];
   modelVersion: string;
 }> {
-  const lesions: Array<{ type: string; confidence: number; risk: 'Low' | 'Medium' | 'High' }> = [];
+  const lesions: { type: string; confidence: number; risk: 'Low' | 'Medium' | 'High' }[] = [];
   
   if (features.length === 0) {
     return { lesions: [], modelVersion: 'MobileNetV3-YOLOv11' };

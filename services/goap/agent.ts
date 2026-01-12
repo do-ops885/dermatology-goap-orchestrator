@@ -2,26 +2,26 @@ import { GOAPPlanner, AVAILABLE_ACTIONS } from '../goap';
 import { AgentAction, WorldState } from '../../types';
 import { Logger } from '../logger';
 
-export type ExecutionAgentRecord = {
+export interface ExecutionAgentRecord {
   id: string;
   agentId: string;
   name?: string;
   startTime: number;
   endTime?: number;
   status: 'running' | 'completed' | 'failed' | 'skipped';
-  metadata?: Record<string, any>;
+  metadata?: Record<string, string | number | boolean | undefined>;
   error?: string;
-};
+}
 
-export type ExecutionTrace = {
+export interface ExecutionTrace {
   runId: string;
   startTime: number;
   endTime?: number;
   agents: ExecutionAgentRecord[];
   finalWorldState: WorldState;
-};
+}
 
-export type ExecutorFn = (ctx: Record<string, any>) => Promise<{ metadata?: any; newStateUpdates?: Partial<WorldState>; shouldReplan?: boolean }>;
+export type ExecutorFn = (ctx: Record<string, unknown>) => Promise<{ metadata?: Record<string, string | number | boolean | undefined>; newStateUpdates?: Partial<WorldState>; shouldReplan?: boolean }>;
 
 export type ExecutorMap = Record<string, ExecutorFn>;
 
@@ -40,7 +40,7 @@ export class GoapAgent {
     return this.planner.plan(startState, goalState);
   }
 
-  public async execute(startState: WorldState, goalState: Partial<WorldState>, ctx: Record<string, any>): Promise<ExecutionTrace> {
+  public async execute(startState: WorldState, goalState: Partial<WorldState>, ctx: Record<string, unknown>): Promise<ExecutionTrace> {
     const runId = 'run_' + Math.random().toString(36).slice(2, 9);
     const startTime = Date.now();
     Logger.info('goap-agent', 'plan_start', { runId, goalState });
@@ -54,7 +54,7 @@ export class GoapAgent {
     while (index < plan.length) {
       const action = plan[index];
       const agentRecord: ExecutionAgentRecord = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: Math.random().toString(36).substring(2, 11),
         agentId: action.agentId,
         name: action.name,
         startTime: Date.now(),
@@ -67,7 +67,7 @@ export class GoapAgent {
       // UI callbacks (if provided) and capture returned UI log id
       let uiLogId: string | undefined;
       if (typeof ctx.onAgentStart === 'function') {
-        try { uiLogId = ctx.onAgentStart(action); } catch (e) { /* ignore */ }
+        try { uiLogId = ctx.onAgentStart(action); } catch (_e) { /* ignore */ }
       }
 
       const executor = this.executors[action.agentId];
@@ -87,8 +87,8 @@ export class GoapAgent {
         const execPromise = executor({ ...ctx, currentState, action });
         const result = await Promise.race([
           execPromise,
-          new Promise((_, reject) => setTimeout(() => reject(new Error('executor_timeout')), this.perAgentTimeoutMs))
-        ]) as any;
+          new Promise<never>((_, reject) => setTimeout(() => { reject(new Error('executor_timeout')); }, this.perAgentTimeoutMs))
+        ]);
 
         agentRecord.endTime = Date.now();
         agentRecord.status = 'completed';
@@ -112,17 +112,17 @@ export class GoapAgent {
           index = -1; // will increment to 0 for next loop
           Logger.info('goap-agent', 'replan_complete', { runId, durationMs: Date.now() - replanStart, newPlan: plan.map(a => a.name) });
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         agentRecord.endTime = Date.now();
         agentRecord.status = 'failed';
-        agentRecord.error = e.message;
-        Logger.error('goap-agent', 'agent_failed', { runId, agent: action.agentId, error: e.message });
+        agentRecord.error = e instanceof Error ? e.message : String(e);
+        Logger.error('goap-agent', 'agent_failed', { runId, agent: action.agentId, error: e instanceof Error ? e.message : String(e) });
 
         if (typeof ctx.onAgentEnd === 'function') ctx.onAgentEnd(action, agentRecord);
 
         // Decide failure policy: skip non-critical and continue, abort on critical
         // Critical failure if executor throws a fatal error string 'Critical'
-        if (e.message && e.message.includes('Critical')) {
+        if (e instanceof Error && e.message?.includes('Critical')) {
           trace.endTime = Date.now();
           trace.finalWorldState = currentState;
           Logger.error('goap-agent', 'plan_aborted', { runId, reason: e.message });

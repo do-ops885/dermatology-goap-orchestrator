@@ -79,49 +79,49 @@ test.describe('Individual Agent Performance', () => {
 });
 
 async function verifyImage(file: File): Promise<boolean> {
-  return new Promise(resolve => setTimeout(() => resolve(true), 100));
+  return new Promise(resolve => setTimeout(() => { resolve(true); }, 100));
 }
 
 async function detectSkinTone(image: HTMLCanvasElement): Promise<{ tone: string; confidence: number }> {
-  return new Promise(resolve => setTimeout(() => resolve({ tone: 'IV', confidence: 0.85 }), 3000));
+  return new Promise(resolve => setTimeout(() => { resolve({ tone: 'IV', confidence: 0.85 }); }, 3000));
 }
 
 async function detectLesions(image: HTMLCanvasElement): Promise<any[]> {
-  return new Promise(resolve => setTimeout(() => resolve([]), 12000));
+  return new Promise(resolve => setTimeout(() => { resolve([]); }, 12000));
 }
 
 async function extractFeatures(image: { width: number; height: number }): Promise<number[]> {
-  return new Promise(resolve => setTimeout(() => resolve([]), 8000));
+  return new Promise(resolve => setTimeout(() => { resolve([]); }, 8000));
 }
 
 async function searchSimilarCases(query: { embedding: number[] }): Promise<any[]> {
-  return new Promise(resolve => setTimeout(() => resolve([]), 1500));
+  return new Promise(resolve => setTimeout(() => { resolve([]); }, 1500));
 }
 
 async function assessRisk(data: { lesions: any[]; history: any[] }): Promise<any> {
-  return new Promise(resolve => setTimeout(() => resolve({ risk: 'low' }), 4000));
+  return new Promise(resolve => setTimeout(() => { resolve({ risk: 'low' }); }, 4000));
 }
 
 async function auditFairness(data: { predictions: any[] }): Promise<any> {
-  return new Promise(resolve => setTimeout(() => resolve({ gaps: [] }), 2000));
+  return new Promise(resolve => setTimeout(() => { resolve({ gaps: [] }); }, 2000));
 }
 
 async function verifyWeb(data: { diagnosis: string }): Promise<any> {
-  return new Promise(resolve => setTimeout(() => resolve({ grounded: true }), 8000));
+  return new Promise(resolve => setTimeout(() => { resolve({ grounded: true }); }, 8000));
 }
 
 async function generateRecommendations(data: { risk: string; conditions: any[] }): Promise<string[]> {
-  return new Promise(resolve => setTimeout(() => resolve([]), 4000));
+  return new Promise(resolve => setTimeout(() => { resolve([]); }, 4000));
 }
 
 async function updateLearning(data: { caseData: any }): Promise<void> {
-  return new Promise(resolve => setTimeout(() => resolve(), 2000));
+  return new Promise(resolve => setTimeout(() => { resolve(); }, 2000));
 }
 
 async function encryptPayload(data: { data: string }): Promise<string> {
-  return new Promise(resolve => setTimeout(() => resolve('encrypted'), 1000));
+  return new Promise(resolve => setTimeout(() => { resolve('encrypted'); }, 1000));
 }
 
 async function commitAudit(data: { hash: string }): Promise<string> {
-  return new Promise(resolve => setTimeout(() => resolve('committed'), 500));
+  return new Promise(resolve => setTimeout(() => { resolve('committed'); }, 500));
 }

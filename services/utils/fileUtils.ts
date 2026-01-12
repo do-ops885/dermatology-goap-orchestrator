@@ -13,6 +13,6 @@ export const isValidFileType = (file: File): boolean => {
   return validTypes.includes(file.type);
 };
 
-export const isValidFileSize = (file: File, maxMB: number = 10): boolean => {
+export const isValidFileSize = (file: File, maxMB = 10): boolean => {
   return file.size <= maxMB * 1024 * 1024;
 };

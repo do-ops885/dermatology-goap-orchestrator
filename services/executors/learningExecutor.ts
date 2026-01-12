@@ -21,7 +21,7 @@ export const learningExecutor = async ({ reasoningBank, currentState, analysisPa
         successRate: analysisPayload.confidence || primaryLesion.confidence || 0.9,
         timestamp: Date.now(),
         metadata: {
-          fitzpatrick: (currentState.fitzpatrick_type as FitzpatrickType) || 'I',
+          fitzpatrick: (currentState.fitzpatrick_type!) || 'I',
           risk: analysisPayload.risk_label || primaryLesion.risk,
           lesion_type: primaryLesion.type,
           verified: false, // Will be verified by clinician feedback
@@ -55,7 +55,7 @@ export const learningExecutor = async ({ reasoningBank, currentState, analysisPa
           analysisId: feedback.analysisId,
           originalDiagnosis: feedback.diagnosis,
           correctedDiagnosis: feedback.correctedDiagnosis,
-          fitzpatrick: feedback.fitzpatrickType || (currentState.fitzpatrick_type as FitzpatrickType) || 'I',
+          fitzpatrick: feedback.fitzpatrickType || (currentState.fitzpatrick_type!) || 'I',
           clinicianId: feedback.clinicianId,
           notes: feedback.notes,
           isCorrection: feedback.isCorrection,
