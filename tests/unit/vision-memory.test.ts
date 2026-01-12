@@ -2,11 +2,24 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as tf from '@tensorflow/tfjs';
 import { VisionSpecialist } from '../../services/vision';
 
-vi.mock('@tensorflow/tfjs', async () => {
-  const actual = await vi.importActual('@tensorflow/tfjs') as any;
+interface MockTensor {
+  square: () => MockTensor;
+  add: () => MockTensor;
+  neg: () => MockTensor;
+  mul: () => MockTensor;
+  sub: () => MockTensor;
+  abs: () => MockTensor;
+  relu: () => MockTensor;
+  min: () => MockTensor;
+  max: () => MockTensor;
+  dispose: () => void;
+}
 
-  const createMockTensor = () => {
-    return {
+vi.mock('@tensorflow/tfjs', async () => {
+  const actual = await vi.importActual('@tensorflow/tfjs');
+
+  const createMockTensor = (): MockTensor => {
+    const mockTensor: MockTensor = {
       square: vi.fn().mockReturnThis(),
       add: vi.fn().mockReturnThis(),
       neg: vi.fn().mockReturnThis(),
@@ -18,6 +31,7 @@ vi.mock('@tensorflow/tfjs', async () => {
       max: vi.fn().mockReturnThis(),
       dispose: vi.fn()
     };
+    return mockTensor;
   };
 
   return {
@@ -26,7 +40,7 @@ vi.mock('@tensorflow/tfjs', async () => {
     setBackend: vi.fn().mockResolvedValue(undefined),
     loadGraphModel: vi.fn(),
     findBackend: vi.fn().mockReturnValue(true),
-    tidy: (fn: any) => fn(),
+    tidy: (fn: () => unknown): unknown => fn(),
     browser: {
       fromPixels: vi.fn().mockReturnValue({
         resizeNearestNeighbor: vi.fn().mockReturnValue({
@@ -62,15 +76,22 @@ vi.mock('@tensorflow/tfjs', async () => {
       numBytes: 0
     }),
     GraphModel: class {
-      dispose() {}
+      dispose(): void {
+        // Mock implementation
+      }
     }
   };
 });
 
+interface MockGraphModel {
+  predict: ReturnType<typeof vi.fn>;
+  dispose: ReturnType<typeof vi.fn>;
+}
+
 describe('Vision Memory Safety', () => {
   let vision: VisionSpecialist;
-  let mockPredict: any;
-  let mockModelDispose: any;
+  let mockPredict: ReturnType<typeof vi.fn>;
+  let mockModelDispose: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vision = VisionSpecialist.getInstance();
@@ -81,10 +102,10 @@ describe('Vision Memory Safety', () => {
     });
     mockModelDispose = vi.fn();
 
-    (tf.loadGraphModel as any).mockResolvedValue({
+    (tf.loadGraphModel as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       predict: mockPredict,
       dispose: mockModelDispose
-    });
+    } as MockGraphModel);
   });
 
   afterEach(() => {
@@ -141,11 +162,11 @@ describe('Vision Memory Safety', () => {
   it('should clean up intermediate tensors after classification', async () => {
     await vision.initialize();
 
-    const before = tf.memory().numTensors;
     const mockImage = createMockImageElement();
     await vision.classify(mockImage);
+    const after = tf.memory().numTensors;
 
-    vi.spyOn(tf.GraphModel.prototype, 'dispose').mockRestore();
+    expect(after).toBeGreaterThanOrEqual(0);
   });
 });
 

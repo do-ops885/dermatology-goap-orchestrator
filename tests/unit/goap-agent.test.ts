@@ -5,7 +5,7 @@ import { INITIAL_STATE, type WorldState, type AgentAction } from '../../types';
 import type { ExecutorFn } from '../../services/goap/agent';
 
 // Minimal executor that simply returns completed metadata
-const noopExecutor: ExecutorFn = async () => ({ metadata: { ok: true } });
+const noopExecutor: ExecutorFn = async () => Promise.resolve({ metadata: { ok: true } });
 
 // Build an executor map that returns noop for all agent ids used in the domain
 const buildExecutorMap = (actions: AgentAction[]) => {
@@ -73,9 +73,7 @@ describe('GoapAgent', () => {
 
     it('should handle executor failures gracefully for non-critical agents', async () => {
       const planner = new GOAPPlanner();
-      const failingExecutor: ExecutorFn = async () => {
-        throw new Error('Non-critical failure');
-      };
+      const failingExecutor: ExecutorFn = async () => Promise.reject(new Error('Non-critical failure'));
       
       const executors: Record<string, ExecutorFn> = {
         'Image-Verification-Agent': noopExecutor,
@@ -92,9 +90,7 @@ describe('GoapAgent', () => {
 
     it('should abort on critical failures', async () => {
       const planner = new GOAPPlanner();
-      const criticalFailureExecutor: ExecutorFn = async () => {
-        throw new Error('Critical: System failure');
-      };
+      const criticalFailureExecutor: ExecutorFn = async () => Promise.reject(new Error('Critical: System failure'));
       
       const executors: Record<string, ExecutorFn> = {
         'Image-Verification-Agent': criticalFailureExecutor,
@@ -114,9 +110,9 @@ describe('GoapAgent', () => {
       const replanningExecutor: ExecutorFn = async () => {
         callCount++;
         if (callCount === 1) {
-          return { shouldReplan: true, newStateUpdates: { is_low_confidence: true } };
+          return Promise.resolve({ shouldReplan: true, newStateUpdates: { is_low_confidence: true } });
         }
-        return { metadata: { ok: true } };
+        return Promise.resolve({ metadata: { ok: true } });
       };
       
       const executors: Record<string, ExecutorFn> = {
@@ -136,12 +132,10 @@ describe('GoapAgent', () => {
     it('should apply state updates from executors', async () => {
       const planner = new GOAPPlanner();
       
-      const stateUpdatingExecutor: ExecutorFn = async () => {
-        return { 
-          metadata: { ok: true },
-          newStateUpdates: { confidence_score: 0.95 }
-        };
-      };
+      const stateUpdatingExecutor: ExecutorFn = async () => Promise.resolve({ 
+        metadata: { ok: true },
+        newStateUpdates: { confidence_score: 0.95 }
+      });
       
       const executors: Record<string, ExecutorFn> = {
         'Image-Verification-Agent': stateUpdatingExecutor,

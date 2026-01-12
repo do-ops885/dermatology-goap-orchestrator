@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import FairnessDashboard from '../../components/FairnessDashboard';
 import AgentDB from '../../services/agentDB';
@@ -18,11 +18,22 @@ describe('FairnessDashboard', () => {
     vi.clearAllMocks();
   });
 
-  it('renders initial state correctly', () => {
-    render(<FairnessDashboard />);
+  it('renders initial state correctly', async () => {
+    const getInstanceSpy = vi.spyOn(AgentDB, 'getInstance').mockReturnValue({
+        getFairnessMetrics: () => ({}),
+        getLiveStats: vi.fn().mockResolvedValue({}),
+        getFeedbackStats: vi.fn().mockResolvedValue({ totalFeedback: 0, corrections: 0, confirmations: 0, avgConfidence: 0 })
+    } as any);
+
+    await act(async () => {
+      render(<FairnessDashboard />);
+    });
+
     expect(screen.getByText('Equity Assurance')).toBeInTheDocument();
     expect(screen.getByText('TPR')).toBeInTheDocument();
     expect(screen.getByText('FPR')).toBeInTheDocument();
+    
+    getInstanceSpy.mockRestore();
   });
 
   it('fetches and displays metrics from AgentDB', async () => {
@@ -37,10 +48,13 @@ describe('FairnessDashboard', () => {
 
     const getInstanceSpy = vi.spyOn(AgentDB, 'getInstance').mockReturnValue({
         getFairnessMetrics: () => mockMetrics,
-        getLiveStats: vi.fn().mockResolvedValue(mockMetrics)
+        getLiveStats: vi.fn().mockResolvedValue(mockMetrics),
+        getFeedbackStats: vi.fn().mockResolvedValue({ totalFeedback: 0, corrections: 0, confirmations: 0, avgConfidence: 0 })
     } as any);
 
-    render(<FairnessDashboard />);
+    await act(async () => {
+      render(<FairnessDashboard />);
+    });
 
     await waitFor(() => {
         // Check for max TPR gap calculation: 0.95 - 0.7 = 0.25
@@ -52,12 +66,24 @@ describe('FairnessDashboard', () => {
     getInstanceSpy.mockRestore();
   });
 
-  it('shows report button when callback provided', () => {
+  it('shows report button when callback provided', async () => {
+    const getInstanceSpy = vi.spyOn(AgentDB, 'getInstance').mockReturnValue({
+        getFairnessMetrics: () => ({}),
+        getLiveStats: vi.fn().mockResolvedValue({}),
+        getFeedbackStats: vi.fn().mockResolvedValue({ totalFeedback: 0, corrections: 0, confirmations: 0, avgConfidence: 0 })
+    } as any);
+
     const onOpen = vi.fn();
-    render(<FairnessDashboard onOpenReport={onOpen} />);
+    
+    await act(async () => {
+      render(<FairnessDashboard onOpenReport={onOpen} />);
+    });
+
     const btn = screen.getByText('Full Audit');
     expect(btn).toBeInTheDocument();
     btn.click();
     expect(onOpen).toHaveBeenCalled();
+    
+    getInstanceSpy.mockRestore();
   });
 });

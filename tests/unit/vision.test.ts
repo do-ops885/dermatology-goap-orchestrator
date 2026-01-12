@@ -4,14 +4,14 @@ import { VisionSpecialist } from '../../services/vision';
 
 // Mock TFJS
 vi.mock('@tensorflow/tfjs', async () => {
-  const actual = await vi.importActual('@tensorflow/tfjs') as any;
+  const actual = await vi.importActual('@tensorflow/tfjs');
   return {
     ...actual,
     ready: vi.fn().mockResolvedValue(undefined),
     setBackend: vi.fn().mockResolvedValue(undefined),
     loadGraphModel: vi.fn(),
     findBackend: vi.fn(),
-    tidy: (fn: any) => fn(),
+    tidy: (fn: () => unknown): unknown => fn(),
     browser: {
         fromPixels: vi.fn().mockReturnValue({
             resizeNearestNeighbor: vi.fn().mockReturnValue({
@@ -36,6 +36,11 @@ vi.mock('@tensorflow/tfjs', async () => {
 };
 });
 
+interface MockGraphModel {
+  predict: ReturnType<typeof vi.fn>;
+  dispose: ReturnType<typeof vi.fn>;
+}
+
 describe('VisionSpecialist', () => {
   let vision: VisionSpecialist;
   const mockPredict = vi.fn();
@@ -45,14 +50,14 @@ describe('VisionSpecialist', () => {
     vi.clearAllMocks();
     
     // Mock Model Loading
-    (tf.loadGraphModel as any).mockResolvedValue({
+    (tf.loadGraphModel as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         predict: mockPredict,
         dispose: vi.fn()
-    });
+    } as MockGraphModel);
   });
 
   it('should initialize and select backend', async () => {
-    (tf.findBackend as any).mockReturnValue(true); // Simulate WebGPU exists
+    (tf.findBackend as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true); // Simulate WebGPU exists
     
     await vision.initialize();
     
@@ -79,9 +84,9 @@ describe('VisionSpecialist', () => {
   });
 
   it('should handle model loading errors', async () => {
-    (tf.loadGraphModel as any).mockRejectedValue(new Error("Network Error"));
+    (tf.loadGraphModel as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("Network Error"));
     await expect(async () => {
-      const testVision = Object.create(VisionSpecialist.prototype);
+      const testVision = Object.create(VisionSpecialist.prototype) as VisionSpecialist;
       await testVision.initialize();
     }).rejects.toThrow();
   });

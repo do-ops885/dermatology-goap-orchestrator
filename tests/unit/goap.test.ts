@@ -117,7 +117,7 @@ describe('GOAPPlanner', () => {
             agentId: 'multi',
             cost: 5,
             preconditions: {},
-            effects: { features_extracted: true, risk_assessed: true } as any,
+            effects: { features_extracted: true, risk_assessed: true } as Partial<WorldState>,
             description: ''
         },
         {

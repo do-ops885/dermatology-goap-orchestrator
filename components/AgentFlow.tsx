@@ -14,9 +14,9 @@ interface AgentFlowProps {
 
 export const AgentFlow = React.forwardRef<HTMLDivElement, AgentFlowProps>(({ trace, currentAgent }, ref) => {
   useEffect(() => {
-    if (currentAgent && ref?.current) {
+    if (currentAgent !== undefined && currentAgent !== '' && typeof ref === 'object' && ref !== null && ref.current !== null) {
       const element = ref.current.querySelector(`[data-agent="${currentAgent}"]`);
-      if (element) {
+      if (element !== null) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
@@ -100,7 +100,7 @@ export const AgentFlow = React.forwardRef<HTMLDivElement, AgentFlowProps>(({ tra
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-sm text-stone-800 font-grotesk truncate">
-                      {agent.name || agent.agentId}
+                      {agent.name ?? agent.agentId}
                     </span>
                     <StatusBadge status={agent.status} />
                   </div>
@@ -119,7 +119,7 @@ export const AgentFlow = React.forwardRef<HTMLDivElement, AgentFlowProps>(({ tra
                     </div>
                   )}
                   
-                  {agent.error && (
+                  {typeof agent.error === 'string' && agent.error.length > 0 && (
                     <div className="mt-2 text-[10px] text-red-600 bg-red-50 border border-red-100 rounded px-2 py-1">
                       Error: {agent.error}
                     </div>
@@ -174,5 +174,60 @@ export const AgentFlow = React.forwardRef<HTMLDivElement, AgentFlowProps>(({ tra
     </div>
   );
 });
+
+AgentFlow.displayName = 'AgentFlow';
+
+// Helper Functions
+function formatTime(timestamp: number): string {
+  return new Date(timestamp).toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit' 
+  });
+}
+
+function formatDuration(start: number, end?: number): string {
+  const duration = (end ?? Date.now()) - start;
+  if (duration < 1000) return `${duration.toString()}ms`;
+  if (duration < 60000) return `${(duration / 1000).toFixed(1)}s`;
+  return `${Math.floor(duration / 60000).toString()}m ${Math.floor((duration % 60000) / 1000).toString()}s`;
+}
+
+// Status Components
+interface StatusIconProps {
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
+  className?: string;
+}
+
+const StatusIcon: React.FC<StatusIconProps> = ({ status, className }) => {
+  switch (status) {
+    case 'completed':
+      return <CheckCircle2 className={`${className ?? ''} text-green-600`} />;
+    case 'failed':
+      return <XCircle className={`${className ?? ''} text-red-600`} />;
+    case 'running':
+      return <Loader2 className={`${className ?? ''} text-blue-600 animate-spin`} />;
+    case 'skipped':
+      return <Ban className={`${className ?? ''} text-yellow-600`} />;
+    default:
+      return <Clock className={`${className ?? ''} text-stone-400`} />;
+  }
+};
+
+const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
+  const colors: Record<string, string> = {
+    completed: 'bg-green-100 text-green-700 border-green-200',
+    failed: 'bg-red-100 text-red-700 border-red-200',
+    running: 'bg-blue-100 text-blue-700 border-blue-200',
+    skipped: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    pending: 'bg-stone-100 text-stone-600 border-stone-200'
+  };
+  
+  return (
+    <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium border ${colors[status] ?? colors.pending}`}>
+      {status.toUpperCase()}
+    </span>
+  );
+};
 
 export default AgentFlow;

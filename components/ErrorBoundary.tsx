@@ -24,9 +24,9 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    Logger.error(this.props.componentName || 'ErrorBoundary', 'Component Crashed', {
+    Logger.error(this.props.componentName ?? 'ErrorBoundary', 'Component Crashed', {
       error: error.message,
-      stack: errorInfo.componentStack
+      stack: errorInfo.componentStack ?? ''
     });
   }
 
@@ -36,16 +36,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
-      if (this.props.fallback) return this.props.fallback;
+      if (this.props.fallback !== undefined) return this.props.fallback;
 
       return (
         <div className="p-6 bg-red-50 border border-red-100 rounded-xl flex flex-col items-center justify-center text-center h-full min-h-[200px]">
           <AlertTriangle className="w-8 h-8 text-red-500 mb-3" />
           <h3 className="text-sm font-bold text-red-800 font-grotesk mb-1">
-            {this.props.componentName || 'System'} Module Failed
+            {this.props.componentName ?? 'System'} Module Failed
           </h3>
           <p className="text-xs text-red-600 mb-4 max-w-xs leading-relaxed">
-            {this.state.error?.message || "An unexpected error occurred."}
+            {this.state.error?.message ?? "An unexpected error occurred."}
           </p>
           <button 
             onClick={this.handleReset}

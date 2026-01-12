@@ -38,10 +38,10 @@ const FairnessDashboard: React.FC<FairnessDashboardProps> = ({ onOpenReport }) =
   }, [agentDB]);
 
   useEffect(() => {
-    fetchMetrics();
+    void fetchMetrics();
     // Poll every 5s for updates during active sessions
     const interval = setInterval(() => {
-      fetchMetrics();
+      void fetchMetrics();
     }, 5000);
     return () => { clearInterval(interval); };
   }, [fetchMetrics]);
@@ -124,7 +124,7 @@ const FairnessDashboard: React.FC<FairnessDashboardProps> = ({ onOpenReport }) =
             <ReferenceLine y={0.9} stroke="#666" strokeDasharray="3 3" label={{ value: 'Target', position: 'right', fontSize: 9, fill: '#666' }} />
             <Bar dataKey="tpr" radius={[3, 3, 0, 0]} barSize={20}>
               {data.map((entry, index) => (
-                <Cell key={`cell-tpr-${index}`} fill={entry.tpr < 0.88 ? '#D96C5B' : '#4A5D5E'} />
+                <Cell key={`cell-tpr-${index.toString()}`} fill={entry.tpr < 0.88 ? '#D96C5B' : '#4A5D5E'} />
               ))}
             </Bar>
             <Bar dataKey="fpr" radius={[3, 3, 0, 0]} barSize={20} fill="#E5E7EB" />

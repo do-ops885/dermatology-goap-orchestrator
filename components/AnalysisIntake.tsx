@@ -39,29 +39,29 @@ export const AnalysisIntake: React.FC<AnalysisIntakeProps> = ({
        <div className="flex justify-between items-center">
          <h2 className="text-lg font-bold font-grotesk text-stone-800">Analysis Intake</h2>
          
-         {setPrivacyMode && (
+         {typeof setPrivacyMode === 'function' && (
               <button
-                 onClick={() => { setPrivacyMode(!privacyMode); }}
+                 onClick={() => { setPrivacyMode(privacyMode !== true); }}
                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border
-                ${privacyMode 
+                ${privacyMode === true
                     ? 'bg-stone-800 text-white border-stone-900' 
                     : 'bg-stone-100 text-stone-500 border-stone-200 hover:bg-stone-200'}`}
                 title="Privacy Mode: Disables Cloud AI agents"
              >
                 <Shield className="w-3 h-3" />
-                {privacyMode ? 'PRIVACY MODE' : 'CLOUD ENABLED'}
+                {privacyMode === true ? 'PRIVACY MODE' : 'CLOUD ENABLED'}
              </button>
          )}
        </div>
        
-       {error && (
+       {error !== null && error !== '' && (
          <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex items-start gap-2 text-xs text-red-800 animate-in fade-in slide-in-from-top-2">
            <AlertCircle className="w-4 h-4 flex-shrink-0" />
            <span>{error}</span>
          </div>
        )}
 
-       {warning && (
+       {warning !== null && warning !== '' && (
          <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-2 text-xs text-amber-800 animate-in fade-in slide-in-from-top-2">
            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
            <span>{warning}</span>
@@ -69,13 +69,13 @@ export const AnalysisIntake: React.FC<AnalysisIntakeProps> = ({
        )}
 
        <div className="relative group border-2 border-dashed border-stone-200 rounded-2xl h-64 flex flex-col items-center justify-center transition-all bg-white/40 hover:bg-white/60 hover:border-terracotta-300 overflow-hidden">
-          {preview ? (
+          {preview !== null && preview !== '' ? (
               <div className="relative w-full h-full">
                   <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-2xl opacity-90 shadow-inner" />
                   
                   {/* Heatmap Overlay */}
                   <AnimatePresence>
-                    {heatmapOverlay && showHeatmap && (
+                    {heatmapOverlay !== undefined && showHeatmap && (
                         <motion.img 
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 0.6 }}
@@ -88,7 +88,7 @@ export const AnalysisIntake: React.FC<AnalysisIntakeProps> = ({
                   </AnimatePresence>
 
                    {/* Toggle Button */}
-                   {heatmapOverlay && (
+                   {heatmapOverlay !== undefined && (
                        <button
                          onClick={(e: React.MouseEvent) => { e.stopPropagation(); setShowHeatmap(!showHeatmap); }}
                          className="absolute bottom-3 right-3 p-2 bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white rounded-full transition-all z-10"
@@ -103,7 +103,7 @@ export const AnalysisIntake: React.FC<AnalysisIntakeProps> = ({
                   <Upload className="w-8 h-8 mx-auto mb-3 text-stone-400 group-hover:text-terracotta-500 transition-colors" />
                   <p className="text-sm font-medium text-stone-600">Drop high-res dermatoscopy</p>
                   <p className="text-[10px] text-stone-400 mt-1 uppercase tracking-widest font-bold">
-                    {privacyMode ? 'Local Processing Only' : 'Local Encryption Active'}
+                    {privacyMode === true ? 'Local Processing Only' : 'Local Encryption Active'}
                   </p>
               </div>
           )}
