@@ -72,8 +72,8 @@ export const DiagnosticSummary: React.FC<DiagnosticSummaryProps> = ({ result }) 
             version: "3.1.0",
             timestamp: new Date().toISOString(),
             signature: result.signature || `sig_${Math.random().toString(16).substring(2)}`,
-            encryption: result.securityContext ? result.securityContext.algorithm : "None",
-            iv: result.securityContext ? result.securityContext.iv : []
+            encryption: result.securityContext?.algorithm ?? "None",
+            iv: result.securityContext?.iv ?? []
         },
         patient_context: {
             fitzpatrick_type: result.fitzpatrickType,

@@ -1,75 +1,26 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  CheckCircle2, 
-  XCircle, 
-  MinusCircle, 
   Clock, 
   Activity, 
-  PlayCircle,
   ChevronRight
 } from 'lucide-react';
-import type { ExecutionTrace, ExecutionAgentRecord } from '../services/goap/agent';
+import type { ExecutionTrace } from '../services/goap/agent';
 
 interface AgentFlowProps {
   trace: ExecutionTrace | null;
   currentAgent?: string;
 }
 
-const formatDuration = (startTime: number, endTime?: number): string => {
-  if (!endTime) return '...';
-  const duration = endTime - startTime;
-  if (duration < 1000) return `${String(duration)}ms`;
-  if (duration < 60000) return `${(duration / 1000).toFixed(1)}s`;
-  return `${String(Math.floor(duration / 60000))}m ${((duration % 60000) / 1000).toFixed(0)}s`;
-};
-
-const formatTime = (timestamp: number): string => {
-  const date = new Date(timestamp);
-  return date.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-};
-
-const StatusIcon: React.FC<{ status: ExecutionAgentRecord['status']; className?: string }> = ({ status, className = "w-5 h-5" }) => {
-  switch (status) {
-    case 'running':
-      return <PlayCircle className={`${className} text-blue-500 animate-pulse`} />;
-    case 'completed':
-      return <CheckCircle2 className={`${className} text-green-500`} />;
-    case 'failed':
-      return <XCircle className={`${className} text-red-500`} />;
-    case 'skipped':
-      return <MinusCircle className={`${className} text-yellow-500`} />;
-    default:
-      return <Clock className={`${className} text-gray-400`} />;
-  }
-};
-
-const StatusBadge: React.FC<{ status: ExecutionAgentRecord['status'] }> = ({ status }) => {
-  const variants: Record<string, string> = {
-    running: 'bg-blue-100 text-blue-700 border-blue-200',
-    completed: 'bg-green-100 text-green-700 border-green-200',
-    failed: 'bg-red-100 text-red-700 border-red-200',
-    skipped: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  };
-
-  return (
-    <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border uppercase tracking-wide ${variants[status] || variants.default}`}>
-      {status}
-    </span>
-  );
-};
-
-export const AgentFlow: React.FC<AgentFlowProps> = ({ trace, currentAgent }) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
+export const AgentFlow = React.forwardRef<HTMLDivElement, AgentFlowProps>(({ trace, currentAgent }, ref) => {
   useEffect(() => {
-    if (currentAgent && scrollRef.current) {
-      const element = scrollRef.current.querySelector(`[data-agent="${currentAgent}"]`);
+    if (currentAgent && ref?.current) {
+      const element = ref.current.querySelector(`[data-agent="${currentAgent}"]`);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
-  }, [currentAgent]);
+  }, [currentAgent, ref]);
 
   if (!trace) {
     return (
@@ -106,7 +57,7 @@ export const AgentFlow: React.FC<AgentFlowProps> = ({ trace, currentAgent }) => 
       </div>
 
       <div 
-        ref={scrollRef}
+        ref={ref}
         className="flex-1 overflow-y-auto p-4 relative"
         role="log" 
         aria-live="polite"
@@ -222,6 +173,6 @@ export const AgentFlow: React.FC<AgentFlowProps> = ({ trace, currentAgent }) => 
       </div>
     </div>
   );
-};
+});
 
 export default AgentFlow;

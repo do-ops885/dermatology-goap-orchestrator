@@ -40,9 +40,9 @@ export const AnalysisIntake: React.FC<AnalysisIntakeProps> = ({
          <h2 className="text-lg font-bold font-grotesk text-stone-800">Analysis Intake</h2>
          
          {setPrivacyMode && (
-             <button
-                onClick={() => setPrivacyMode(!privacyMode)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border
+              <button
+                 onClick={() => { setPrivacyMode(!privacyMode); }}
+                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border
                 ${privacyMode 
                     ? 'bg-stone-800 text-white border-stone-900' 
                     : 'bg-stone-100 text-stone-500 border-stone-200 hover:bg-stone-200'}`}

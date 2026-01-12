@@ -69,7 +69,7 @@ const validateImageSignature = async (file: File): Promise<boolean> => {
   return false;
 };
 
-interface ClinicalAnalysisResult {
+export interface ClinicalAnalysisResult {
   skinTone?: string;
   confidence?: number;
   lesions?: {
@@ -79,9 +79,9 @@ interface ClinicalAnalysisResult {
   }[];
   riskLevel?: string;
   recommendation?: string;
-  fairnessMetrics?: any;
-  similarCases?: any[];
-  webVerification?: any;
+  fairnessMetrics?: unknown;
+  similarCases?: unknown[];
+  webVerification?: unknown;
   encryptedPayload?: string;
   auditHash?: string;
 }

@@ -77,7 +77,7 @@ export function ClinicianFeedback({ currentDiagnosis, onSubmit, onDismiss }: Cli
           <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1">Corrected Diagnosis (optional)</label>
           <input
             value={correctedDiagnosis}
-            onChange={e => setCorrectedDiagnosis(e.target.value)}
+            onChange={e => { setCorrectedDiagnosis(e.target.value); }}
             placeholder="Enter corrected diagnosis..."
             className="w-full px-2 py-1.5 text-xs bg-white border border-stone-200 rounded-lg focus:outline-none focus:border-terracotta-300"
           />
@@ -92,7 +92,7 @@ export function ClinicianFeedback({ currentDiagnosis, onSubmit, onDismiss }: Cli
               max="1"
               step="0.1"
               value={confidence}
-              onChange={e => setConfidence(parseFloat(e.target.value))}
+              onChange={e => { setConfidence(parseFloat(e.target.value)); }}
               className="flex-1 accent-terracotta-500"
             />
             <span className="text-xs font-mono font-bold text-stone-700 w-10 text-right">{(confidence * 100).toFixed(0)}%</span>
@@ -103,7 +103,7 @@ export function ClinicianFeedback({ currentDiagnosis, onSubmit, onDismiss }: Cli
           <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1">Notes</label>
           <textarea
             value={notes}
-            onChange={e => setNotes(e.target.value)}
+            onChange={e => { setNotes(e.target.value); }}
             placeholder="Add clinical notes..."
             rows={2}
             className="w-full px-2 py-1.5 text-xs bg-white border border-stone-200 rounded-lg resize-none focus:outline-none focus:border-terracotta-300"
