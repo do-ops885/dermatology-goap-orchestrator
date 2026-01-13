@@ -26,10 +26,14 @@ export default class ClinicalAgentDB {
     'VI': { tpr: 0, fpr: 0, count: 0 },
   };
 
-  private constructor() {}
+  private constructor() {
+    // Private constructor for singleton pattern
+  }
 
   public static getInstance(): ClinicalAgentDB {
-    if (!ClinicalAgentDB.instance) ClinicalAgentDB.instance = new ClinicalAgentDB();
+    if (ClinicalAgentDB.instance === undefined) {
+      ClinicalAgentDB.instance = new ClinicalAgentDB();
+    }
     return ClinicalAgentDB.instance;
   }
 

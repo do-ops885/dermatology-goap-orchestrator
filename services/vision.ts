@@ -24,10 +24,12 @@ export class VisionSpecialist {
     private model: tf.GraphModel | null = null;
     private isBackendReady = false;
 
-    private constructor() {}
+    private constructor() {
+    // Private constructor for singleton pattern
+  }
 
     public static getInstance(): VisionSpecialist {
-        if (!VisionSpecialist.instance) {
+        if (VisionSpecialist.instance === undefined) {
             VisionSpecialist.instance = new VisionSpecialist();
         }
         return VisionSpecialist.instance;
