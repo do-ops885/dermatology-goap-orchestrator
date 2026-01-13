@@ -1,8 +1,22 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      'fs': path.resolve(__dirname, './node-stubs.js'),
+      'path': path.resolve(__dirname, './node-stubs.js'),
+      'url': path.resolve(__dirname, './node-stubs.js'),
+      'crypto': path.resolve(__dirname, './node-stubs.js'),
+      'module': path.resolve(__dirname, './node-stubs.js'),
+      'os': path.resolve(__dirname, './node-stubs.js'),
+      'worker_threads': path.resolve(__dirname, './node-stubs.js'),
+      'child_process': path.resolve(__dirname, './node-stubs.js'),
+      'fs/promises': path.resolve(__dirname, './node-stubs.js'),
+    }
+  },
   build: {
     rollupOptions: {
       external: [/(.*)\.node$/, /node_modules\/@ruvector/],
@@ -18,11 +32,5 @@ export default defineConfig({
       }
     },
     chunkSizeWarningLimit: 800
-  },
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: ['./tests/setup.ts'],
-    exclude: ['tests/e2e/**', 'node_modules/**', '.opencode/**']
   }
 });
