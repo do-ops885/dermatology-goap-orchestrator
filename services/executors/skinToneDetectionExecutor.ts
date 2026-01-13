@@ -1,4 +1,3 @@
-import { GoogleGenAI } from '@google/genai';
 import { Logger } from '../logger';
 import { cleanAndParseJSON } from './types';
 import type { AgentContext, ExecutorResult } from './types';

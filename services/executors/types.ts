@@ -10,6 +10,16 @@ export interface AgentExecutor {
   execute(context: AgentContext): Promise<ExecutorResult>;
 }
 
+export interface ClinicalAnalysisResult {
+  id: string;
+  timestamp: number;
+  fitzpatrickType: string;
+  lesions: Array<{ type: string; confidence: number; risk: string }>;
+  recommendations: string[];
+  signature: string;
+  [key: string]: unknown;
+}
+
 export interface AgentContext {
   ai: GoogleGenAI;
   reasoningBank: ReasoningBank;
@@ -22,21 +32,21 @@ export interface AgentContext {
   imageHash: string;
   currentState: WorldState;
   actionTrace: string[];
-  setResult: (res: any) => void;
+  setResult: (res: ClinicalAnalysisResult | null) => void;
   setWarning: (msg: string | null) => void;
-  analysisPayload: any;
+  analysisPayload: Record<string, unknown>;
   encryptionKey: CryptoKey | null;
   lastAuditHashRef: { current: string };
   privacyMode: boolean;
 }
 
 export interface ExecutorResult {
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   newStateUpdates?: Partial<WorldState>;
   shouldReplan?: boolean;
 }
 
-export const cleanAndParseJSON = (text: string | undefined): any => {
+export const cleanAndParseJSON = (text: string | undefined): Record<string, unknown> => {
   if (!text) return {};
   try {
     const cleanText = text.replace(/```json\n?|```/g, '').trim();
