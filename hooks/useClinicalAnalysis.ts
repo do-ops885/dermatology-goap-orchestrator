@@ -11,7 +11,7 @@ import { Logger } from '../services/logger';
 import { ExecutionTrace } from '../services/goap/agent';
 import { EXECUTOR_REGISTRY } from '../services/goap/registry';
 
-const GEMINI_API_KEY = process.env.API_KEY || '';
+const GEMINI_API_KEY = process.env.API_KEY ?? '';
 
 const optimizeImage = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -46,9 +46,13 @@ const optimizeImage = (file: File): Promise<string> => {
         const dataUrl = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.85);
         resolve(dataUrl.split(',')[1]);
       };
-      img.onerror = (err) => { reject(err); };
+      img.onerror = (err) => { 
+        reject(new Error(err instanceof Error ? err.message : 'Image load failed')); 
+      };
     };
-    reader.onerror = (err) => { reject(err); };
+    reader.onerror = (err) => { 
+      reject(new Error(err instanceof Error ? err.message : 'File read failed')); 
+    };
   });
 };
 
@@ -128,7 +132,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
   const [currentAgent, setCurrentAgent] = useState<string | undefined>(undefined);
 
   const [isPending, startTransition] = useTransition();
-  const [optimisticLogs, addOptimisticLog] = useOptimistic(logs, (state: AgentLogEntry[], newLog: AgentLogEntry) => [...state, newLog]);
+  const [_optimisticLogs, addOptimisticLog] = useOptimistic(logs, (state: AgentLogEntry[], newLog: AgentLogEntry) => [...state, newLog]);
   const [searchQuery, setSearchQuery] = useState('');
   const deferredQuery = useDeferredValue(searchQuery);
 
@@ -156,6 +160,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
         const db = await createDatabase('./agent-memory.db');
         const embedder = new EmbeddingService({ model: 'Xenova/all-MiniLM-L6-v2', dimension: 384, provider: 'transformers' });
         await embedder.initialize();
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         const bank = new ReasoningBank(db, embedder);
         reasoningBankRef.current = bank;
         const instance = AgentDB.getInstance();
@@ -164,11 +169,11 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
         setDbReady(true);
         Logger.info('System', 'Core services initialized');
       } catch (e) {
-        Logger.error('System', 'Core Service Init Failed', { error: e });
+        Logger.error('System', 'Core Service Init Failed', { error: e instanceof Error ? e.message : String(e) });
         setDbReady(true);
       }
     };
-    initCoreServices();
+    void initCoreServices();
   }, []);
 
   const initAIServices = async () => {
@@ -185,8 +190,8 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
         if (percent === 100 || report.text.toLowerCase().includes("finish")) {
           setTimeout(() => setModelProgress(null), 2500);
         }
-      }).catch(e => {
-        Logger.warn("System", "Local LLM failed, cloud fallback active", { error: e });
+      }).catch((e: unknown) => {
+        Logger.warn("System", "Local LLM failed, cloud fallback active", { error: e instanceof Error ? e.message : String(e) });
         setModelProgress(null);
       });
       setAiReady(true);
@@ -195,8 +200,8 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     }
   };
 
-  const addLog = useCallback((agent: string, message: string, status: AgentLogEntry['status'], metadata?: any) => {
-    const id = Math.random().toString(36).substr(2, 9);
+  const addLog = useCallback((agent: string, message: string, status: AgentLogEntry['status'], metadata?: Record<string, string | number | boolean | undefined>) => {
+    const id = Math.random().toString(36).substring(2, 11);
     const newLog: AgentLogEntry = { id, agent, message, status, timestamp: Date.now(), metadata };
     addOptimisticLog(newLog);
     startTransition(() => {
@@ -206,7 +211,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     return id;
   }, [addOptimisticLog]);
 
-  const updateLog = useCallback((id: string, status: AgentLogEntry['status'], metadata?: any) => {
+  const updateLog = useCallback((id: string, status: AgentLogEntry['status'], metadata?: Record<string, string | number | boolean | undefined>) => {
     startTransition(() => {
       setLogs(prev => prev.map(log => log.id === id ? { ...log, status, metadata: { ...log.metadata, ...metadata } } : log));
     });
