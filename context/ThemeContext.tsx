@@ -7,7 +7,12 @@ interface ThemeContextType {
   setTheme: (theme: Theme) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType>({ theme: 'light', setTheme: () => {} });
+const ThemeContext = createContext<ThemeContextType>({ 
+  theme: 'light', 
+  setTheme: () => {
+    // Default no-op, overridden by provider
+  } 
+});
 
 export const useTheme = () => useContext(ThemeContext);
 

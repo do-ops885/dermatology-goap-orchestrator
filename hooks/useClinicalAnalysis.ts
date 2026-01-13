@@ -106,7 +106,7 @@ interface UseClinicalAnalysisReturn {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
-  executeAnalysis: () => Promise<{ success: boolean; data?: any; error?: string } | null>;
+  executeAnalysis: () => Promise<{ success: boolean; data?: Record<string, unknown>; error?: string } | null>;
   privacyMode: boolean;
   setPrivacyMode: (mode: boolean) => void;
   action: (payload: FormData) => void;
@@ -261,7 +261,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     }
   }, [initAIServices]);
 
-  async function submitAnalysis(prev: any, formData: FormData) {
+  async function submitAnalysis(_prev: unknown, _formData: FormData) {
     return await executeAnalysis();
   }
 
@@ -285,7 +285,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     let currentState = { ...INITIAL_STATE };
     setWorldState(currentState);
 
-    const analysisPayload: any = {};
+    const analysisPayload: Record<string, unknown> = {};
     const actionTrace: string[] = [];
     const goalState: Partial<WorldState> = { audit_logged: true };
     const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -301,12 +301,16 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
       const goapAgent = new GoapAgent(planner.current, EXECUTOR_REGISTRY, { perAgentTimeoutMs: 10000 });
       const uiLogMap = new Map<string, string>();
 
+      if (!agentDBRef.current || !reasoningBankRef.current || !localLLMRef.current || !visionSpecialistRef.current) {
+        throw new Error('Core services not initialized');
+      }
+
       const trace = await goapAgent.execute(currentState, goalState, {
         ai,
-        agentDB: agentDBRef.current!,
-        reasoningBank: reasoningBankRef.current!,
-        localLLM: localLLMRef.current!,
-        visionSpecialist: visionSpecialistRef.current!,
+        agentDB: agentDBRef.current,
+        reasoningBank: reasoningBankRef.current,
+        localLLM: localLLMRef.current,
+        visionSpecialist: visionSpecialistRef.current,
         router: routerRef.current,
         file,
         base64Image,
@@ -330,7 +334,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
           });
           return logId;
         },
-        onAgentEnd: (action: AgentAction, record: any) => {
+        onAgentEnd: (action: AgentAction, record: { status: string; metadata?: Record<string, unknown> }) => {
           const key = action.agentId + '|' + action.name;
           const logId = uiLogMap.get(key);
           if (logId) updateLog(logId, record.status === 'completed' ? 'completed' : 'failed', record.metadata);
@@ -347,13 +351,15 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
       currentState = trace.finalWorldState;
       setWorldState(currentState);
       actionTrace.push(...trace.agents.map(a => a.agentId));
-      addLog('GOAP-Agent', `Plan ${trace.runId} completed in ${trace.endTime! - trace.startTime}ms`, 'completed', { runId: trace.runId, agents: trace.agents.map(a => ({ agent: a.agentId, status: a.status })) });
+      const duration = (trace.endTime ?? Date.now()) - trace.startTime;
+      addLog('GOAP-Agent', `Plan ${trace.runId} completed in ${duration.toString()}ms`, 'completed', { runId: trace.runId });
       setResult({ ...analysisPayload });
       return { success: true, data: analysisPayload };
-    } catch (e: any) {
+    } catch (e: unknown) {
       let errorCategory = "System Failure";
-      let userMessage = `Orchestration halted: ${e.message}`;
-      const msg = e.message || '';
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      let userMessage = `Orchestration halted: ${errorMessage}`;
+      const msg = errorMessage;
       
       if (msg.includes("No plan found")) {
         errorCategory = "Planning Failure";
@@ -368,7 +374,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
 
       setError(userMessage);
       addLog('System', `Critical Stop: ${errorCategory}`, 'failed', { raw: msg });
-      Logger.error('Orchestrator', 'Execution Failed', { error: e });
+      Logger.error('Orchestrator', 'Execution Failed', { error: errorMessage });
       return { success: false, error: userMessage };
     } finally {
       setAnalyzing(false);
