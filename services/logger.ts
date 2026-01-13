@@ -5,22 +5,24 @@ export interface LogEntry {
   level: LogLevel;
   component: string;
   event: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 class LoggerService {
   private static instance: LoggerService;
   
-  private constructor() {}
+  private constructor() {
+    // Private constructor for singleton pattern
+  }
 
   public static getInstance(): LoggerService {
-    if (!LoggerService.instance) {
+    if (LoggerService.instance === undefined) {
       LoggerService.instance = new LoggerService();
     }
     return LoggerService.instance;
   }
 
-  public log(level: LogLevel, component: string, event: string, metadata?: Record<string, any>) {
+  public log(level: LogLevel, component: string, event: string, metadata?: Record<string, unknown>) {
     const entry: LogEntry = {
       timestamp: Date.now(),
       level,
@@ -38,7 +40,7 @@ class LoggerService {
     }
   }
 
-  private sanitize(data?: Record<string, any>): Record<string, any> | undefined {
+  private sanitize(data?: Record<string, unknown>): Record<string, unknown> | undefined {
     if (!data) return undefined;
     const sanitized = { ...data };
     
@@ -52,15 +54,15 @@ class LoggerService {
     return sanitized;
   }
 
-  public info(component: string, event: string, metadata?: Record<string, any>) {
+  public info(component: string, event: string, metadata?: Record<string, unknown>) {
     this.log('info', component, event, metadata);
   }
 
-  public warn(component: string, event: string, metadata?: Record<string, any>) {
+  public warn(component: string, event: string, metadata?: Record<string, unknown>) {
     this.log('warn', component, event, metadata);
   }
 
-  public error(component: string, event: string, metadata?: Record<string, any>) {
+  public error(component: string, event: string, metadata?: Record<string, unknown>) {
     this.log('error', component, event, metadata);
   }
 }
