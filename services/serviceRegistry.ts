@@ -1,13 +1,12 @@
 import { createDatabase, ReasoningBank, EmbeddingService, LocalLLMService } from 'agentdb';
-import type { VisionSpecialist } from './vision';
 import { Logger } from './logger';
 
 export class ServiceRegistry {
   private static instance: ServiceRegistry;
-  private services = new Map<string, any>();
+  private services = new Map<string, unknown>();
 
   static getInstance(): ServiceRegistry {
-    if (!ServiceRegistry.instance) {
+    if (ServiceRegistry.instance === undefined) {
       ServiceRegistry.instance = new ServiceRegistry();
     }
     return ServiceRegistry.instance;

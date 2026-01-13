@@ -3,10 +3,12 @@ export type AnalysisIntent = 'VISION_ANALYSIS' | 'REPORT_GENERATION' | 'CONVERSA
 export class RouterAgent {
     private static instance: RouterAgent;
 
-    private constructor() {}
+    private constructor() {
+        // Private constructor for singleton pattern
+    }
 
     public static getInstance(): RouterAgent {
-        if (!RouterAgent.instance) {
+        if (RouterAgent.instance === undefined) {
             RouterAgent.instance = new RouterAgent();
         }
         return RouterAgent.instance;

@@ -1,4 +1,4 @@
-import { Logger } from './logger';
+import { Logger } from '../logger';
 
 const MAX_SIZE = 800;
 
@@ -34,9 +34,13 @@ export const optimizeImage = (file: File): Promise<string> => {
         const dataUrl = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.85);
         resolve(dataUrl.split(',')[1]);
       };
-      img.onerror = (err) => { reject(err); };
+      img.onerror = (err) => { 
+        reject(new Error(err instanceof Error ? err.message : 'Image load failed')); 
+      };
     };
-    reader.onerror = (err) => { reject(err); };
+    reader.onerror = (err) => { 
+      reject(new Error(err instanceof Error ? err.message : 'File read failed')); 
+    };
   });
 };
 
@@ -45,7 +49,9 @@ export const loadImageElement = (file: File): Promise<HTMLImageElement> => {
         const img = new Image();
         img.src = URL.createObjectURL(file);
         img.onload = () => { resolve(img); };
-        img.onerror = reject;
+        img.onerror = (err) => {
+          reject(new Error(err instanceof Error ? err.message : 'Image load failed'));
+        };
     });
 };
 

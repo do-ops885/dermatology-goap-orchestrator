@@ -1,3 +1,7 @@
+/**
+ * CryptoService provides encryption utilities for client-side data protection.
+ * All methods are static as this is a stateless utility class.
+ */
 export class CryptoService {
   /**
    * Generates a 256-bit AES-GCM key for ephemeral client-side encryption.
@@ -14,7 +18,7 @@ export class CryptoService {
   /**
    * Encrypts a JSON object using AES-GCM.
    */
-  static async encryptData(data: any, key: CryptoKey): Promise<{ ciphertext: ArrayBuffer; iv: Uint8Array }> {
+  static async encryptData(data: Record<string, unknown>, key: CryptoKey): Promise<{ ciphertext: ArrayBuffer; iv: Uint8Array }> {
     const encoder = new TextEncoder();
     const encodedData = encoder.encode(JSON.stringify(data));
     // 12 bytes IV is standard for GCM
