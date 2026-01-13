@@ -34,7 +34,7 @@ export const ModelProgress: React.FC<ModelProgressProps> = ({ progress }) => {
               </div>
               <div className="flex items-center gap-2">
                   <span className="text-[10px] font-mono font-bold text-terracotta-600">
-                    {progress.percent}%
+                    {progress.percent.toString()}%
                   </span>
                   {progress.percent < 100 ? (
                       <Loader2 className="w-3 h-3 text-stone-400 animate-spin" />
@@ -48,7 +48,7 @@ export const ModelProgress: React.FC<ModelProgressProps> = ({ progress }) => {
               <motion.div 
                 className="h-full bg-terracotta-500 rounded-full"
                 initial={{ width: 0 }}
-                animate={{ width: `${progress.percent}%` }}
+                animate={{ width: `${progress.percent.toString()}%` }}
                 transition={{ type: "spring", stiffness: 50, damping: 20 }}
               />
             </div>

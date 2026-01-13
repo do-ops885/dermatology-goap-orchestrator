@@ -28,13 +28,13 @@ export const TraceTimeline: React.FC<TraceTimelineProps> = ({ trace, currentAgen
     if (!trace) return { bars: [], totalDuration: 0 };
 
     const startTime = trace.startTime;
-    const endTime = trace.endTime || trace.startTime + 1;
+    const endTime = trace.endTime ?? trace.startTime + 1;
     const duration = endTime - startTime;
     const totalDuration = Math.max(duration, 1);
 
     const bars = trace.agents.map((agent, index) => {
       const agentStart = ((agent.startTime - startTime) / totalDuration) * 100;
-      const agentEnd = ((agent.endTime || endTime) - startTime) / totalDuration * 100;
+      const agentEnd = ((agent.endTime ?? endTime) - startTime) / totalDuration * 100;
       const width = Math.max(agentEnd - agentStart, 1);
 
       return {
@@ -87,8 +87,8 @@ export const TraceTimeline: React.FC<TraceTimelineProps> = ({ trace, currentAgen
               animate={{ 
                 opacity: 1, 
                 scaleX: 1,
-                left: `${bar.left}%`,
-                width: `${bar.width}%`,
+                left: `${bar.left.toString()}%`,
+                width: `${bar.width.toString()}%`,
               }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -98,11 +98,11 @@ export const TraceTimeline: React.FC<TraceTimelineProps> = ({ trace, currentAgen
                   : ''
               } ${getStatusColor(bar.status)}`}
               style={{ top: bar.top }}
-              title={`${bar.name || bar.agentId}: ${bar.status} (${bar.width.toFixed(1)}%)`}
+              title={`${bar.name ?? bar.agentId}: ${bar.status} (${bar.width.toFixed(1)}%)`}
             >
               {bar.width > 8 && (
                 <span className="absolute left-1/2 -translate-x-1/2 text-[8px] font-medium text-white truncate pointer-events-none">
-                  {bar.name?.split('-')[0] || bar.agentId.split('-')[0]}
+                  {bar.name?.split('-')[0] ?? bar.agentId.split('-')[0]}
                 </span>
               )}
             </motion.div>
@@ -112,7 +112,7 @@ export const TraceTimeline: React.FC<TraceTimelineProps> = ({ trace, currentAgen
       
       <div className="flex justify-between mt-1 text-[9px] text-stone-400 font-mono">
         <span>{new Date(trace.startTime).toLocaleTimeString([], { hour12: false })}</span>
-        <span>{trace.endTime ? new Date(trace.endTime).toLocaleTimeString([], { hour12: false }) : 'now'}</span>
+        <span>{trace.endTime !== null && trace.endTime !== undefined ? new Date(trace.endTime).toLocaleTimeString([], { hour12: false }) : 'now'}</span>
       </div>
     </div>
   );

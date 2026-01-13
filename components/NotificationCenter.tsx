@@ -26,7 +26,7 @@ export function NotificationCenter({ clinicianId }: NotificationCenterProps) {
       return unsubscribe;
     };
 
-    init();
+    void init();
   }, []);
 
   const handleAcknowledge = async (notificationId: string) => {
@@ -94,14 +94,14 @@ export function NotificationCenter({ clinicianId }: NotificationCenterProps) {
                     </span>
                   </div>
                   <p className="text-sm font-medium text-stone-800 mb-2">{n.triggerReason}</p>
-                  {n.diagnosis && (
+                  {n.diagnosis !== undefined && n.diagnosis !== '' && (
                     <p className="text-xs text-stone-600 mb-2">Diagnosis: {n.diagnosis}</p>
                   )}
-                  {n.riskLevel && (
+                  {n.riskLevel !== undefined && (
                     <p className="text-xs text-stone-600 mb-2">Risk: {n.riskLevel}</p>
                   )}
                   <button
-                    onClick={() => handleAcknowledge(n.id)}
+                    onClick={() => { void handleAcknowledge(n.id); }}
                     className="flex items-center gap-1 px-2 py-1 text-xs font-bold text-white bg-stone-600 hover:bg-stone-700 rounded-lg transition-colors"
                   >
                     <Check className="w-3 h-3" />

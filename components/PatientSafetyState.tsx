@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { WorldState } from '../types';
 
 interface PatientSafetyStateProps {
@@ -33,10 +33,16 @@ export const PatientSafetyState: React.FC<PatientSafetyStateProps> = ({ worldSta
                     let bg = 'bg-blue-50 text-blue-700 border-blue-100';
                     
                     if (key === 'confidence_score') {
-                         if (val < 0.65) { color = 'bg-amber-500'; bg = 'bg-amber-50 text-amber-700 border-amber-200'; }
-                         else { color = 'bg-green-500'; bg = 'bg-green-50 text-green-700 border-green-200'; }
-                    } else if (key === 'fairness_score') {
-                         if (val < 0.8) { color = 'bg-terracotta-500'; bg = 'bg-terracotta-50 text-terracotta-700 border-terracotta-200'; }
+                         if (val < 0.65) { 
+                           color = 'bg-amber-500'; 
+                           bg = 'bg-amber-50 text-amber-700 border-amber-200'; 
+                         } else { 
+                           color = 'bg-green-500'; 
+                           bg = 'bg-green-50 text-green-700 border-green-200'; 
+                         }
+                    } else if (key === 'fairness_score' && val < 0.8) {
+                         color = 'bg-terracotta-500'; 
+                         bg = 'bg-terracotta-50 text-terracotta-700 border-terracotta-200';
                     }
 
                     return (
@@ -46,7 +52,7 @@ export const PatientSafetyState: React.FC<PatientSafetyStateProps> = ({ worldSta
                                  <span className="font-bold">{(val * 100).toFixed(0)}%</span>
                              </div>
                              <div className="h-1.5 bg-white/50 rounded-full overflow-hidden w-full">
-                                <div className={`h-full ${color} transition-all duration-700`} style={{ width: `${val * 100}%` }}></div>
+                                <div className={`h-full ${color} transition-all duration-700`} style={{ width: `${(val * 100).toString()}%` }}></div>
                              </div>
                         </div>
                     );

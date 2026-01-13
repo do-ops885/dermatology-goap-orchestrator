@@ -16,7 +16,9 @@ export const ThemeSwitcher: React.FC = () => {
       {themes.map((t) => (
         <button
           key={t.id}
-          onClick={() => setTheme(t.id)}
+          onClick={() => { 
+            setTheme(t.id); 
+          }}
           className={`p-1.5 rounded-full transition-all flex items-center justify-center ${
             theme === t.id
               ? 'bg-white dark:bg-stone-600 text-terracotta-600 shadow-sm'

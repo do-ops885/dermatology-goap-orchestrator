@@ -7,20 +7,29 @@ interface HeaderProps {
   dbReady: boolean;
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 export const Header: React.FC<HeaderProps> = ({ dbReady }) => {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   useEffect(() => {
     // PWA Install Prompt Handler
-    const handleBeforeInstallPrompt = (e: any) => {
+    const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
 
     // Offline Status Handler
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
+    const handleOnline = () => {
+      setIsOffline(false);
+    };
+    const handleOffline = () => {
+      setIsOffline(true);
+    };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('online', handleOnline);
@@ -34,9 +43,10 @@ export const Header: React.FC<HeaderProps> = ({ dbReady }) => {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
+    if (deferredPrompt === null) return;
+    await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
+    // eslint-disable-next-line no-console
     console.log(`User response to the install prompt: ${outcome}`);
     setDeferredPrompt(null);
   };
@@ -59,9 +69,9 @@ export const Header: React.FC<HeaderProps> = ({ dbReady }) => {
       
       <div className="flex flex-col items-end gap-2">
          <div className="flex gap-2 mb-2">
-           {deferredPrompt && (
+           {deferredPrompt !== null && (
              <button 
-               onClick={handleInstallClick}
+               onClick={() => { void handleInstallClick(); }}
                className="flex items-center gap-2 px-3 py-1.5 bg-stone-900 text-white rounded-full text-xs font-bold hover:bg-stone-700 transition-colors shadow-md"
              >
                <Download className="w-3.5 h-3.5" />
