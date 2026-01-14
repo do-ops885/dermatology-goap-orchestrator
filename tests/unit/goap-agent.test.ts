@@ -1,7 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { GoapAgent } from '../../services/goap/agent';
+
 import { GOAPPlanner } from '../../services/goap';
+import { GoapAgent } from '../../services/goap/agent';
 import { INITIAL_STATE, type WorldState, type AgentAction } from '../../types';
+
 import type { ExecutorFn } from '../../services/goap/agent';
 
 // Minimal executor that simply returns completed metadata

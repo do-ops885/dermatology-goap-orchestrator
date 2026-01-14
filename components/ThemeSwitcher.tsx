@@ -1,6 +1,7 @@
-import React from 'react';
-import { useTheme, Theme } from '../context/ThemeContext';
 import { Sun, Moon, Contrast } from 'lucide-react';
+import React from 'react';
+
+import { useTheme, type Theme } from '../context/ThemeContext';
 
 export const ThemeSwitcher: React.FC = () => {
   const { theme, setTheme } = useTheme();

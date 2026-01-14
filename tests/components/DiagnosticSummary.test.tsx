@@ -1,8 +1,10 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
+
 import { DiagnosticSummary } from '../../components/DiagnosticSummary';
-import { AnalysisResult } from '../../types';
+
+import type { AnalysisResult } from '../../types';
 
 describe('DiagnosticSummary', () => {
   const mockResult: AnalysisResult = {
@@ -39,8 +41,8 @@ describe('DiagnosticSummary', () => {
 
   it('triggers export logic on button click', () => {
     const createObjectURL = vi.fn();
-    global.URL.createObjectURL = createObjectURL;
-    global.URL.revokeObjectURL = vi.fn();
+    globalThis.URL.createObjectURL = createObjectURL;
+    globalThis.URL.revokeObjectURL = vi.fn();
 
     render(<DiagnosticSummary result={mockResult} />);
     

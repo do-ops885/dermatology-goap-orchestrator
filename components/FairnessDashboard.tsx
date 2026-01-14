@@ -1,7 +1,8 @@
+import { ArrowUpRight, Info, RefreshCw, MessageSquareHeart } from 'lucide-react';
 import React, { useMemo, useEffect, useState, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
+
 import AgentDB from '../services/agentDB';
-import { ArrowUpRight, Info, RefreshCw, MessageSquareHeart } from 'lucide-react';
 
 interface FairnessDashboardProps {
   onOpenReport?: () => void;

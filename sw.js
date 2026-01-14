@@ -90,10 +90,10 @@ self.addEventListener('fetch', event => {
                  cache.put(event.request, networkResponse.clone());
              }
              return networkResponse;
-          }).catch(err => {
-             // Network failure - ignore if we have cached response
-             console.log('[SW] Network fail for static asset, using cache');
-          });
+}).catch(() => {
+               // Network failure - ignore if we have cached response
+               console.log('[SW] Network fail for static asset, using cache');
+            });
           
           return cachedResponse || fetchPromise;
         });

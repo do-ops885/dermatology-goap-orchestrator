@@ -1,10 +1,11 @@
 import { Logger } from './logger';
+
 import type { ClinicianNotification } from '../types';
 
 export class NotificationService {
   private static instance: NotificationService;
   private notifications: ClinicianNotification[] = [];
-  private listeners = new Set<(notification: ClinicianNotification) => void>();
+  private listeners = new Set<(_notification: ClinicianNotification) => void>();
 
   static getInstance(): NotificationService {
     if (!NotificationService.instance) {
@@ -21,7 +22,7 @@ export class NotificationService {
     patientId?: string;
   }): Promise<ClinicianNotification> {
     const notification: ClinicianNotification = {
-      id: 'notif_' + Math.random().toString(36).substr(2, 9),
+       id: 'notif_' + Math.random().toString(36).substring(2, 11),
       timestamp: Date.now(),
       safetyLevel: 'HIGH',
       analysisId: params.analysisId,
@@ -53,11 +54,11 @@ export class NotificationService {
     return notification;
   }
 
-  async acknowledgeNotification(
+  acknowledgeNotification(
     notificationId: string,
     clinicianId: string,
     notes?: string
-  ): Promise<void> {
+  ): void {
     const notification = this.notifications.find(n => n.id === notificationId);
     if (notification) {
       notification.status = 'acknowledged';
@@ -74,7 +75,7 @@ export class NotificationService {
     return this.notifications.filter(n => n.status === 'pending');
   }
 
-  onNotification(listener: (n: ClinicianNotification) => void): () => void {
+  onNotification(listener: (_n: ClinicianNotification) => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }

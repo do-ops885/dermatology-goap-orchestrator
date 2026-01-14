@@ -1,6 +1,14 @@
-import type { AgentContext, ExecutorResult } from './types';
 import { CryptoService } from '../crypto';
 import { Logger } from '../logger';
+
+import type { AgentContext, ExecutorResult } from './types';
+
+interface AgentDBPattern {
+  taskType: string;
+  approach: string;
+  successRate: number;
+  metadata?: Record<string, unknown>;
+}
 
 export const privacyEncryptionExecutor = async ({ encryptionKey, analysisPayload, reasoningBank }: AgentContext): Promise<ExecutorResult> => {
   if (!encryptionKey) {
@@ -22,12 +30,14 @@ export const privacyEncryptionExecutor = async ({ encryptionKey, analysisPayload
     }
   });
   
-  await reasoningBank.storePattern({
+  const securityPattern: AgentDBPattern = {
     taskType: 'security_event',
     approach: 'AES-GCM Encryption',
     successRate: 1.0,
     metadata: { type: 'payload_encryption', size: ciphertext.byteLength }
-  } as any);
+  };
   
-  return { metadata: { cipher: 'AES-256-GCM', payload_size: `${ciphertext.byteLength} bytes`, audit: 'encrypted_in_memory' } };
+  await reasoningBank.storePattern(securityPattern as unknown as Parameters<typeof reasoningBank.storePattern>[0]);
+  
+  return { metadata: { cipher: 'AES-256-GCM', payload_size: `${String(ciphertext.byteLength)} bytes`, audit: 'encrypted_in_memory' } };
 };

@@ -1,8 +1,9 @@
-import type { AgentContext, ExecutorResult } from './types';
 import { Logger } from '../logger';
 
+import type { AgentContext, ExecutorResult } from './types';
+
 export const recommendationExecutor = async ({ ai, localLLM, currentState, analysisPayload, setResult, privacyMode }: AgentContext): Promise<ExecutorResult> => {
-  const recPrompt = `Generate one short clinical recommendation for Fitzpatrick Type ${currentState.fitzpatrick_type} with ${analysisPayload?.risk_label} risk. Consider this context: ${analysisPayload.webVerification?.summary}. Max 25 words.`;
+  const recPrompt = `Generate one short clinical recommendation for Fitzpatrick Type ${String(currentState.fitzpatrick_type)} with ${String(analysisPayload.risk_label)} risk. Consider this context: ${String(analysisPayload.webVerification?.summary)}. Max 25 words.`;
   let recommendation = "";
   let engine = "";
 
@@ -10,7 +11,7 @@ export const recommendationExecutor = async ({ ai, localLLM, currentState, analy
     try {
       recommendation = await localLLM.generate(recPrompt, "You are a dermatologist assistant.");
       engine = "SmolLM2-1.7B";
-    } catch(e) { Logger.warn("Rec-Agent", "Local LLM recs failed"); }
+    } catch { Logger.warn("Rec-Agent", "Local LLM recs failed"); }
   }
   
   if (!recommendation && navigator.onLine && !privacyMode) {
@@ -19,9 +20,9 @@ export const recommendationExecutor = async ({ ai, localLLM, currentState, analy
         model: 'gemini-3-flash-preview',
         contents: [{ parts: [{ text: recPrompt }] }],
       });
-      recommendation = recResponse.text?.trim() || "";
+       recommendation = recResponse.text?.trim() ?? "";
       engine = "Gemini-3-Flash";
-    } catch (e) { Logger.warn("Rec-Agent", "Cloud recommendation failed"); }
+    } catch { Logger.warn("Rec-Agent", "Cloud recommendation failed"); }
   }
   
   if (!recommendation) {

@@ -1,5 +1,5 @@
-import React, { useState, FormEvent } from 'react';
 import { CheckCircle, X } from 'lucide-react';
+import React, { useState, type FormEvent } from 'react';
 
 interface Feedback {
   diagnosis: string;
@@ -12,7 +12,7 @@ interface Feedback {
 interface ClinicianFeedbackProps {
   analysisId: string;
   currentDiagnosis: string;
-  onSubmit: (feedback: Feedback) => void;
+  onSubmit: (_feedback: Feedback) => void;
   onDismiss: () => void;
 }
 

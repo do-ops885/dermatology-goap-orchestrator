@@ -1,5 +1,7 @@
 import { Logger } from '../logger';
+
 import { cleanAndParseJSON } from './types';
+
 import type { AgentContext, ExecutorResult } from './types';
 
 export const skinToneDetectionExecutor = async ({ ai, file, base64Image, setWarning, analysisPayload, privacyMode }: AgentContext): Promise<ExecutorResult> => {

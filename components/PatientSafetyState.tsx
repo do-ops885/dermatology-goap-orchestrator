@@ -1,6 +1,7 @@
-import React from 'react';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
-import { WorldState } from '../types';
+import React from 'react';
+
+import type { WorldState } from '../types';
 
 interface PatientSafetyStateProps {
   worldState: WorldState;
@@ -8,8 +9,8 @@ interface PatientSafetyStateProps {
 
 export const PatientSafetyState: React.FC<PatientSafetyStateProps> = ({ worldState }) => {
   // Separate metrics for dedicated display
-  const metrics = Object.entries(worldState).filter(([_, v]) => typeof v === 'number');
-  const flags = Object.entries(worldState).filter(([_, v]) => typeof v === 'boolean');
+  const metrics = Object.entries(worldState).filter(([, v]) => typeof v === 'number');
+  const flags = Object.entries(worldState).filter(([, v]) => typeof v === 'boolean');
 
   return (
     <div className="glass-panel p-6 rounded-2xl">

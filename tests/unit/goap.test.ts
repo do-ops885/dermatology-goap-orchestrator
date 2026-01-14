@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
+
 import { GOAPPlanner } from '../../services/goap';
-import { AgentAction, INITIAL_STATE, WorldState } from '../../types';
+import { INITIAL_STATE, type AgentAction, type WorldState } from '../../types';
 
 describe('GOAPPlanner', () => {
   // Mock actions for testing

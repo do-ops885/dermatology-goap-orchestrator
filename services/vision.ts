@@ -1,4 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
+
 import '@tensorflow/tfjs-backend-webgpu';
 import { Logger } from './logger';
 
@@ -42,13 +43,12 @@ export class VisionSpecialist {
             await tf.ready();
             
             // Robust Backend Selection Strategy
-            const availableBackends = tf.engine().registryFactory;
             
             if (tf.findBackend('webgpu')) {
                 try {
                     await tf.setBackend('webgpu');
                     Logger.info('VisionSpecialist', 'WebGPU Backend Active');
-                } catch (err) {
+                } catch {
                     Logger.warn('VisionSpecialist', 'WebGPU failed, falling back to WebGL');
                     await tf.setBackend('webgl');
                 }
@@ -95,7 +95,7 @@ export class VisionSpecialist {
                         .expandDims();
 
                 // 2. Real Inference
-                const prediction = this.model!.predict(tensor) as tf.Tensor;
+                const prediction = this.model?.predict(tensor) as tf.Tensor;
                 const probabilities = prediction.dataSync(); // Use dataSync inside tidy for clean return
                 
                 // 3. Output Mapping
@@ -139,7 +139,7 @@ export class VisionSpecialist {
      * Generates a visual heatmap simulating Grad-CAM using Saliency logic.
      * Highlights high-contrast central regions (lesions) in a JET colormap.
      */
-    private async generateSaliencyMap(img: HTMLImageElement): Promise<string> {
+    private generateSaliencyMap(img: HTMLImageElement): string {
         return tf.tidy(() => {
             // A. Preprocessing
             const t = tf.browser.fromPixels(img).toFloat().div(255);
@@ -173,7 +173,7 @@ export class VisionSpecialist {
             const heatmap = tf.stack([r, g, b], 2);
             
             // D. Resize for output
-            const resized = tf.image.resizeBilinear(heatmap as any, [h, w]);
+            const resized = tf.image.resizeBilinear(heatmap, [h, w]) as tf.Tensor3D;
             
             // E. Draw to Canvas to get DataURL
             const canvas = document.createElement('canvas');

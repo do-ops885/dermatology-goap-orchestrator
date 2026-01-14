@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
 import { Database, ShieldCheck, Stethoscope, Download, WifiOff } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
 import { ThemeSwitcher } from './ThemeSwitcher';
 
 interface HeaderProps {

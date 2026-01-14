@@ -28,8 +28,9 @@ export interface ReasoningPatternMetadata {
   [key: string]: string | number | boolean | undefined;
 }
 
+// AgentDB library uses number for id, but we want string for internal use
 export interface ReasoningPattern {
-  id: string;
+  id: number | undefined;
   taskType: string;
   context?: string; // Optional for generic patterns
   approach?: string; // Optional
@@ -133,7 +134,44 @@ export interface AgentLogEntry {
   status: 'pending' | 'running' | 'completed' | 'failed';
   message: string;
   timestamp: number;
-  metadata?: Record<string, string | number | boolean | undefined>;
+  metadata?: Record<string, unknown>;
+}
+
+// AgentDB Pattern Types
+export interface AgentDBPattern {
+  id: string;
+  taskType: string;
+  context?: string;
+  approach?: string;
+  outcome?: string;
+  confidence?: number;
+  successRate?: number;
+  timestamp: number;
+  score?: number;
+  metadata?: ReasoningPatternMetadata;
+}
+
+export interface FairnessStats {
+  tpr: number;
+  fpr: number;
+  count: number;
+}
+
+export interface FeedbackStats {
+  totalFeedback: number;
+  corrections: number;
+  confirmations: number;
+  avgConfidence: number;
+  byFitzpatrick: Record<FitzpatrickType, { count: number; corrections: number }>;
+}
+
+export interface AuditEventPayload {
+  type: string;
+  hash: string;
+  prev_hash: string;
+  agent_trace: string[];
+  safety_level: 'LOW' | 'MEDIUM' | 'HIGH';
+  [key: string]: unknown;
 }
 
 export const INITIAL_STATE: WorldState = {

@@ -1,20 +1,25 @@
-import { defineConfig } from 'vite';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import { defineConfig } from 'vite';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      'fs': path.resolve(__dirname, './node-stubs.js'),
-      'path': path.resolve(__dirname, './node-stubs.js'),
-      'url': path.resolve(__dirname, './node-stubs.js'),
-      'crypto': path.resolve(__dirname, './node-stubs.js'),
-      'module': path.resolve(__dirname, './node-stubs.js'),
-      'os': path.resolve(__dirname, './node-stubs.js'),
-      'worker_threads': path.resolve(__dirname, './node-stubs.js'),
-      'child_process': path.resolve(__dirname, './node-stubs.js'),
-      'fs/promises': path.resolve(__dirname, './node-stubs.js'),
+      'fs': path.resolve(__dirname, './stubs/fs'),
+      'path': path.resolve(__dirname, './stubs/path'),
+      'url': path.resolve(__dirname, './stubs/url'),
+      'crypto': path.resolve(__dirname, './stubs/crypto'),
+      'module': path.resolve(__dirname, './stubs/module'),
+      'os': path.resolve(__dirname, './stubs/os'),
+      'worker_threads': path.resolve(__dirname, './stubs/worker_threads'),
+      'child_process': path.resolve(__dirname, './stubs/child_process'),
+      'fs/promises': path.resolve(__dirname, './stubs/fs/promises.js'),
     }
   },
   build: {

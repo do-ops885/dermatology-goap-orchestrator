@@ -1,5 +1,6 @@
-import type { AgentContext, ExecutorResult } from './types';
 import { loadImageElement } from './types';
+
+import type { AgentContext, ExecutorResult } from './types';
 
 export const lesionDetectionExecutor = async ({ visionSpecialist, file, currentState, analysisPayload, setResult }: AgentContext): Promise<ExecutorResult> => {
   const imgElement = await loadImageElement(file);

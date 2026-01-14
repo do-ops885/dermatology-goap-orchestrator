@@ -1,5 +1,6 @@
-import type { AgentContext, ExecutorResult } from './types';
 import { cleanAndParseJSON } from './types';
+
+import type { AgentContext, ExecutorResult } from './types';
 
 export const featureExtractionExecutor = async ({ ai, file, base64Image, privacyMode }: AgentContext): Promise<ExecutorResult> => {
   if (privacyMode) {

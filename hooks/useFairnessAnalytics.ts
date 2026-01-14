@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+
 import AgentDB from '@/services/agentDB';
 
 interface FairnessResult {
@@ -23,7 +24,7 @@ export function useFairnessAnalytics() {
     
     const channel = new MessageChannel();
     
-    channel.port1.onmessage = (event) => {
+    channel.port1.onmessage = (event: MessageEvent<{ type: string; results: FairnessResult | null }>) => {
       if (event.data.type === 'BATCH_ANALYTICS_COMPLETE') {
         setAnalytics(event.data.results);
         setLoading(false);
@@ -41,14 +42,16 @@ export function useFairnessAnalytics() {
   }, []);
 
   const registerPeriodicSync = useCallback(async () => {
-    if ('periodicSync' in navigator.serviceWorker.registration) {
-      try {
-        await navigator.serviceWorker.registration.periodicSync.register('fairness-analytics', {
+    try {
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (registration && 'periodicSync' in registration) {
+        const periodicSync = (registration as unknown as { periodicSync: { register(_tag: string, _options: { minInterval: number }): Promise<void> } }).periodicSync;
+        await periodicSync.register('fairness-analytics', {
           minInterval: 24 * 60 * 60 * 1000
         });
-      } catch (e) {
-        console.warn('Periodic sync not supported:', e);
       }
+    } catch (e) {
+      console.warn('Periodic sync not supported:', e);
     }
   }, []);
 

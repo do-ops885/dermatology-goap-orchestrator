@@ -1,6 +1,8 @@
-import { GOAPPlanner, AVAILABLE_ACTIONS } from '../goap';
-import { AgentAction, WorldState } from '../../types';
+
 import { Logger } from '../logger';
+
+import type { AgentAction, WorldState } from '../../types';
+import type { GOAPPlanner } from '../goap';
 
 export interface ExecutionAgentRecord {
   id: string;
@@ -9,7 +11,7 @@ export interface ExecutionAgentRecord {
   startTime: number;
   endTime?: number;
   status: 'running' | 'completed' | 'failed' | 'skipped';
-  metadata?: Record<string, string | number | boolean | undefined>;
+  metadata?: Record<string, unknown>;
   error?: string;
 }
 
@@ -21,7 +23,7 @@ export interface ExecutionTrace {
   finalWorldState: WorldState;
 }
 
-export type ExecutorFn = (ctx: Record<string, unknown>) => Promise<{ metadata?: Record<string, string | number | boolean | undefined>; newStateUpdates?: Partial<WorldState>; shouldReplan?: boolean }>;
+export type ExecutorFn = (_ctx: Record<string, unknown>) => Promise<{ metadata?: Record<string, unknown>; newStateUpdates?: Partial<WorldState>; shouldReplan?: boolean }>;
 
 export type ExecutorMap = Record<string, ExecutorFn>;
 
@@ -67,14 +69,19 @@ export class GoapAgent {
       // UI callbacks (if provided) and capture returned UI log id
       let uiLogId: string | undefined;
       if (typeof ctx.onAgentStart === 'function') {
-        try { uiLogId = ctx.onAgentStart(action); } catch (_e) { /* ignore */ }
+        try { 
+          const result = ctx.onAgentStart(action);
+          if (typeof result === 'string') {
+            uiLogId = result;
+          }
+        } catch { /* ignore */ }
       }
 
       const executor = this.executors[action.agentId];
-      if (uiLogId) {
+      if (uiLogId !== undefined) {
         agentRecord.metadata = { ...(agentRecord.metadata || {}), uiLogId };
       }
-      if (!executor) {
+      if (executor === undefined) {
         agentRecord.endTime = Date.now();
         agentRecord.status = 'failed';
         agentRecord.error = 'executor_missing';
@@ -92,10 +99,10 @@ export class GoapAgent {
 
         agentRecord.endTime = Date.now();
         agentRecord.status = 'completed';
-        agentRecord.metadata = result?.metadata;
+        agentRecord.metadata = result.metadata;
 
         // Apply any state updates and action.effects
-        if (result?.newStateUpdates) {
+        if (result.newStateUpdates) {
           currentState = { ...currentState, ...result.newStateUpdates };
         }
         currentState = { ...currentState, ...action.effects };
@@ -105,7 +112,7 @@ export class GoapAgent {
         Logger.info('goap-agent', 'agent_end', { runId, agent: action.agentId, status: 'completed', durationMs: agentRecord.endTime - agentRecord.startTime });
 
         // Replan if needed
-        if (result?.shouldReplan) {
+        if (result?.shouldReplan === true) {
           Logger.info('goap-agent', 'replan_triggered', { runId, agent: action.agentId });
           const replanStart = Date.now();
           plan = this.planner.plan(currentState, goalState);
@@ -122,7 +129,7 @@ export class GoapAgent {
 
         // Decide failure policy: skip non-critical and continue, abort on critical
         // Critical failure if executor throws a fatal error string 'Critical'
-        if (e instanceof Error && e.message?.includes('Critical')) {
+        if (e instanceof Error && e.message.includes('Critical')) {
           trace.endTime = Date.now();
           trace.finalWorldState = currentState;
           Logger.error('goap-agent', 'plan_aborted', { runId, reason: e.message });

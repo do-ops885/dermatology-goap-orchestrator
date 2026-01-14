@@ -1,6 +1,6 @@
-import React from 'react';
-import { BrainCircuit, CheckCircle2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BrainCircuit, CheckCircle2, Loader2 } from 'lucide-react';
+import React from 'react';
 
 interface ModelProgressProps {
   progress: { text: string; percent: number } | null;

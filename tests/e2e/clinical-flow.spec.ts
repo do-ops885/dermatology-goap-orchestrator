@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer';
+
 import { test, expect } from '@playwright/test';
 
 // Mock Data Generators
@@ -285,7 +287,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     });
 
     // Verify orchestration trace exists in the page state
-    const traceData = await page.evaluate(() => {
+    await page.evaluate(() => {
       // Access React component state (if exposed via window for debugging)
       const traceElement = document.querySelector('[data-trace-id]');
       return {

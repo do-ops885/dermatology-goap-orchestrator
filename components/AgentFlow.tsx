@@ -1,10 +1,15 @@
-import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Clock, 
   Activity, 
-  ChevronRight
+  ChevronRight,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  Ban
 } from 'lucide-react';
+import React, { useEffect } from 'react';
+
 import type { ExecutionTrace } from '../services/goap/agent';
 
 interface AgentFlowProps {
@@ -113,7 +118,7 @@ export const AgentFlow = React.forwardRef<HTMLDivElement, AgentFlowProps>(({ tra
                           className="inline-flex items-center px-1.5 py-0.5 bg-stone-100 border border-stone-200 rounded text-[9px] text-stone-600 font-mono"
                           title={`${key}: ${JSON.stringify(value)}`}
                         >
-                          {key}: {typeof value === 'object' ? '...' : String(value)}
+                          {key}: {typeof value === 'object' && value !== null ? '...' : String(value)}
                         </span>
                       ))}
                     </div>

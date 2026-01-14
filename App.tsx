@@ -1,14 +1,16 @@
 import React, { useState, useRef } from 'react';
-import { useClinicalAnalysis } from './hooks/useClinicalAnalysis';
-import { Header } from './components/Header';
+
+import AgentFlow from './components/AgentFlow';
 import { AnalysisIntake } from './components/AnalysisIntake';
-import { PatientSafetyState } from './components/PatientSafetyState';
 import { DiagnosticSummary } from './components/DiagnosticSummary';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import FairnessDashboard from './components/FairnessDashboard';
 import FairnessReport from './components/FairnessReport';
-import AgentFlow from './components/AgentFlow';
+import { Header } from './components/Header';
+import { PatientSafetyState } from './components/PatientSafetyState';
 import { ThemeProvider } from './context/ThemeContext';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import type { AnalysisResult } from './types';
+import { useClinicalAnalysis } from './hooks/useClinicalAnalysis';
 
 export default function App() {
   const [showFairnessReport, setShowFairnessReport] = useState(false);
@@ -83,7 +85,7 @@ export default function App() {
                   <PatientSafetyState worldState={worldState} />
               </ErrorBoundary>
               <ErrorBoundary componentName="Diagnostic Summary">
-                  <DiagnosticSummary result={result as import('./types').AnalysisResult | null} />
+                  <DiagnosticSummary result={result as AnalysisResult | null} />
               </ErrorBoundary>
           </div>
 

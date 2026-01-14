@@ -36,7 +36,7 @@ test.describe('Performance Benchmarks', () => {
     
     const duration = Date.now() - startTime;
     
-    console.log(`Full pipeline completed in ${duration}ms`);
+    console.warn(`Full pipeline completed in ${duration}ms`);
     
     expect(duration).toBeLessThan(PERFORMANCE_BUDGETS.total);
   });
@@ -93,7 +93,7 @@ test.describe('Performance Benchmarks', () => {
     await page.waitForLoadState('domcontentloaded');
     const tti = performance.now() - ttiStart;
     
-    console.log(`TTI: ${tti}ms`);
+    console.warn(`TTI: ${tti}ms`);
     
     expect(tti).toBeLessThan(5000);
   });
@@ -161,7 +161,7 @@ test.describe('Memory Performance', () => {
       return peak;
     });
     
-    console.log(`Peak memory: ${(peakMemory / 1024 / 1024).toFixed(2)}MB`);
+    console.warn(`Peak memory: ${(peakMemory / 1024 / 1024).toFixed(2)}MB`);
     
     expect(peakMemory).toBeLessThan(500 * 1024 * 1024);
   });

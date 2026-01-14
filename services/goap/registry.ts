@@ -4,6 +4,7 @@
  */
 
 import type { ExecutorMap } from './agent';
+
 import {
   imageVerificationExecutor,
   skinToneDetectionExecutor,
@@ -48,8 +49,9 @@ export const EXECUTOR_REGISTRY: ExecutorMap = {
 /**
  * Create a GoapAgent instance with the standard executor registry
  */
-import { GoapAgent } from './agent';
 import { GOAPPlanner } from '../goap';
+
+import { GoapAgent } from './agent';
 
 export function createGoapAgent(opts?: { perAgentTimeoutMs?: number }): GoapAgent {
   const planner = new GOAPPlanner();

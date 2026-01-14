@@ -1,5 +1,3 @@
-import { Logger } from '../logger';
-
 const MAX_SIZE = 800;
 
 export const optimizeImage = (file: File): Promise<string> => {

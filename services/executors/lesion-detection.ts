@@ -1,7 +1,7 @@
-export async function detectLesions(features: Float32Array): Promise<{
+export function detectLesions(features: Float32Array): {
   lesions: { type: string; confidence: number; risk: 'Low' | 'Medium' | 'High' }[];
   modelVersion: string;
-}> {
+} {
   const lesions: { type: string; confidence: number; risk: 'Low' | 'Medium' | 'High' }[] = [];
   
   if (features.length === 0) {

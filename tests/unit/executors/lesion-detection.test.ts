@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
+
 import { detectLesions } from '../../../services/executors/lesion-detection';
 
 describe('Lesion-Detection-Agent', () => {
@@ -11,7 +12,7 @@ describe('Lesion-Detection-Agent', () => {
     for (let i = 0; i < normalFeatures.length; i++) {
       normalFeatures[i] = 0.1;
     }
-    const result = await detectLesions(normalFeatures);
+    const result = detectLesions(normalFeatures);
     expect(result.lesions).toBeInstanceOf(Array);
     expect(result.modelVersion).toBeDefined();
   });
@@ -25,7 +26,7 @@ describe('Lesion-Detection-Agent', () => {
     suspiciousFeatures[1] = 0.88;
     suspiciousFeatures[2] = 0.92;
     
-    const result = await detectLesions(suspiciousFeatures);
+    const result = detectLesions(suspiciousFeatures);
     const melanoma = result.lesions.find(l => l.type === 'Melanoma');
     
     if (melanoma) {
@@ -42,7 +43,7 @@ describe('Lesion-Detection-Agent', () => {
     bccFeatures[100] = 0.85;
     bccFeatures[101] = 0.75;
     
-    const result = await detectLesions(bccFeatures);
+    const result = detectLesions(bccFeatures);
     const bcc = result.lesions.find(l => l.type === 'Basal Cell Carcinoma');
     
     if (bcc) {
@@ -53,7 +54,7 @@ describe('Lesion-Detection-Agent', () => {
 
   it('should return valid risk classifications', async () => {
     const features = new Float32Array(1280).fill(0.5);
-    const result = await detectLesions(features);
+    const result = detectLesions(features);
     
     result.lesions.forEach(lesion => {
       expect(['Low', 'Medium', 'High']).toContain(lesion.risk);
@@ -64,13 +65,13 @@ describe('Lesion-Detection-Agent', () => {
 
   it('should handle empty feature vector', async () => {
     const emptyFeatures = new Float32Array(0);
-    const result = await detectLesions(emptyFeatures);
+    const result = detectLesions(emptyFeatures);
     expect(result.lesions).toEqual([]);
   });
 
   it('should include model version in response', async () => {
     const features = new Float32Array(1280);
-    const result = await detectLesions(features);
+    const result = detectLesions(features);
     expect(result.modelVersion).toMatch(/MobileNetV3|YOLOv11/);
   });
 });

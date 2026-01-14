@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
 import { Lock, Fingerprint, MessageSquareText, Share2, Gauge, History, Globe, ExternalLink, Cpu, ListTree, KeyRound, MessageSquareHeart } from 'lucide-react';
-import { AnalysisResult, ClinicianFeedback as ClinicianFeedbackType } from '../types';
-import { ClinicianFeedback } from './ClinicianFeedback';
+import React, { useState } from 'react';
+
+
 import AgentDB from '../services/agentDB';
 import { Logger } from '../services/logger';
+
+import { ClinicianFeedback } from './ClinicianFeedback';
+
+import type { AnalysisResult, ClinicianFeedback as ClinicianFeedbackType } from '../types';
 
 interface DiagnosticSummaryProps {
   result: AnalysisResult | null;

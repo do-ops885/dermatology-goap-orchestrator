@@ -1,17 +1,20 @@
-import { useState, useRef, useEffect, useTransition, useOptimistic, useDeferredValue, useCallback, useMemo } from 'react';
-import { useActionState } from 'react';
 import { GoogleGenAI } from '@google/genai';
-import { GOAPPlanner } from '../services/goap';
-import AgentDB, { createDatabase, ReasoningBank, EmbeddingService, LocalLLMService } from '../services/agentDB';
-import type { VisionSpecialist } from '../services/vision';
-import { RouterAgent } from '../services/router';
-import { AgentLogEntry, INITIAL_STATE, WorldState, AgentAction } from '../types';
-import { CryptoService } from '../services/crypto';
-import { Logger } from '../services/logger';
-import { ExecutionTrace } from '../services/goap/agent';
-import { EXECUTOR_REGISTRY } from '../services/goap/registry';
+import { useActionState , useState, useRef, useEffect, useTransition, useOptimistic, useDeferredValue, useCallback, useMemo } from 'react';
 
-const GEMINI_API_KEY = process.env.API_KEY ?? '';
+import AgentDB, { createDatabase, ReasoningBank, EmbeddingService, LocalLLMService } from '../services/agentDB';
+import { CryptoService } from '../services/crypto';
+import { GOAPPlanner } from '../services/goap';
+import { EXECUTOR_REGISTRY } from '../services/goap/registry';
+import { Logger } from '../services/logger';
+import { RouterAgent } from '../services/router';
+import { INITIAL_STATE } from '../types';
+
+import type { ExecutionTrace, ExecutionAgentRecord } from '../services/goap/agent';
+import type { VisionSpecialist } from '../services/vision';
+import type { AgentLogEntry, WorldState, AgentAction } from '../types';
+import type { ChangeEvent } from 'react';
+
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY ?? '';
 
 const optimizeImage = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -104,12 +107,12 @@ interface UseClinicalAnalysisReturn {
   isPending: boolean;
   pending: boolean;
   searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
+  setSearchQuery: (_query: string) => void;
+  handleFileChange: (_e: ChangeEvent<HTMLInputElement>) => Promise<void>;
   executeAnalysis: () => Promise<{ success: boolean; data?: Record<string, unknown>; error?: string } | null>;
   privacyMode: boolean;
-  setPrivacyMode: (mode: boolean) => void;
-  action: (payload: FormData) => void;
+  setPrivacyMode: (_mode: boolean) => void;
+  action: (_payload: FormData) => void;
   actionState: null;
   trace: ExecutionTrace | null;
   currentAgent: string | undefined;
@@ -132,7 +135,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
   const [currentAgent, setCurrentAgent] = useState<string | undefined>(undefined);
 
   const [isPending, startTransition] = useTransition();
-  const [_optimisticLogs, addOptimisticLog] = useOptimistic(logs, (state: AgentLogEntry[], newLog: AgentLogEntry) => [...state, newLog]);
+  const [, addOptimisticLog] = useOptimistic(logs, (state: AgentLogEntry[], newLog: AgentLogEntry) => [...state, newLog]);
   const [searchQuery, setSearchQuery] = useState('');
   const deferredQuery = useDeferredValue(searchQuery);
 
@@ -157,10 +160,9 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     const initCoreServices = async () => {
       try {
         encryptionKeyRef.current = await CryptoService.generateEphemeralKey();
-        const db = await createDatabase('./agent-memory.db');
+        const db = await createDatabase('./agent-memory.db') as unknown;
         const embedder = new EmbeddingService({ model: 'Xenova/all-MiniLM-L6-v2', dimension: 384, provider: 'transformers' });
         await embedder.initialize();
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         const bank = new ReasoningBank(db, embedder);
         reasoningBankRef.current = bank;
         const instance = AgentDB.getInstance();
@@ -176,7 +178,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     void initCoreServices();
   }, []);
 
-  const initAIServices = async () => {
+  const initAIServices = useCallback(async () => {
     if (aiReady || visionSpecialistRef.current) return;
     try {
       Logger.info('System', 'Lazy loading AI models...');
@@ -188,7 +190,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
         const percent = Math.round(report.progress * 100);
         setModelProgress({ text: report.text.length > 50 ? report.text.substring(0, 50) + '...' : report.text, percent });
         if (percent === 100 || report.text.toLowerCase().includes("finish")) {
-          setTimeout(() => setModelProgress(null), 2500);
+          void setTimeout(() => { setModelProgress(null); }, 2500);
         }
       }).catch((e: unknown) => {
         Logger.warn("System", "Local LLM failed, cloud fallback active", { error: e instanceof Error ? e.message : String(e) });
@@ -198,9 +200,9 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     } catch (e) {
       Logger.error('System', 'AI Service Init Failed', { error: e });
     }
-  };
+  }, [aiReady]);
 
-  const addLog = useCallback((agent: string, message: string, status: AgentLogEntry['status'], metadata?: Record<string, string | number | boolean | undefined>) => {
+  const addLog = useCallback((agent: string, message: string, status: AgentLogEntry['status'], metadata?: Record<string, unknown>) => {
     const id = Math.random().toString(36).substring(2, 11);
     const newLog: AgentLogEntry = { id, agent, message, status, timestamp: Date.now(), metadata };
     addOptimisticLog(newLog);
@@ -211,16 +213,16 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     return id;
   }, [addOptimisticLog]);
 
-  const updateLog = useCallback((id: string, status: AgentLogEntry['status'], metadata?: Record<string, string | number | boolean | undefined>) => {
+  const updateLog = useCallback((id: string, status: AgentLogEntry['status'], metadata?: Record<string, unknown>) => {
     startTransition(() => {
       setLogs(prev => prev.map(log => log.id === id ? { ...log, status, metadata: { ...log.metadata, ...metadata } } : log));
     });
   }, []);
 
-  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
     setError(null);
     setWarning(null);
-    initAIServices();
+    void initAIServices();
 
     if (e.target.files?.[0]) {
       const f = e.target.files[0];
@@ -261,7 +263,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     }
   }, [initAIServices]);
 
-  async function submitAnalysis(_prev: unknown, _formData: FormData) {
+  async function submitAnalysis(_: unknown, __: FormData) {
     return await executeAnalysis();
   }
 
@@ -326,7 +328,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
           const logId = addLog(action.agentId, action.description, 'running');
           uiLogMap.set(action.agentId + '|' + action.name, logId);
           setCurrentAgent(action.agentId);
-          setTrace(prev => prev || {
+          setTrace(prev => prev ?? {
             runId: 'run_' + Math.random().toString(36).slice(2, 9),
             startTime: Date.now(),
             agents: [],
@@ -337,10 +339,22 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
         onAgentEnd: (action: AgentAction, record: { status: string; metadata?: Record<string, unknown> }) => {
           const key = action.agentId + '|' + action.name;
           const logId = uiLogMap.get(key);
-          if (logId) updateLog(logId, record.status === 'completed' ? 'completed' : 'failed', record.metadata);
+          if (logId !== undefined) updateLog(logId, record.status === 'completed' ? 'completed' : 'failed', record.metadata);
+
+          // Create proper ExecutionAgentRecord
+          const agentRecord: ExecutionAgentRecord = {
+            id: Math.random().toString(36).substring(2, 11),
+            agentId: action.agentId,
+            name: action.name,
+            startTime: Date.now(), // This would normally come from onAgentStart
+            endTime: Date.now(),
+            status: record.status as 'running' | 'completed' | 'failed' | 'skipped',
+            metadata: record.metadata
+          };
+
           setTrace(prev => prev ? {
             ...prev,
-            agents: [...prev.agents, record]
+            agents: [...prev.agents, agentRecord]
           } : null);
           if (record.status !== 'running') {
             setCurrentAgent(undefined);

@@ -1,5 +1,6 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import React, { type Component, type ErrorInfo, type ReactNode } from 'react';
+
 import { Logger } from '../services/logger';
 
 interface Props {

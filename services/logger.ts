@@ -36,7 +36,7 @@ class LoggerService {
     } else if (level === 'warn') {
       console.warn(`[${component}] ${event}`, entry);
     } else {
-      console.log(`[${component}] ${event}`, entry);
+      console.warn(`[${component}] ${event}`, entry);
     }
   }
 

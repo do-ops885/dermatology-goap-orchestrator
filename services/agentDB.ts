@@ -1,7 +1,27 @@
-import { FitzpatrickType } from '../types';
 import { createDatabase, ReasoningBank, EmbeddingService } from 'agentdb';
-import type { MLCEngineInterface, InitProgressReport } from "@mlc-ai/web-llm";
+
 import { Logger } from './logger';
+
+import type { FitzpatrickType, ReasoningPatternMetadata, FairnessStats, AuditEventPayload, ClinicianFeedback, ReasoningPattern } from '../types';
+import type { MLCEngineInterface, InitProgressReport, ChatCompletionMessageParam } from "@mlc-ai/web-llm";
+
+
+interface AgentDBReasoningPattern {
+  id?: number;
+  taskType: string;
+  approach: string;
+  successRate: number;
+  embedding?: Float32Array;
+  uses?: number;
+  avgReward?: number;
+  tags?: string[];
+  metadata?: Record<string, unknown>;
+  createdAt?: number;
+  similarity?: number;
+  outcome?: string;
+  timestamp?: number;
+  confidence?: number;
+}
 
 /**
  * Re-export library components so consumers of this service file 
@@ -12,7 +32,7 @@ export { createDatabase, ReasoningBank, EmbeddingService };
 // --- Singleton Interface for UI ---
 
 export default class ClinicalAgentDB {
-  private static instance: ClinicalAgentDB;
+  private static instance: ClinicalAgentDB | undefined = undefined;
   public reasoningBank: ReasoningBank | null = null;
   
   // Production: Initialize with zero-state. 
@@ -31,9 +51,7 @@ export default class ClinicalAgentDB {
   }
 
   public static getInstance(): ClinicalAgentDB {
-    if (ClinicalAgentDB.instance === undefined) {
-      ClinicalAgentDB.instance = new ClinicalAgentDB();
-    }
+    ClinicalAgentDB.instance ??= new ClinicalAgentDB();
     return ClinicalAgentDB.instance;
   }
 
@@ -43,55 +61,38 @@ export default class ClinicalAgentDB {
 
   public getFairnessMetrics() { return this.fairnessStats; }
 
-   public async getAllPatterns(): Promise<any[]> {
-     if (!this.reasoningBank) return [];
-     try {
-       // Try multiple access patterns for the underlying database
-       // @ts-expect-error - Dynamic access to library internals for aggregation
-       if (typeof this.reasoningBank.getAllPatterns === 'function') {
-         // @ts-expect-error - Dynamic method call on reasoning bank
-         return await this.reasoningBank.getAllPatterns();
-      } else if (this.reasoningBank.db) {
-        // Access the underlying database directly
-        const db = this.reasoningBank.db;
-        if (typeof db.getAll === 'function') {
-          const records = await db.getAll();
-          return records.map((r: any) => r.data || r);
-        } else if (typeof db.all === 'function') {
-          // SQL-based database
-          return await db.all('SELECT * FROM patterns ORDER BY timestamp DESC');
-        }
-      }
-    } catch (e) {
-      Logger.error("AgentDB", "Failed to get all patterns", { error: e });
+   public async getAllPatterns(): Promise<ReasoningPattern[]> {
+      if (!this.reasoningBank) return [];
+      try {
+        const bank = this.reasoningBank as unknown;
+        if (typeof bank === 'object' && bank !== null && 'getAllPatterns' in bank && typeof (bank as { getAllPatterns?: () => Promise<ReasoningPattern[]> }).getAllPatterns === 'function') {
+          return await (bank as { getAllPatterns: () => Promise<ReasoningPattern[]> }).getAllPatterns();
+       }
+       Logger.warn("AgentDB", "getAllPatterns method not available in library");
+       return [];
+    } catch (error) {
+      Logger.error("AgentDB", "Failed to get all patterns", { error: error instanceof Error ? error.message : String(error) });
+      return [];
     }
-    return [];
   }
 
   /**
    * Retrieves live statistics by aggregating data directly from the Vector DB.
    * No simulation or mock data is returned.
    */
-  public async getLiveStats() {
+  public async getLiveStats(): Promise<Record<FitzpatrickType, FairnessStats>> {
     if (!this.reasoningBank) return this.fairnessStats;
-    
-    let patterns: any[] = [];
-    
+
+    let patterns: ReasoningPattern[] = [];
+
     // Production Access Pattern:
-     // Attempt to access internal DB to scan all records for aggregation.
-     // This relies on the library exposing the underlying storage or a getAll method.
-      try {
-         // @ts-expect-error - Dynamic access to library internals for aggregation
-         if (typeof this.reasoningBank.getAllPatterns === 'function') {
-             // @ts-expect-error - Dynamic method call on reasoning bank
-             patterns = await this.reasoningBank.getAllPatterns();
-        } else if (this.reasoningBank.db && typeof this.reasoningBank.db.getAll === 'function') {
-             const records = await this.reasoningBank.db.getAll();
-             patterns = records.map((r: any) => r.data || r);
-        }
-    } catch (e) {
-        Logger.error("AgentDB", "Aggregation Error", { error: e });
-        return this.fairnessStats;
+    // Attempt to access internal DB to scan all records for aggregation.
+    // This relies on the library exposing the underlying storage or a getAll method.
+    try {
+      patterns = await this.getAllPatterns();
+    } catch (error) {
+      Logger.error("AgentDB", "Aggregation Error", { error: error instanceof Error ? error.message : String(error) });
+      return this.fairnessStats;
     }
 
     // Reset stats to 0 before aggregation to ensure real-time accuracy
@@ -106,14 +107,15 @@ export default class ClinicalAgentDB {
 
     // Aggregate real data
     patterns.forEach(p => {
-        const type = p.metadata?.fitzpatrick as FitzpatrickType;
-        if (type && stats[type]) {
+          const type = p.metadata?.fitzpatrick;
+          if (!type) return;
+        if (type in stats) {
             stats[type].count++;
             
             // Calculate TPR (True Positive Rate) based on outcome/success metadata
             // In a real system, this compares model prediction vs verified ground truth.
             // Here we use the stored success rate as a proxy for correct classification.
-            const success = p.successRate || p.confidence || 0;
+            const success = (p.successRate ?? p.confidence ?? 0);
             const isCorrect = success > 0.7; // Threshold for "True Positive" in this context
             
             if (isCorrect) {
@@ -142,99 +144,98 @@ export default class ClinicalAgentDB {
     return stats;
   }
 
-  public async getUnifiedAuditLog() {
+  public async getUnifiedAuditLog(): Promise<{ id: string; timestamp: number; severity: string; message: string; status: string; mitigation: string; type: string; }[]> {
      if (!this.reasoningBank) return [];
-     
-      let patterns: any[] = [];
+
+       let patterns: ReasoningPattern[] = [];
        try {
-          // @ts-expect-error - Dynamic access to library internals for aggregation
-          if (typeof this.reasoningBank.getAllPatterns === 'function') {
-              // @ts-expect-error - Dynamic method call on reasoning bank
-              patterns = await this.reasoningBank.getAllPatterns();
-        } else if (this.reasoningBank.db) {
-            const records = await this.reasoningBank.db.getAll();
-            patterns = records.map((r: any) => r.data || r);
-        }
-     } catch (e) { return []; }
+         patterns = await this.getAllPatterns();
+      } catch (error) {
+        Logger.error("AgentDB", "Failed to get audit log", { error: error instanceof Error ? error.message : String(error) });
+        return [];
+      }
 
      // Convert Vector DB records into Audit Log format
-     return patterns
-        .sort((a: any, b: any) => b.timestamp - a.timestamp)
+      return patterns
+         .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
         .slice(0, 50)
-        .map((p: any) => {
-            // Differentiate between Clinical Patterns and Audit Logs
-            const isAudit = p.taskType === 'AUDIT_LOG';
-            
-            const message = isAudit 
-                ? (p.metadata?.context || p.context || 'Audit Event') 
-                : `Decision: ${p.outcome || 'Analysis'}`;
+          .map((p) => {
+             const pattern = p as AgentDBReasoningPattern;
+             const isAudit = pattern.taskType === 'AUDIT_LOG';
+             
+              const message = isAudit 
+                  ? String(p.metadata?.context ?? p.context ?? 'Audit Event')
+                  : `Decision: ${pattern.outcome ?? 'Analysis'}`;
 
-            const mitigation = isAudit 
-                ? (p.outcome || (p.metadata?.hash ? p.metadata.hash.substring(0,10) : '') || 'Hash Verified') 
-                : `Ctx: ${(p.context || 'Generic').substring(0, 30)}...`;
-            
-            return { 
-                id: p.id || `log_${Math.random().toString(36).substr(2)}`, 
-                timestamp: p.timestamp || Date.now(), 
-                severity: isAudit ? 'info' : ((p.confidence || p.successRate || 0) > 0.8 ? 'info' : 'medium'), 
-                message, 
-                status: 'verified', 
-                mitigation, 
-                type: isAudit ? 'audit' : 'learning' 
-            };
-        });
+              const metadataHash = p.metadata?.hash;
+              const hashString = typeof metadataHash === 'string' ? metadataHash : '';
+               const mitigation = isAudit 
+                   ? (pattern.outcome ?? hashString.substring(0,10)) 
+                   : `Ctx: ${(p.context ?? 'Generic').substring(0, 30)}...`;
+             
+               return { 
+                    id: String(p.id ?? `log_${Math.random().toString(36).substring(2)}`),
+                     timestamp: pattern.timestamp ?? Date.now(),
+                    severity: isAudit ? 'info' : (((pattern.confidence ?? pattern.successRate) > 0.8) ? 'info' : 'medium'),
+                   message, 
+                   status: 'verified', 
+                   mitigation, 
+                   type: isAudit ? 'audit' : 'learning' 
+               };
+         });
   }
 
-   public async resetMemory() { 
-       // @ts-expect-error - Dynamic method check on reasoning bank
-       if(this.reasoningBank && typeof this.reasoningBank.clear === 'function') {
-           // @ts-expect-error - Dynamic clear method call
-           await this.reasoningBank.clear();
-      } else if (this.reasoningBank?.db) {
-          await this.reasoningBank.db.clear();
-      }
-      Logger.info("AgentDB", "Memory Reset Completed");
-  }
+    public async resetMemory(): Promise<void> {
+        if (!this.reasoningBank) return;
+        try {
+          const bank = this.reasoningBank as unknown;
+          if (typeof bank === 'object' && bank !== null && 'clear' in bank && typeof (bank as { clear?: () => Promise<void> }).clear === 'function') {
+            await (bank as { clear: () => Promise<void> }).clear();
+          } else {
+            Logger.warn("AgentDB", "clear method not available in library");
+          }
+       } catch (error) {
+         Logger.error("AgentDB", "Memory reset failed", { error: error instanceof Error ? error.message : String(error) });
+       }
+       Logger.info("AgentDB", "Memory Reset Completed");
+   }
   
   // These would typically pull from a separate analytics store, keeping static for this scope
   public getCalibrationData() { return [0.1, 0.3, 0.5, 0.7, 0.9].map(p => ({ prob: p, perfect: p, TypeI: p + 0.01, TypeVI: p - 0.02 })); }
   public getHistoricalTrends() { return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((day, i) => ({ day, parity: 0.9 + i*0.01, gap: 0.05 - i*0.005 })); }
   
-  public async logAuditEvent(e: any) { 
+  public async logAuditEvent(event: AuditEventPayload): Promise<void> {
       if (!this.reasoningBank) return;
-      
+
       try {
           // Store audit log as a pattern to maintain the immutable ledger within AgentDB
-          await this.reasoningBank.storePattern({
-              taskType: 'AUDIT_LOG',
-              approach: `Trace: ${Array.isArray(e.agent_trace) ? e.agent_trace.join('->') : 'System'}`,
-              outcome: `Merkle: ${e.hash ? e.hash.substring(0, 12) + '...' : 'Generated'}`,
-              successRate: 1.0,
-              timestamp: Date.now(),
-              metadata: {
-                  ...e,
-                  context: `Audit Event: ${e.type}`,
-                  verified: true,
-                  audit_signature: e.hash
-              }
-          } as any);
-      } catch (err) {
-          Logger.error("AgentDB", "Failed to write to audit ledger", { error: err });
+          const metadata: ReasoningPatternMetadata = {
+              context: `Audit Event: ${event.type}`,
+              verified: true,
+              audit_signature: event.hash,
+              type: event.type,
+              hash: event.hash,
+              prev_hash: event.prev_hash,
+              safety_level: event.safety_level,
+              agent_trace: Array.isArray(event.agent_trace) ? event.agent_trace.join(',') : String(event.agent_trace)
+          };
+
+           const patternForDb: AgentDBReasoningPattern = {
+               id: Date.now(),
+               taskType: 'AUDIT_LOG',
+               approach: `Trace: ${Array.isArray(event.agent_trace) ? event.agent_trace.join('->') : 'System'}`,
+               outcome: `Merkle: ${event.hash ? event.hash.substring(0, 12) + '...' : 'Generated'}`,
+               successRate: 1.0,
+               timestamp: Date.now(),
+               metadata
+           };
+           await this.reasoningBank.storePattern(patternForDb);
+      } catch (error) {
+          Logger.error("AgentDB", "Failed to write to audit ledger", { error: error instanceof Error ? error.message : String(error) });
       }
   }
 
-  public async storeClinicianFeedback(feedback: {
-      id: string;
-      analysisId: string;
-      diagnosis: string;
-      correctedDiagnosis?: string;
-      confidence: number;
-      notes: string;
-      timestamp: number;
-      fitzpatrickType?: FitzpatrickType;
-      clinicianId?: string;
-      isCorrection: boolean;
-  }): Promise<void> {
+  public async storeClinicianFeedback(feedback: ClinicianFeedback): Promise<void> {
       if (!this.reasoningBank) {
           Logger.warn("AgentDB", "Cannot store feedback: ReasoningBank not initialized");
           return;
@@ -242,33 +243,38 @@ export default class ClinicalAgentDB {
 
       try {
           // Store feedback as a high-value pattern for future learning
-          await this.reasoningBank.storePattern({
-              taskType: 'clinician_feedback',
-              approach: feedback.isCorrection ? 'correction' : 'confirmation',
-              outcome: feedback.correctedDiagnosis || feedback.diagnosis,
-              successRate: feedback.confidence,
-              timestamp: feedback.timestamp,
-              metadata: {
-                  feedbackId: feedback.id,
-                  analysisId: feedback.analysisId,
-                  originalDiagnosis: feedback.diagnosis,
-                  correctedDiagnosis: feedback.correctedDiagnosis,
-                  fitzpatrick: feedback.fitzpatrickType || 'I',
-                  clinicianId: feedback.clinicianId,
-                  notes: feedback.notes,
-                  isCorrection: feedback.isCorrection,
-                  verified: true, // Human-verified data is gold standard
-                  feedback_source: 'clinician'
-              }
-          } as any);
+          const metadata: ReasoningPatternMetadata = {
+              feedbackId: feedback.id,
+              analysisId: feedback.analysisId,
+              originalDiagnosis: feedback.diagnosis,
+              correctedDiagnosis: feedback.correctedDiagnosis,
+               fitzpatrick: feedback.fitzpatrickType ?? 'I',
+              clinicianId: feedback.clinicianId,
+              notes: feedback.notes,
+              isCorrection: feedback.isCorrection,
+              verified: true, // Human-verified data is gold standard
+              feedback_source: 'clinician'
+          };
 
-          Logger.info("AgentDB", "Clinician feedback stored", { 
-              feedbackId: feedback.id, 
-              isCorrection: feedback.isCorrection 
+           const patternForDb: AgentDBReasoningPattern = {
+               id: Date.now(),
+               taskType: 'clinician_feedback',
+               approach: feedback.isCorrection ? 'correction' : 'confirmation',
+               outcome: feedback.correctedDiagnosis ?? feedback.diagnosis,
+               successRate: feedback.confidence,
+               timestamp: feedback.timestamp,
+               metadata
+           };
+
+           await this.reasoningBank.storePattern(patternForDb);
+
+           Logger.info("AgentDB", "Clinician feedback stored", {
+              feedbackId: feedback.id,
+              isCorrection: feedback.isCorrection
           });
-      } catch (err) {
-          Logger.error("AgentDB", "Failed to store clinician feedback", { error: err });
-          throw err;
+      } catch (error) {
+          Logger.error("AgentDB", "Failed to store clinician feedback", { error: error instanceof Error ? error.message : String(error) });
+          throw error;
       }
   }
 
@@ -300,11 +306,11 @@ export default class ClinicalAgentDB {
           const patterns = await this.getAllPatterns();
           const feedbackPatterns = patterns.filter(p => p.taskType === 'clinician_feedback');
 
-          const stats = {
-              totalFeedback: feedbackPatterns.length,
-              corrections: feedbackPatterns.filter(p => p.metadata?.isCorrection).length,
-              confirmations: feedbackPatterns.filter(p => !p.metadata?.isCorrection).length,
-              avgConfidence: feedbackPatterns.reduce((sum, p) => sum + (p.successRate || 0), 0) / (feedbackPatterns.length || 1),
+           const stats = {
+               totalFeedback: feedbackPatterns.length,
+               corrections: feedbackPatterns.filter(p => p.metadata?.isCorrection === true).length,
+               confirmations: feedbackPatterns.filter(p => p.metadata?.isCorrection !== true).length,
+               avgConfidence: feedbackPatterns.reduce((sum, p) => sum + (p.successRate ?? 0), 0) / (feedbackPatterns.length || 1),
               byFitzpatrick: {
                   'I': { count: 0, corrections: 0 },
                   'II': { count: 0, corrections: 0 },
@@ -315,11 +321,12 @@ export default class ClinicalAgentDB {
               } as Record<FitzpatrickType, { count: number; corrections: number }>
           };
 
-          feedbackPatterns.forEach(p => {
-              const fitzpatrick = p.metadata?.fitzpatrick as FitzpatrickType;
-              if (fitzpatrick && stats.byFitzpatrick[fitzpatrick]) {
-                  stats.byFitzpatrick[fitzpatrick].count++;
-                  if (p.metadata?.isCorrection) {
+           feedbackPatterns.forEach(p => {
+                const fitzpatrick = p.metadata?.fitzpatrick;
+               if (!fitzpatrick) return;
+               if (fitzpatrick in stats.byFitzpatrick) {
+                   stats.byFitzpatrick[fitzpatrick].count++;
+                   if (p.metadata?.isCorrection === true) {
                       stats.byFitzpatrick[fitzpatrick].corrections++;
                   }
               }
@@ -352,10 +359,11 @@ export class LocalLLMService {
     public isReady = false;
     private engine: MLCEngineInterface | null = null;
     private initializationPromise: Promise<void> | null = null;
-    private idleTimer: any | null = null;
+    private idleTimer: ReturnType<typeof setTimeout> | null = null;
     // Using a quantized SmolLM2 model optimized for browser edge inference
     private modelId = "SmolLM2-1.7B-Instruct-q4f16_1-MLC";
 
+    // eslint-disable-next-line no-unused-vars
     async initialize(progressCallback?: (report: { text: string; progress: number }) => void): Promise<void> {
         // Prevent double-initialization in React Strict Mode
         if (this.isReady) {
@@ -411,12 +419,12 @@ export class LocalLLMService {
             ];
             
             const reply = await this.engine.chat.completions.create({
-                messages: messages as any,
+                 messages: messages as unknown as ChatCompletionMessageParam[],
                 temperature: 0.1, // Low temperature for clinical precision
                 max_tokens: 256,
             });
             
-            return reply.choices[0].message.content || "";
+             return reply.choices[0]?.message?.content ?? "";
         } catch (e) {
             Logger.error("LocalLLMService", "Generation Failed", { error: e });
             return "";
@@ -426,7 +434,7 @@ export class LocalLLMService {
     private resetIdleTimer() {
         if (this.idleTimer) clearTimeout(this.idleTimer);
         // Unload after 5 minutes of inactivity to save memory
-        this.idleTimer = setTimeout(() => this.unload(), 5 * 60 * 1000);
+        this.idleTimer = setTimeout(() => { void this.unload(); }, 5 * 60 * 1000);
     }
 
     async unload() {

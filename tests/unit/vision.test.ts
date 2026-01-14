@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as tf from '@tensorflow/tfjs';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { VisionSpecialist } from '../../services/vision';
 
 // Mock TFJS

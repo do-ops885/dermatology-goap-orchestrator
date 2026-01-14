@@ -1,10 +1,10 @@
-export async function detectSkinTone(imageData: ImageData): Promise<{
+export function detectSkinTone(imageData: ImageData): {
   fitzpatrick: string;
   monkScale: string;
   confidence: number;
   itaEstimate: number;
-}> {
-  if (!imageData || imageData.width === 0 || imageData.height === 0) {
+} {
+  if (imageData.width === 0 || imageData.height === 0) {
     throw new Error('Invalid image data provided');
   }
 

@@ -21,6 +21,18 @@ This is a **Clinical AI Orchestrator** powered by a **Goal-Oriented Action Plann
 
 For detailed architecture, see `AGENTS.md` and plans in `/plans/`.
 
+## Repository Configuration
+
+This repository follows 2025 GitHub best practices for security, automation, and code quality. For details on:
+
+- GitHub Actions workflows (CI/CD, Security, E2E Tests)
+- Auto-merge configuration for dependencies
+- Branch protection rules
+- Dependabot settings
+- Code quality and security scanning
+
+See [`.github/REPO_CONFIGURATION.md`](.github/REPO_CONFIGURATION.md).
+
 ## Run Locally
 
 **Prerequisites:**  Node.js

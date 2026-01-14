@@ -1,20 +1,23 @@
-import { GoogleGenAI } from '@google/genai';
-import AgentDB, { ReasoningBank, LocalLLMService } from '../agentDB';
+
+
+import type { WorldState } from '../../types';
+import type { ReasoningBank, LocalLLMService } from '../agentDB';
+import type AgentDB from '../agentDB';
+import type { RouterAgent } from '../router';
 import type { VisionSpecialist } from '../vision';
-import { RouterAgent } from '../router';
-import { WorldState } from '../../types';
+import type { GoogleGenAI } from '@google/genai';
 
 export interface AgentExecutor {
   agentId: string;
   cost: number;
-  execute(context: AgentContext): Promise<ExecutorResult>;
+  execute(_context: AgentContext): Promise<ExecutorResult>;
 }
 
 export interface ClinicalAnalysisResult {
   id: string;
   timestamp: number;
   fitzpatrickType: string;
-  lesions: Array<{ type: string; confidence: number; risk: string }>;
+  lesions: { type: string; confidence: number; risk: string }[];
   recommendations: string[];
   signature: string;
   [key: string]: unknown;
@@ -32,8 +35,8 @@ export interface AgentContext {
   imageHash: string;
   currentState: WorldState;
   actionTrace: string[];
-  setResult: (res: ClinicalAnalysisResult | null) => void;
-  setWarning: (msg: string | null) => void;
+  setResult: (_res: unknown) => void;
+  setWarning: (_msg: string | null) => void;
   analysisPayload: Record<string, unknown>;
   encryptionKey: CryptoKey | null;
   lastAuditHashRef: { current: string };
@@ -47,11 +50,11 @@ export interface ExecutorResult {
 }
 
 export const cleanAndParseJSON = (text: string | undefined): Record<string, unknown> => {
-  if (!text) return {};
+  if (text === undefined) return {};
   try {
     const cleanText = text.replace(/```json\n?|```/g, '').trim();
-    return JSON.parse(cleanText);
-  } catch (e) {
+    return JSON.parse(cleanText) as Record<string, unknown>;
+  } catch {
     return {};
   }
 };

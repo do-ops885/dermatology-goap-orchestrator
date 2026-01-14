@@ -1,5 +1,8 @@
-import { onCLS, onFID, onLCP, onTTFB, onFCP, Metric } from 'web-vitals';
+import { onCLS, onINP, onLCP, onTTFB, onFCP } from 'web-vitals';
+
 import { Logger } from './logger';
+
+import type { Metric } from 'web-vitals';
 
 const reportHandler = (metric: Metric) => {
   // Log to internal logger for observability
@@ -19,7 +22,7 @@ const reportHandler = (metric: Metric) => {
 
 export const reportWebVitals = () => {
   onCLS(reportHandler);
-  onFID(reportHandler);
+  onINP(reportHandler);
   onLCP(reportHandler);
   onTTFB(reportHandler);
   onFCP(reportHandler);

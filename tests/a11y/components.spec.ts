@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+
 import { axe } from './test-utils';
 
 test.describe('Accessibility - Components', () => {
@@ -49,7 +50,7 @@ test.describe('Accessibility - Components', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     
-    await page.locator('[data-testid="fairness-dashboard"]');
+    page.locator('[data-testid="fairness-dashboard"]');
     
     const results = await axe.evaluate(page, {
       include: '[data-testid="fairness-dashboard"]'
@@ -74,7 +75,7 @@ test.describe('Accessibility - Components', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     
-    await page.locator('[data-testid="patient-safety"]');
+    page.locator('[data-testid="patient-safety"]');
     
     const results = await axe.evaluate(page, {
       include: '[data-testid="patient-safety"]'

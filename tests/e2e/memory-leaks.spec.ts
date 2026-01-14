@@ -18,9 +18,10 @@ test('no memory growth after 50 analyses', async ({ page }) => {
   }
 
   const metrics = await page.evaluate(() => {
+    const perf = performance as unknown as { memory?: { totalJSHeapSize?: number; usedJSHeapSize?: number } };
     return {
-      totalJSHeapSize: (performance as any).memory?.totalJSHeapSize,
-      usedJSHeapSize: (performance as any).memory?.usedJSHeapSize
+      totalJSHeapSize: perf.memory?.totalJSHeapSize,
+      usedJSHeapSize: perf.memory?.usedJSHeapSize
     };
   });
 
@@ -30,8 +31,8 @@ test('no memory growth after 50 analyses', async ({ page }) => {
 test('should dispose tensors after component unmount', async ({ page }) => {
   await page.goto('/');
 
-  const initialStats = await page.evaluate(() => {
-    const vision = (window as any).visionSpecialist;
+  await page.evaluate(() => {
+    const vision = (window as unknown as { visionSpecialist?: { getTensorStats: () => unknown } }).visionSpecialist;
     return vision?.getTensorStats();
   });
 
@@ -41,7 +42,7 @@ test('should dispose tensors after component unmount', async ({ page }) => {
   await page.waitForSelector('[data-status="completed"]', { timeout: 60000 });
 
   const disposeCalled = await page.evaluate(() => {
-    return (window as any).disposeCalled;
+    return (window as unknown as { disposeCalled?: boolean }).disposeCalled;
   });
 
   expect(disposeCalled).toBe(true);

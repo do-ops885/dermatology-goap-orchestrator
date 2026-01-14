@@ -1,6 +1,7 @@
+import { X, ShieldCheck, AlertTriangle, CheckCircle2, TrendingUp, Activity, Fingerprint, Lock, Database, RefreshCcw, BrainCircuit } from 'lucide-react';
 import React, { useMemo, useEffect, useState, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
-import { X, ShieldCheck, AlertTriangle, CheckCircle2, TrendingUp, Activity, Fingerprint, Lock, Database, RefreshCcw, BrainCircuit } from 'lucide-react';
+
 import AgentDB from '../services/agentDB';
 
 interface FairnessReportProps {

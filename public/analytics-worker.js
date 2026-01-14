@@ -1,8 +1,7 @@
+/* global clients */
 // Service worker for batch analytics
-const ANALYTICS_KEY = 'fairness_analytics_cache';
-const BATCH_SIZE = 100;
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 

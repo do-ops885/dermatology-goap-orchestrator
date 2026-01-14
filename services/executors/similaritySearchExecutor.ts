@@ -1,14 +1,16 @@
-import type { AgentContext, ExecutorResult } from './types';
+import type { AgentContext, ExecutorResult, ClinicalAnalysisResult } from './types';
+import type { ReasoningPattern } from '../types';
 
 export const similaritySearchExecutor = async ({ reasoningBank, currentState, analysisPayload, setResult }: AgentContext): Promise<ExecutorResult> => {
-  const query = `Fitzpatrick ${currentState.fitzpatrick_type}, ${analysisPayload.lesions?.[0]?.type || 'Lesion'}`;
+  const lesions = analysisPayload.lesions as { type?: string }[] | undefined;
+  const query = `Fitzpatrick ${String(currentState.fitzpatrick_type)}, ${String(lesions?.[0]?.type) || 'Lesion'}`;
   const matches = await reasoningBank.searchPatterns({ 
     task: query, 
     k: 10 
-  }) as any[];
+  }) as ReasoningPattern[];
   
   Object.assign(analysisPayload, { similarCases: matches });
-  setResult({ ...analysisPayload });
+  setResult(analysisPayload as unknown as ClinicalAnalysisResult);
 
   return { 
     metadata: { 

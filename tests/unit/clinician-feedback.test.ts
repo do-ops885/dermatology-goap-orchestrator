@@ -1,6 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
+
 import AgentDB from '../../services/agentDB';
-import type { FitzpatrickType, ClinicianFeedback } from '../../types';
+
+import type { ClinicianFeedback } from '../../types';
 
 describe('Clinician Feedback Integration', () => {
   let agentDB: AgentDB;

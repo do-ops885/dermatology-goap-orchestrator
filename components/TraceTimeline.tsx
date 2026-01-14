@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import React, { useMemo } from 'react';
+
 import type { ExecutionTrace, ExecutionAgentRecord } from '../services/goap/agent';
 
 interface TraceTimelineProps {
@@ -112,7 +113,7 @@ export const TraceTimeline: React.FC<TraceTimelineProps> = ({ trace, currentAgen
       
       <div className="flex justify-between mt-1 text-[9px] text-stone-400 font-mono">
         <span>{new Date(trace.startTime).toLocaleTimeString([], { hour12: false })}</span>
-        <span>{trace.endTime !== null && trace.endTime !== undefined ? new Date(trace.endTime).toLocaleTimeString([], { hour12: false }) : 'now'}</span>
+        <span>{trace.endTime !== undefined ? new Date(trace.endTime).toLocaleTimeString([], { hour12: false }) : 'now'}</span>
       </div>
     </div>
   );

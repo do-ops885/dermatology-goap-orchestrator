@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+
 import { axe } from './test-utils';
 
 test.describe('Accessibility - Navigation', () => {

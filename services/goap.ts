@@ -1,4 +1,4 @@
-import { AgentAction, WorldState } from '../types';
+import type { AgentAction, WorldState } from '../types';
 
 export const AVAILABLE_ACTIONS: AgentAction[] = [
   {
@@ -178,7 +178,8 @@ export class GOAPPlanner {
 
       // Sort by F-score (lowest first) - Mimics Priority Queue
       openList.sort((a, b) => a.f - b.f);
-      const currentNode = openList.shift()!;
+      const currentNode = openList.shift();
+      if (!currentNode) continue;
 
       // Check if current state satisfies all goal conditions
       if (this.satisfiesGoal(currentNode.state, goalState)) {
@@ -238,7 +239,7 @@ export class GOAPPlanner {
   private calculateRobustHeuristic(currentState: WorldState, goalState: Partial<WorldState>): number {
     let estimatedCost = 0;
     const visited = new Set<string>();
-    const queue: { key: keyof WorldState, value: any }[] = [];
+    const queue: { key: keyof WorldState, value: unknown }[] = [];
 
     // Initialize queue with unsatisfied goals
     for (const key in goalState) {
@@ -249,7 +250,7 @@ export class GOAPPlanner {
     }
 
     while (queue.length > 0) {
-        const item = queue.shift()!;
+        const item = queue.shift();
         const itemKeyStr = `${item.key}:${item.value}`;
         
         if (visited.has(itemKeyStr)) continue;
@@ -313,14 +314,14 @@ export class GOAPPlanner {
     // Generate a unique string key for the state to use in Sets/Maps
     // We sort keys to ensure deterministic output
     const relevantKeys = Object.keys(state).sort() as (keyof WorldState)[];
-    const values = relevantKeys.map(k => `${k}:${state[k]}`);
+    const values = relevantKeys.map(k => `${k}:${String(state[k])}`);
     return values.join('|');
   }
 
   private reconstructPath(node: PlannerNode): AgentAction[] {
     const plan: AgentAction[] = [];
     let current: PlannerNode | null = node;
-    while (current && current.action) {
+    while (current?.action) {
       plan.unshift(current.action);
       current = current.parent;
     }

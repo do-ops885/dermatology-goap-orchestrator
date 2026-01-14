@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import AgentDB, { ReasoningBank } from '../../services/agentDB';
+
+import AgentDB from '../../services/agentDB';
+
+import type { ReasoningBank } from '../../services/agentDB';
 
 // Mock dependencies
 const mockGetAllPatterns = vi.fn();

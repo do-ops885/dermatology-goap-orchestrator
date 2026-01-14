@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { Upload, Activity, Database, AlertCircle, AlertTriangle, Eye, EyeOff, Shield } from 'lucide-react';
-import { ModelProgress } from './ModelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Upload, Activity, Database, AlertCircle, AlertTriangle, Eye, EyeOff, Shield } from 'lucide-react';
+import React, { useState } from 'react';
+
+import { ModelProgress } from './ModelProgress';
+
 
 interface AnalysisIntakeProps {
   error: string | null;
@@ -12,10 +14,10 @@ interface AnalysisIntakeProps {
   dbReady: boolean;
   file: File | null;
   heatmapOverlay?: string;
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFileChange: (_e: React.ChangeEvent<HTMLInputElement>) => void;
   onExecute: () => void;
   privacyMode?: boolean;
-  setPrivacyMode?: (val: boolean) => void;
+  setPrivacyMode?: (_val: boolean) => void;
 }
 
 export const AnalysisIntake: React.FC<AnalysisIntakeProps> = ({

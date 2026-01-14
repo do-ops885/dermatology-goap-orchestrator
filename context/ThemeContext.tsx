@@ -4,12 +4,12 @@ export type Theme = 'light' | 'dark' | 'contrast';
 
 interface ThemeContextType {
   theme: Theme;
-  setTheme: (theme: Theme) => void;
+  setTheme: (_theme: Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType>({ 
   theme: 'light', 
-  setTheme: () => {
+  setTheme: (_theme: Theme) => {
     // Default no-op, overridden by provider
   } 
 });

@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
 import { Bell, Check, AlertTriangle, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
+import type { NotificationService } from '../services/notifications';
 import type { ClinicianNotification, SafetyLevel } from '../types';
-import { NotificationService } from '../services/notifications';
+
 
 interface NotificationCenterProps {
   clinicianId: string;
@@ -29,9 +31,9 @@ export function NotificationCenter({ clinicianId }: NotificationCenterProps) {
     void init();
   }, []);
 
-  const handleAcknowledge = async (notificationId: string) => {
+  const handleAcknowledge = (notificationId: string) => {
     if (notificationService) {
-      await notificationService.acknowledgeNotification(notificationId, clinicianId, 'Reviewed');
+      notificationService.acknowledgeNotification(notificationId, clinicianId, 'Reviewed');
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
     }
   };
@@ -100,8 +102,8 @@ export function NotificationCenter({ clinicianId }: NotificationCenterProps) {
                   {n.riskLevel !== undefined && (
                     <p className="text-xs text-stone-600 mb-2">Risk: {n.riskLevel}</p>
                   )}
-                  <button
-                    onClick={() => { void handleAcknowledge(n.id); }}
+                    <button
+                    onClick={() => { handleAcknowledge(n.id); }}
                     className="flex items-center gap-1 px-2 py-1 text-xs font-bold text-white bg-stone-600 hover:bg-stone-700 rounded-lg transition-colors"
                   >
                     <Check className="w-3 h-3" />

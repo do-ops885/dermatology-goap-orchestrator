@@ -1,12 +1,22 @@
-import type { AgentContext, ExecutorResult } from './types';
 import { Logger } from '../logger';
+
+import type { AgentContext, ExecutorResult, ClinicalAnalysisResult } from './types';
+
+interface WebSource {
+  title?: string;
+  uri?: string;
+}
+
+function isValidSource(s: WebSource): s is { title?: string | undefined; uri: string } {
+  return typeof s.uri === 'string' && s.uri.length > 0;
+}
 
 export const webVerificationExecutor = async ({ ai, currentState, analysisPayload, setResult, privacyMode }: AgentContext): Promise<ExecutorResult> => {
   if (privacyMode) {
     Object.assign(analysisPayload, {
       webVerification: { verified: false, sources: [], summary: "Privacy Mode: Web verification skipped." }
     });
-    setResult({ ...analysisPayload });
+    setResult(analysisPayload as unknown as ClinicalAnalysisResult);
     return { metadata: { status: 'skipped_privacy' } };
   }
 
@@ -14,12 +24,13 @@ export const webVerificationExecutor = async ({ ai, currentState, analysisPayloa
     Object.assign(analysisPayload, {
       webVerification: { verified: false, sources: [], summary: "Offline Mode: Web verification skipped." }
     });
-    setResult({ ...analysisPayload });
+    setResult(analysisPayload as unknown as ClinicalAnalysisResult);
     return { metadata: { status: 'skipped_offline' } };
   }
 
-  const lesionType = analysisPayload.lesions?.[0]?.type || 'skin condition';
-  const query = `latest clinical guidelines and risk factors for ${lesionType} in Fitzpatrick skin type ${currentState.fitzpatrick_type || 'unspecified'}`;
+  const lesions = analysisPayload.lesions as { type?: string }[] | undefined;
+  const lesionType = lesions?.[0]?.type ?? 'skin condition';
+  const query = `latest clinical guidelines and risk factors for ${lesionType} in Fitzpatrick skin type ${String(currentState.fitzpatrick_type) || 'unspecified'}`;
   
   try {
     const response = await ai.models.generateContent({
@@ -31,13 +42,13 @@ export const webVerificationExecutor = async ({ ai, currentState, analysisPayloa
       }
     });
 
-    const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks
-      ?.map((c: any) => ({
-        title: c.web?.title,
-        uri: c.web?.uri
+    const sources = (response.candidates?.[0]?.groundingMetadata?.groundingChunks || [])
+      .map((c: WebSource) => ({
+        title: c.title,
+        uri: c.uri
       }))
-      .filter((s: any) => s.uri)
-      .slice(0, 3) || [];
+      .filter(isValidSource)
+      .slice(0, 3);
     
     Object.assign(analysisPayload, {
       webVerification: {
@@ -46,7 +57,7 @@ export const webVerificationExecutor = async ({ ai, currentState, analysisPayloa
         summary: response.text
       }
     });
-    setResult({ ...analysisPayload });
+    setResult(analysisPayload as unknown as ClinicalAnalysisResult);
 
     return { metadata: { source_count: sources.length, engine: 'Gemini 3 Flash + Google Search' } };
   } catch (e) {

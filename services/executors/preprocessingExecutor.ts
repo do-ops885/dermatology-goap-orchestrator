@@ -1,4 +1,4 @@
-import type { AgentContext, ExecutorResult } from './types';
+import type { ExecutorResult } from './types';
 
 export const preprocessingExecutor = async (): Promise<ExecutorResult> => {
   await new Promise(r => setTimeout(r, 400));

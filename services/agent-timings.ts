@@ -1,57 +1,58 @@
-export class AgentTimings {
-  private static timings = new Map<string, number[]>();
+// Convert static class to module export (2025 best practice)
+const timings = new Map<string, number[]>();
 
-  static record(agentId: string, duration: number) {
-    const timings = this.timings.get(agentId) || [];
-    timings.push(duration);
-    this.timings.set(agentId, timings.slice(-100));
-  }
+export const AgentTimings = {
+  record(agentId: string, duration: number): void {
+    const agentTimings = timings.get(agentId) ?? [];
+    agentTimings.push(duration);
+    timings.set(agentId, agentTimings.slice(-100));
+  },
 
-  static getAverage(agentId: string): number {
-    const timings = this.timings.get(agentId) || [];
-    if (timings.length === 0) return 0;
-    return timings.reduce((a, b) => a + b, 0) / timings.length;
-  }
+  getAverage(agentId: string): number {
+    const agentTimings = timings.get(agentId);
+    if (!agentTimings || agentTimings.length === 0) return 0;
+    return agentTimings.reduce((a, b) => a + b, 0) / agentTimings.length;
+  },
 
-  static getP95(agentId: string): number {
-    const timings = this.timings.get(agentId) || [];
-    if (timings.length === 0) return 0;
-    timings.sort((a, b) => a - b);
-    return timings[Math.floor(timings.length * 0.95)];
-  }
+  getP95(agentId: string): number {
+    const agentTimings = timings.get(agentId);
+    if (!agentTimings || agentTimings.length === 0) return 0;
+    const sorted = [...agentTimings].sort((a, b) => a - b);
+    return sorted[Math.floor(sorted.length * 0.95)];
+  },
 
-  static getP99(agentId: string): number {
-    const timings = this.timings.get(agentId) || [];
-    if (timings.length === 0) return 0;
-    timings.sort((a, b) => a - b);
-    return timings[Math.floor(timings.length * 0.99)];
-  }
+  getP99(agentId: string): number {
+    const agentTimings = timings.get(agentId);
+    if (!agentTimings || agentTimings.length === 0) return 0;
+    const sorted = [...agentTimings].sort((a, b) => a - b);
+    return sorted[Math.floor(sorted.length * 0.99)];
+  },
 
-  static getReport(): Record<string, { avg: number; p95: number; p99: number; count: number }> {
+  getReport(): Record<string, { avg: number; p95: number; p99: number; count: number }> {
     const report: Record<string, { avg: number; p95: number; p99: number; count: number }> = {};
-    for (const [agentId, timings] of this.timings) {
+    for (const [agentId, agentTimings] of timings) {
       report[agentId] = {
         avg: this.getAverage(agentId),
         p95: this.getP95(agentId),
         p99: this.getP99(agentId),
-        count: timings.length
+        count: agentTimings.length
       };
     }
     return report;
-  }
+  },
 
-  static getAllTimings(): Map<string, number[]> {
-    return new Map(this.timings);
-  }
+  getAllTimings(): Map<string, number[]> {
+    return new Map(timings);
+  },
 
-  static clear(agentId?: string) {
-    if (agentId) {
-      this.timings.delete(agentId);
+  clear(agentId?: string): void {
+    if (agentId !== undefined) {
+      timings.delete(agentId);
     } else {
-      this.timings.clear();
+      timings.clear();
     }
   }
-}
+};
 
 export const PERFORMANCE_BUDGETS = {
   verification: 2000,
@@ -70,12 +71,14 @@ export const PERFORMANCE_BUDGETS = {
   encryption: 2000,
   audit: 1000,
   total: 72000
-};
+} as const;
+
+export type PerformanceBudgetKey = keyof typeof PERFORMANCE_BUDGETS;
 
 export function checkBudget(agentId: string, duration: number): boolean {
-  return duration <= (PERFORMANCE_BUDGETS as any)[agentId] || false;
+  return duration <= (PERFORMANCE_BUDGETS as Record<string, number>)[agentId];
 }
 
 export function getBudgetForAgent(agentId: string): number {
-  return (PERFORMANCE_BUDGETS as any)[agentId] || 0;
+  return (PERFORMANCE_BUDGETS as Record<string, number>)[agentId] ?? 0;
 }

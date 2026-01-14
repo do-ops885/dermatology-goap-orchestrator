@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { calibrateForConfidence, SafetyCalibrationConfig } from '../../../services/executors/calibration';
+
+import { calibrateForConfidence, type SafetyCalibrationConfig } from '../../../services/executors/calibration';
 
 describe('Calibration Agent', () => {
   describe('Standard Calibration', () => {

@@ -1,4 +1,5 @@
-import { createDatabase, ReasoningBank, EmbeddingService, LocalLLMService } from 'agentdb';
+import { createDatabase, ReasoningBank, EmbeddingService } from 'agentdb';
+
 import { Logger } from './logger';
 
 export class ServiceRegistry {
@@ -24,7 +25,7 @@ export class ServiceRegistry {
     await embedder.initialize();
     this.register('embedder', embedder);
 
-    const reasoningBank = new ReasoningBank(db, embedder);
+    const reasoningBank = new ReasoningBank(db as unknown as Record<string, unknown>, embedder);
     this.register('reasoningBank', reasoningBank);
 
     const { VisionSpecialist } = await import('./vision');
@@ -32,6 +33,7 @@ export class ServiceRegistry {
     await vision.initialize();
     this.register('vision', vision);
 
+    const { LocalLLMService } = await import('./agentDB');
     const localLLM = new LocalLLMService();
     this.register('localLLM', localLLM);
 
@@ -48,7 +50,7 @@ export class ServiceRegistry {
 
   getOrInitialize<T>(key: string, initializer: () => Promise<T>): Promise<T> {
     const existing = this.services.get(key);
-    if (existing) return Promise.resolve(existing);
+    if (existing !== undefined) return Promise.resolve(existing);
     return initializer().then(service => {
       this.register(key, service);
       return service;

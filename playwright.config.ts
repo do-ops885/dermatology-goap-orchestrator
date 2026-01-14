@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+/* eslint-disable @typescript-eslint/strict-boolean-expressions */
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
