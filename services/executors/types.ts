@@ -1,5 +1,3 @@
-
-
 import type { WorldState } from '../../types';
 import type { ReasoningBank, LocalLLMService } from '../agentDB';
 import type AgentDB from '../agentDB';
@@ -63,7 +61,9 @@ export const loadImageElement = (file: File): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.src = URL.createObjectURL(file);
-    img.onload = () => { resolve(img); };
+    img.onload = () => {
+      resolve(img);
+    };
     img.onerror = reject;
   });
 };

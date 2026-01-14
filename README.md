@@ -79,16 +79,16 @@ Image Upload
 
 ### Tech Stack
 
-| Category | Technology |
-|----------|-----------|
-| **Frontend** | React 19, TypeScript 5.8, Vite 6 |
-| **Styling** | Tailwind CSS, Framer Motion |
-| **ML Inference** | TensorFlow.js (WebGPU), WebLLM, @xenova/transformers |
-| **Vector DB** | AgentDB (local, browser-based) |
-| **Vision** | Gemini 3 Flash API |
-| **State Management** | React Hooks, Context API |
-| **Testing** | Vitest (unit), Playwright (E2E), @axe-core (a11y) |
-| **Code Quality** | ESLint, TypeScript strict mode, SonarJS |
+| Category             | Technology                                           |
+| -------------------- | ---------------------------------------------------- |
+| **Frontend**         | React 19, TypeScript 5.8, Vite 6                     |
+| **Styling**          | Tailwind CSS, Framer Motion                          |
+| **ML Inference**     | TensorFlow.js (WebGPU), WebLLM, @xenova/transformers |
+| **Vector DB**        | AgentDB (local, browser-based)                       |
+| **Vision**           | Gemini 3 Flash API                                   |
+| **State Management** | React Hooks, Context API                             |
+| **Testing**          | Vitest (unit), Playwright (E2E), @axe-core (a11y)    |
+| **Code Quality**     | ESLint, TypeScript strict mode, SonarJS              |
 
 ---
 
@@ -103,33 +103,38 @@ Image Upload
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/do-ops885/dermatology-goap-orchestrator.git
    cd dermatology-goap-orchestrator
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Configure environment variables**
-   
+
    Create a `.env.local` file in the root directory:
+
    ```env
    GEMINI_API_KEY=your_gemini_api_key_here
    ```
 
 4. **Initialize AgentDB** (optional, for local vector store)
+
    ```bash
    npm run agentdb:init
    ```
 
 5. **Start the development server**
+
    ```bash
    npm run dev
    ```
-   
+
    Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
@@ -138,17 +143,17 @@ Image Upload
 
 ### Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start Vite dev server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
-| `npm run lint` | Run ESLint |
-| `npm run lint:fix` | Auto-fix ESLint issues |
-| `npm test` | Run Vitest unit tests |
-| `npx playwright test` | Run Playwright E2E tests |
-| `npx playwright test --ui` | Run E2E tests with UI mode |
-| `npm run agentdb:init` | Initialize AgentDB vector store |
+| Command                    | Description                     |
+| -------------------------- | ------------------------------- |
+| `npm run dev`              | Start Vite dev server           |
+| `npm run build`            | Build for production            |
+| `npm run preview`          | Preview production build        |
+| `npm run lint`             | Run ESLint                      |
+| `npm run lint:fix`         | Auto-fix ESLint issues          |
+| `npm test`                 | Run Vitest unit tests           |
+| `npx playwright test`      | Run Playwright E2E tests        |
+| `npx playwright test --ui` | Run E2E tests with UI mode      |
+| `npm run agentdb:init`     | Initialize AgentDB vector store |
 
 ### Code Quality Standards
 

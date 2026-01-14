@@ -30,7 +30,7 @@ vi.mock('@tensorflow/tfjs', async () => {
       relu: vi.fn().mockReturnThis(),
       min: vi.fn().mockReturnThis(),
       max: vi.fn().mockReturnThis(),
-      dispose: vi.fn()
+      dispose: vi.fn(),
     };
     return mockTensor;
   };
@@ -47,40 +47,40 @@ vi.mock('@tensorflow/tfjs', async () => {
         resizeNearestNeighbor: vi.fn().mockReturnValue({
           toFloat: vi.fn().mockReturnValue({
             div: vi.fn().mockReturnValue({
-              expandDims: vi.fn()
-            })
-          })
+              expandDims: vi.fn(),
+            }),
+          }),
         }),
         toFloat: vi.fn().mockReturnValue({
           div: vi.fn().mockReturnValue({
             shape: [224, 224, 3],
             mean: vi.fn().mockReturnValue(createMockTensor()),
-            dispose: vi.fn()
+            dispose: vi.fn(),
           }),
-          dispose: vi.fn()
+          dispose: vi.fn(),
         }),
-        dispose: vi.fn()
+        dispose: vi.fn(),
       }),
-      toPixels: vi.fn()
+      toPixels: vi.fn(),
     },
     scalar: vi.fn().mockReturnValue(createMockTensor()),
     linspace: vi.fn().mockReturnValue([]),
     meshgrid: vi.fn().mockReturnValue([createMockTensor(), createMockTensor()]),
     exp: vi.fn().mockReturnValue(createMockTensor()),
     image: {
-      resizeBilinear: vi.fn().mockReturnValue(createMockTensor())
+      resizeBilinear: vi.fn().mockReturnValue(createMockTensor()),
     },
     stack: vi.fn(),
     memory: vi.fn().mockReturnValue({
       numTensors: 0,
       numDataBuffers: 0,
-      numBytes: 0
+      numBytes: 0,
     }),
     GraphModel: class {
       dispose(): void {
         // Mock implementation
       }
-    }
+    },
   };
 });
 
@@ -99,13 +99,13 @@ describe('Vision Memory Safety', () => {
     vi.clearAllMocks();
     mockPredict = vi.fn().mockReturnValue({
       dataSync: () => new Float32Array([0.1, 0.8, 0.05, 0.01, 0.01, 0.01, 0.02]),
-      dispose: vi.fn()
+      dispose: vi.fn(),
     });
     mockModelDispose = vi.fn();
 
     (tf.loadGraphModel as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       predict: mockPredict,
-      dispose: mockModelDispose
+      dispose: mockModelDispose,
     } as MockGraphModel);
   });
 

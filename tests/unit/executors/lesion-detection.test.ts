@@ -25,10 +25,10 @@ describe('Lesion-Detection-Agent', () => {
     suspiciousFeatures[0] = 0.95;
     suspiciousFeatures[1] = 0.88;
     suspiciousFeatures[2] = 0.92;
-    
+
     const result = detectLesions(suspiciousFeatures);
-    const melanoma = result.lesions.find(l => l.type === 'Melanoma');
-    
+    const melanoma = result.lesions.find((l) => l.type === 'Melanoma');
+
     if (melanoma) {
       expect(['Low', 'Medium', 'High']).toContain(melanoma.risk);
       expect(melanoma.confidence).toBeGreaterThan(0);
@@ -42,10 +42,10 @@ describe('Lesion-Detection-Agent', () => {
     }
     bccFeatures[100] = 0.85;
     bccFeatures[101] = 0.75;
-    
+
     const result = detectLesions(bccFeatures);
-    const bcc = result.lesions.find(l => l.type === 'Basal Cell Carcinoma');
-    
+    const bcc = result.lesions.find((l) => l.type === 'Basal Cell Carcinoma');
+
     if (bcc) {
       expect(bcc.confidence).toBeDefined();
       expect(bcc.risk).toMatch(/Low|Medium|High/);
@@ -55,8 +55,8 @@ describe('Lesion-Detection-Agent', () => {
   it('should return valid risk classifications', async () => {
     const features = new Float32Array(1280).fill(0.5);
     const result = detectLesions(features);
-    
-    result.lesions.forEach(lesion => {
+
+    result.lesions.forEach((lesion) => {
       expect(['Low', 'Medium', 'High']).toContain(lesion.risk);
       expect(lesion.confidence).toBeGreaterThanOrEqual(0);
       expect(lesion.confidence).toBeLessThanOrEqual(1);

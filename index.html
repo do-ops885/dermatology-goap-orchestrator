@@ -1,11 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://esm.sh; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://esm.sh https://generativelanguage.googleapis.com https://storage.googleapis.com https://huggingface.co https://raw.githubusercontent.com blob: data:;">
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://esm.sh; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://esm.sh https://generativelanguage.googleapis.com https://storage.googleapis.com https://huggingface.co https://raw.githubusercontent.com blob: data:;"
+    />
     <title>Dermatology AI Orchestrator</title>
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="/manifest.json" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -40,20 +43,23 @@
                 800: 'var(--stone-800)',
                 900: 'var(--stone-900)',
                 950: 'var(--stone-950)',
-              }
+              },
             },
             fontFamily: {
               grotesk: ['Space Grotesk', 'sans-serif'],
               sans: ['Inter', 'sans-serif'],
-            }
-          }
-        }
-      }
+            },
+          },
+        },
+      };
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
     <!-- Polyfills for Node.js environment -->
     <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
     <script>
@@ -61,25 +67,28 @@
       if (typeof window.Buffer === 'undefined' && typeof window.buffer !== 'undefined') {
         window.Buffer = window.buffer.Buffer;
       }
-      
+
       // Strict browser process mock
-      window.process = { 
+      window.process = {
         env: { NODE_ENV: 'production' },
         browser: true,
         version: '',
-        versions: {}, 
+        versions: {},
         platform: 'browser',
         nextTick: (cb) => setTimeout(cb, 0),
-        cwd: () => '/'
+        cwd: () => '/',
       };
 
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').then(registration => {
-            console.log('SW registered: ', registration);
-          }).catch(registrationError => {
-            console.log('SW registration failed: ', registrationError);
-          });
+          navigator.serviceWorker
+            .register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
         });
       }
     </script>
@@ -89,7 +98,7 @@
         /* Default Light Theme */
         --color-white: #ffffff;
         --color-black: #000000;
-        
+
         --stone-50: #fafaf9;
         --stone-100: #f5f5f4;
         --stone-200: #e7e5e4;
@@ -101,18 +110,18 @@
         --stone-800: #292524;
         --stone-900: #1c1917;
         --stone-950: #0c0a09;
-        
-        --color-bone: #FDFCF8;
-        --color-warm-grey: #F4F1EA;
-        --color-terracotta: #D96C5B;
-        --color-slate-green: #4A5D5E;
-        --color-soft-black: #1A1918;
+
+        --color-bone: #fdfcf8;
+        --color-warm-grey: #f4f1ea;
+        --color-terracotta: #d96c5b;
+        --color-slate-green: #4a5d5e;
+        --color-soft-black: #1a1918;
 
         --glass-bg: rgba(255, 255, 255, 0.7);
         --glass-border: rgba(255, 255, 255, 0.4);
       }
 
-      [data-theme="dark"] {
+      [data-theme='dark'] {
         --color-white: #1c1917; /* Dark bg for things that were white */
         --color-black: #f5f5f4; /* Light text for things that were black */
 
@@ -130,12 +139,12 @@
 
         --color-bone: #121212;
         --color-soft-black: #e7e5e4;
-        
+
         --glass-bg: rgba(30, 30, 30, 0.7);
         --glass-border: rgba(255, 255, 255, 0.1);
       }
 
-      [data-theme="contrast"] {
+      [data-theme='contrast'] {
         --color-white: #000000;
         --color-black: #ffffff;
 
@@ -162,9 +171,16 @@
         font-family: 'Inter', sans-serif;
         background-color: var(--stone-50);
         color: var(--stone-900);
-        transition: background-color 0.3s, color 0.3s;
+        transition:
+          background-color 0.3s,
+          color 0.3s;
       }
-      h1, h2, h3, h4, h5, h6 {
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
         font-family: 'Space Grotesk', sans-serif;
       }
       .font-grotesk {
@@ -175,10 +191,12 @@
         backdrop-filter: blur(12px);
         border: 1px solid var(--glass-border);
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        transition: background-color 0.3s, border-color 0.3s;
+        transition:
+          background-color 0.3s,
+          border-color 0.3s;
       }
       .pattern-grid {
-        background-image: radial-gradient(#4A5D5E 1px, transparent 1px);
+        background-image: radial-gradient(#4a5d5e 1px, transparent 1px);
         background-size: 24px 24px;
         opacity: 0.05;
       }
@@ -194,47 +212,47 @@
         border-radius: 20px;
       }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react-dom": "https://esm.sh/react-dom@^19.2.3",
-    "react-dom/client": "https://esm.sh/react-dom@^19.2.3/client",
-    "recharts": "https://esm.sh/recharts@^3.6.0",
-    "framer-motion": "https://esm.sh/framer-motion@^12.24.7",
-    "@google/genai": "https://esm.sh/@google/genai@^1.34.0?bundle",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "@mlc-ai/web-llm": "https://esm.sh/@mlc-ai/web-llm@0.2.61",
-    "@xenova/transformers": "https://esm.sh/@xenova/transformers@2.17.1",
-    "long": "https://esm.sh/long@5.2.3",
-    "buffer": "https://esm.sh/buffer@6.0.3",
-    "process": "https://esm.sh/process/browser",
-    "stream": "https://esm.sh/stream-browserify@3.0.0",
-    "util": "https://esm.sh/util@0.12.5",
-    "events": "https://esm.sh/events@3.3.0",
-    "fs": "data:text/javascript,export default {}",
-    "path": "data:text/javascript,export default {}",
-    "crypto": "data:text/javascript,export default {}",
-    "@tensorflow/tfjs": "https://esm.sh/@tensorflow/tfjs@4.17.0",
-    "@tensorflow/tfjs-backend-webgpu": "https://esm.sh/@tensorflow/tfjs-backend-webgpu@4.17.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "agentdb": "https://esm.sh/agentdb@0.0.6",
-    "vitest": "https://esm.sh/vitest@^4.0.16",
-    "@playwright/test": "https://esm.sh/@playwright/test@^1.57.0",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "typescript-eslint": "https://esm.sh/typescript-eslint@^8.52.0",
-    "web-vitals": "https://esm.sh/web-vitals@^5.1.0",
-    "@testing-library/react": "https://esm.sh/@testing-library/react@^16.3.1",
-    "globals": "https://esm.sh/globals@^17.0.0",
-    "@eslint/js": "https://esm.sh/@eslint/js@^9.39.2",
-    "eslint-plugin-react-hooks": "https://esm.sh/eslint-plugin-react-hooks@^7.0.1",
-    "eslint-plugin-react-refresh": "https://esm.sh/eslint-plugin-react-refresh@^0.4.26"
-  }
-}
-</script>
- </head>
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@^19.2.3",
+          "react/": "https://esm.sh/react@^19.2.3/",
+          "react-dom": "https://esm.sh/react-dom@^19.2.3",
+          "react-dom/client": "https://esm.sh/react-dom@^19.2.3/client",
+          "recharts": "https://esm.sh/recharts@^3.6.0",
+          "framer-motion": "https://esm.sh/framer-motion@^12.24.7",
+          "@google/genai": "https://esm.sh/@google/genai@^1.34.0?bundle",
+          "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+          "@mlc-ai/web-llm": "https://esm.sh/@mlc-ai/web-llm@0.2.61",
+          "@xenova/transformers": "https://esm.sh/@xenova/transformers@2.17.1",
+          "long": "https://esm.sh/long@5.2.3",
+          "buffer": "https://esm.sh/buffer@6.0.3",
+          "process": "https://esm.sh/process/browser",
+          "stream": "https://esm.sh/stream-browserify@3.0.0",
+          "util": "https://esm.sh/util@0.12.5",
+          "events": "https://esm.sh/events@3.3.0",
+          "fs": "data:text/javascript,export default {}",
+          "path": "data:text/javascript,export default {}",
+          "crypto": "data:text/javascript,export default {}",
+          "@tensorflow/tfjs": "https://esm.sh/@tensorflow/tfjs@4.17.0",
+          "@tensorflow/tfjs-backend-webgpu": "https://esm.sh/@tensorflow/tfjs-backend-webgpu@4.17.0",
+          "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+          "agentdb": "https://esm.sh/agentdb@0.0.6",
+          "vitest": "https://esm.sh/vitest@^4.0.16",
+          "@playwright/test": "https://esm.sh/@playwright/test@^1.57.0",
+          "vite": "https://esm.sh/vite@^7.3.1",
+          "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+          "typescript-eslint": "https://esm.sh/typescript-eslint@^8.52.0",
+          "web-vitals": "https://esm.sh/web-vitals@^5.1.0",
+          "@testing-library/react": "https://esm.sh/@testing-library/react@^16.3.1",
+          "globals": "https://esm.sh/globals@^17.0.0",
+          "@eslint/js": "https://esm.sh/@eslint/js@^9.39.2",
+          "eslint-plugin-react-hooks": "https://esm.sh/eslint-plugin-react-hooks@^7.0.1",
+          "eslint-plugin-react-refresh": "https://esm.sh/eslint-plugin-react-refresh@^0.4.26"
+        }
+      }
+    </script>
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>

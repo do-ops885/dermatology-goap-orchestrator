@@ -18,23 +18,25 @@ export function useFairnessAnalytics() {
 
   const runBatchAnalytics = useCallback(async () => {
     setLoading(true);
-    
+
     const db = AgentDB.getInstance();
     const patterns = await db.getAllPatterns();
-    
+
     const channel = new MessageChannel();
-    
-    channel.port1.onmessage = (event: MessageEvent<{ type: string; results: FairnessResult | null }>) => {
+
+    channel.port1.onmessage = (
+      event: MessageEvent<{ type: string; results: FairnessResult | null }>,
+    ) => {
       if (event.data.type === 'BATCH_ANALYTICS_COMPLETE') {
         setAnalytics(event.data.results);
         setLoading(false);
       }
     };
-    
+
     if (navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage(
         { type: 'RUN_BATCH_ANALYTICS', data: patterns },
-        [channel.port2]
+        [channel.port2],
       );
     } else {
       setLoading(false);
@@ -45,9 +47,15 @@ export function useFairnessAnalytics() {
     try {
       const registration = await navigator.serviceWorker.getRegistration();
       if (registration && 'periodicSync' in registration) {
-        const periodicSync = (registration as unknown as { periodicSync: { register(_tag: string, _options: { minInterval: number }): Promise<void> } }).periodicSync;
+        const periodicSync = (
+          registration as unknown as {
+            periodicSync: {
+              register(_tag: string, _options: { minInterval: number }): Promise<void>;
+            };
+          }
+        ).periodicSync;
         await periodicSync.register('fairness-analytics', {
-          minInterval: 24 * 60 * 60 * 1000
+          minInterval: 24 * 60 * 60 * 1000,
         });
       }
     } catch (e) {

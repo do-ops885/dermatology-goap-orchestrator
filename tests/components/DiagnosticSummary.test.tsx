@@ -16,13 +16,13 @@ describe('DiagnosticSummary', () => {
     recommendations: ['See a doctor immediately.'],
     signature: 'sig-123',
     webVerification: { verified: true, sources: [], summary: 'Verified online.' },
-    securityContext: { 
-        encrypted: true, 
-        algorithm: 'AES-GCM', 
-        timestamp: 123, 
-        iv: [1,2,3], 
-        payloadSize: 100 
-    }
+    securityContext: {
+      encrypted: true,
+      algorithm: 'AES-GCM',
+      timestamp: 123,
+      iv: [1, 2, 3],
+      payloadSize: 100,
+    },
   };
 
   it('renders idle state when no result', () => {
@@ -32,7 +32,7 @@ describe('DiagnosticSummary', () => {
 
   it('renders diagnosis details correctly', () => {
     render(<DiagnosticSummary result={mockResult} />);
-    
+
     expect(screen.getByText('Type III')).toBeInTheDocument();
     expect(screen.getByText('85.0%')).toBeInTheDocument();
     expect(screen.getByText('SECURED')).toBeInTheDocument();
@@ -45,7 +45,7 @@ describe('DiagnosticSummary', () => {
     globalThis.URL.revokeObjectURL = vi.fn();
 
     render(<DiagnosticSummary result={mockResult} />);
-    
+
     const exportBtn = screen.getByText('Export Encrypted Report');
     fireEvent.click(exportBtn);
 

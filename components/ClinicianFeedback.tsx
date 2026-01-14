@@ -16,7 +16,11 @@ interface ClinicianFeedbackProps {
   onDismiss: () => void;
 }
 
-export function ClinicianFeedback({ currentDiagnosis, onSubmit, onDismiss }: ClinicianFeedbackProps) {
+export function ClinicianFeedback({
+  currentDiagnosis,
+  onSubmit,
+  onDismiss,
+}: ClinicianFeedbackProps) {
   const [correctedDiagnosis, setCorrectedDiagnosis] = useState('');
   const [confidence, setConfidence] = useState(0.8);
   const [notes, setNotes] = useState('');
@@ -29,7 +33,7 @@ export function ClinicianFeedback({ currentDiagnosis, onSubmit, onDismiss }: Cli
       correctedDiagnosis: correctedDiagnosis || undefined,
       confidence,
       notes,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
     setSubmitted(true);
   };
@@ -41,7 +45,9 @@ export function ClinicianFeedback({ currentDiagnosis, onSubmit, onDismiss }: Cli
           <CheckCircle className="w-4 h-4 text-green-600" />
           <span className="text-sm font-bold text-green-800">Feedback Submitted</span>
         </div>
-        <p className="text-xs text-green-700 mb-3">Thank you for helping improve our AI diagnostics.</p>
+        <p className="text-xs text-green-700 mb-3">
+          Thank you for helping improve our AI diagnostics.
+        </p>
         <button
           onClick={onDismiss}
           className="px-3 py-1.5 text-xs font-bold text-green-700 bg-green-100 hover:bg-green-200 rounded-lg transition-colors"
@@ -60,31 +66,41 @@ export function ClinicianFeedback({ currentDiagnosis, onSubmit, onDismiss }: Cli
           <X className="w-4 h-4" />
         </button>
       </div>
-      
-      <p className="text-[10px] text-stone-500 mb-4">Help us improve by reviewing this diagnosis.</p>
-      
+
+      <p className="text-[10px] text-stone-500 mb-4">
+        Help us improve by reviewing this diagnosis.
+      </p>
+
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1">AI Diagnosis</label>
+          <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1">
+            AI Diagnosis
+          </label>
           <input
             value={currentDiagnosis}
             disabled
             className="w-full px-2 py-1.5 text-xs bg-stone-100 border border-stone-200 rounded-lg text-stone-600 cursor-not-allowed"
           />
         </div>
-        
+
         <div>
-          <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1">Corrected Diagnosis (optional)</label>
+          <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1">
+            Corrected Diagnosis (optional)
+          </label>
           <input
             value={correctedDiagnosis}
-            onChange={e => { setCorrectedDiagnosis(e.target.value); }}
+            onChange={(e) => {
+              setCorrectedDiagnosis(e.target.value);
+            }}
             placeholder="Enter corrected diagnosis..."
             className="w-full px-2 py-1.5 text-xs bg-white border border-stone-200 rounded-lg focus:outline-none focus:border-terracotta-300"
           />
         </div>
-        
+
         <div>
-          <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1">Confidence Score</label>
+          <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1">
+            Confidence Score
+          </label>
           <div className="flex items-center gap-2">
             <input
               type="range"
@@ -92,24 +108,30 @@ export function ClinicianFeedback({ currentDiagnosis, onSubmit, onDismiss }: Cli
               max="1"
               step="0.1"
               value={confidence}
-              onChange={e => { setConfidence(parseFloat(e.target.value)); }}
+              onChange={(e) => {
+                setConfidence(parseFloat(e.target.value));
+              }}
               className="flex-1 accent-terracotta-500"
             />
-            <span className="text-xs font-mono font-bold text-stone-700 w-10 text-right">{(confidence * 100).toFixed(0)}%</span>
+            <span className="text-xs font-mono font-bold text-stone-700 w-10 text-right">
+              {(confidence * 100).toFixed(0)}%
+            </span>
           </div>
         </div>
-        
+
         <div>
           <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1">Notes</label>
           <textarea
             value={notes}
-            onChange={e => { setNotes(e.target.value); }}
+            onChange={(e) => {
+              setNotes(e.target.value);
+            }}
             placeholder="Add clinical notes..."
             rows={2}
             className="w-full px-2 py-1.5 text-xs bg-white border border-stone-200 rounded-lg resize-none focus:outline-none focus:border-terracotta-300"
           />
         </div>
-        
+
         <div className="flex gap-2 pt-1">
           <button
             type="submit"

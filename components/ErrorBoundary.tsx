@@ -17,7 +17,7 @@ interface State {
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
-    error: null
+    error: null,
   };
 
   public static getDerivedStateFromError(error: Error): State {
@@ -27,7 +27,7 @@ export class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     Logger.error(this.props.componentName ?? 'ErrorBoundary', 'Component Crashed', {
       error: error.message,
-      stack: errorInfo.componentStack ?? ''
+      stack: errorInfo.componentStack ?? '',
     });
   }
 
@@ -46,9 +46,9 @@ export class ErrorBoundary extends Component<Props, State> {
             {this.props.componentName ?? 'System'} Module Failed
           </h3>
           <p className="text-xs text-red-600 mb-4 max-w-xs leading-relaxed">
-            {this.state.error?.message ?? "An unexpected error occurred."}
+            {this.state.error?.message ?? 'An unexpected error occurred.'}
           </p>
-          <button 
+          <button
             onClick={this.handleReset}
             className="flex items-center gap-2 px-3 py-1.5 bg-white border border-red-200 rounded-lg text-xs font-bold text-red-700 hover:bg-red-50 transition-colors shadow-sm"
           >

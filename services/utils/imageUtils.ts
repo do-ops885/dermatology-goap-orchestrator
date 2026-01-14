@@ -28,34 +28,39 @@ export const optimizeImage = (file: File): Promise<string> => {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        
-        const dataUrl = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.85);
+
+        const dataUrl = canvas.toDataURL(
+          file.type === 'image/png' ? 'image/png' : 'image/jpeg',
+          0.85,
+        );
         resolve(dataUrl.split(',')[1]);
       };
-      img.onerror = (err) => { 
-        reject(new Error(err instanceof Error ? err.message : 'Image load failed')); 
+      img.onerror = (err) => {
+        reject(new Error(err instanceof Error ? err.message : 'Image load failed'));
       };
     };
-    reader.onerror = (err) => { 
-      reject(new Error(err instanceof Error ? err.message : 'File read failed')); 
+    reader.onerror = (err) => {
+      reject(new Error(err instanceof Error ? err.message : 'File read failed'));
     };
   });
 };
 
 export const loadImageElement = (file: File): Promise<HTMLImageElement> => {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.src = URL.createObjectURL(file);
-        img.onload = () => { resolve(img); };
-        img.onerror = (err) => {
-          reject(new Error(err instanceof Error ? err.message : 'Image load failed'));
-        };
-    });
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    img.onload = () => {
+      resolve(img);
+    };
+    img.onerror = (err) => {
+      reject(new Error(err instanceof Error ? err.message : 'Image load failed'));
+    };
+  });
 };
 
 export const calculateImageHash = async (file: File): Promise<string> => {
   const arrayBuffer = await file.arrayBuffer();
   const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 };

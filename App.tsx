@@ -32,7 +32,7 @@ export default function App() {
     privacyMode,
     setPrivacyMode,
     trace,
-    currentAgent
+    currentAgent,
   } = useClinicalAnalysis();
 
   const handleExecute = () => {
@@ -45,17 +45,22 @@ export default function App() {
   return (
     <ThemeProvider>
       <div className="min-h-screen p-4 md:p-8 flex flex-col gap-8 transition-colors duration-300">
-        {showFairnessReport && <FairnessReport onClose={() => { setShowFairnessReport(false); }} />}
+        {showFairnessReport && (
+          <FairnessReport
+            onClose={() => {
+              setShowFairnessReport(false);
+            }}
+          />
+        )}
 
         <ErrorBoundary componentName="Header">
-           <Header dbReady={dbReady} />
+          <Header dbReady={dbReady} />
         </ErrorBoundary>
 
         <main className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-[700px]">
-
           <div className="lg:col-span-4 flex flex-col gap-6">
             <ErrorBoundary componentName="Intake Module">
-                <AnalysisIntake
+              <AnalysisIntake
                 error={errorMessage}
                 warning={warning}
                 modelProgress={modelProgress}
@@ -63,33 +68,38 @@ export default function App() {
                 analyzing={analyzing}
                 dbReady={dbReady}
                 file={file}
-                onFileChange={(_e) => { void handleFileChange(_e); }}
+                onFileChange={(_e) => {
+                  void handleFileChange(_e);
+                }}
                 onExecute={handleExecute}
                 heatmapOverlay={result?.lesions?.[0]?.heatmap}
                 privacyMode={privacyMode}
                 setPrivacyMode={setPrivacyMode}
-                />
+              />
             </ErrorBoundary>
             <ErrorBoundary componentName="Fairness Dashboard">
-                <FairnessDashboard onOpenReport={() => { setShowFairnessReport(true); }} />
+              <FairnessDashboard
+                onOpenReport={() => {
+                  setShowFairnessReport(true);
+                }}
+              />
             </ErrorBoundary>
           </div>
 
           <div className="lg:col-span-4 h-full">
-              <ErrorBoundary componentName="Agent Flow Orchestrator">
-                  <AgentFlow trace={trace} currentAgent={currentAgent} ref={agentFlowRef} />
-              </ErrorBoundary>
+            <ErrorBoundary componentName="Agent Flow Orchestrator">
+              <AgentFlow trace={trace} currentAgent={currentAgent} ref={agentFlowRef} />
+            </ErrorBoundary>
           </div>
 
           <div className="lg:col-span-4 flex flex-col gap-6">
-              <ErrorBoundary componentName="Safety State">
-                  <PatientSafetyState worldState={worldState} />
-              </ErrorBoundary>
-              <ErrorBoundary componentName="Diagnostic Summary">
-                  <DiagnosticSummary result={result as AnalysisResult | null} />
-              </ErrorBoundary>
+            <ErrorBoundary componentName="Safety State">
+              <PatientSafetyState worldState={worldState} />
+            </ErrorBoundary>
+            <ErrorBoundary componentName="Diagnostic Summary">
+              <DiagnosticSummary result={result as AnalysisResult | null} />
+            </ErrorBoundary>
           </div>
-
         </main>
       </div>
     </ThemeProvider>

@@ -6,7 +6,6 @@ import '@testing-library/jest-dom';
 
 // Only set up a11y config for E2E tests (Playwright provides setA11yConfig)
 try {
-   
   const { setA11yConfig } = require('@axe-core/playwright');
   setA11yConfig({
     rules: [
@@ -18,7 +17,7 @@ try {
       { id: 'focus-visible', enabled: true },
       { id: 'aria-required-attr', enabled: true },
       { id: 'aria-valid-attr-value', enabled: true },
-    ]
+    ],
   });
 } catch {
   // setA11yConfig not available in this environment
@@ -26,23 +25,26 @@ try {
 
 // Ensure global crypto.subtle is available in Node environments
 // Prefer the built-in WebCrypto API when available
-if (typeof globalThis.crypto === 'undefined' || !(globalThis as { crypto?: { subtle?: unknown } }).crypto?.subtle) {
+if (
+  typeof globalThis.crypto === 'undefined' ||
+  !(globalThis as { crypto?: { subtle?: unknown } }).crypto?.subtle
+) {
   // Node >= 16.0.0 provides webcrypto
   try {
-     
     const { webcrypto } = require('node:crypto');
     (globalThis as unknown as { crypto: typeof webcrypto }).crypto = webcrypto;
   } catch {
     // Last resort: minimal mock for tests relying on digest
-    (globalThis as unknown as { crypto: { subtle: { digest: () => Promise<ArrayBuffer> } } }).crypto = {
-      subtle: { digest: async () => new ArrayBuffer(0) }
+    (
+      globalThis as unknown as { crypto: { subtle: { digest: () => Promise<ArrayBuffer> } } }
+    ).crypto = {
+      subtle: { digest: async () => new ArrayBuffer(0) },
     };
   }
 }
 
 // TextEncoder/TextDecoder (should exist in Node >= 11)
 if (typeof globalThis.TextEncoder === 'undefined') {
-   
   const { TextEncoder } = require('util');
   (globalThis as { TextEncoder: typeof TextEncoder }).TextEncoder = TextEncoder;
 }
@@ -53,14 +55,15 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
     observe(_element: Element) {}
     disconnect() {}
   }
-  (globalThis as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver = ResizeObserver;
+  (globalThis as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver =
+    ResizeObserver;
 }
 
 // Provide a no-op URL.createObjectURL implementation if not present
 if (!globalThis.URL?.createObjectURL) {
   globalThis.URL = Object.assign(globalThis.URL || {}, {
     createObjectURL: () => 'blob:mock',
-    revokeObjectURL: () => {}
+    revokeObjectURL: () => {},
   });
 }
 
@@ -99,9 +102,8 @@ if (typeof File !== 'undefined') {
 
 // Mock HTMLCanvasElement for jsdom (canvas API not available by default)
 if (typeof HTMLCanvasElement !== 'undefined') {
-   
   // @ts-ignore
-  HTMLCanvasElement.prototype.getContext = function() {
+  HTMLCanvasElement.prototype.getContext = function () {
     return {
       fillRect: () => {},
       fillStyle: '',
@@ -111,10 +113,10 @@ if (typeof HTMLCanvasElement !== 'undefined') {
       lineTo: () => {},
       stroke: () => {},
       arc: () => {},
-      fill: () => {}
+      fill: () => {},
     };
   };
-   
+
   // @ts-ignore
   HTMLCanvasElement.prototype.toDataURL = () => 'data:image/png;base64,mockdata';
 }

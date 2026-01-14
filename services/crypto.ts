@@ -10,25 +10,28 @@ export const CryptoService = {
    */
   async generateEphemeralKey(): Promise<CryptoKey> {
     return window.crypto.subtle.generateKey(
-      { name: "AES-GCM", length: 256 },
+      { name: 'AES-GCM', length: 256 },
       true, // extractable
-      ["encrypt", "decrypt"]
+      ['encrypt', 'decrypt'],
     );
   },
 
   /**
    * Encrypts a JSON object using AES-GCM.
    */
-  async encryptData(data: Record<string, unknown>, key: CryptoKey): Promise<{ ciphertext: ArrayBuffer; iv: Uint8Array }> {
+  async encryptData(
+    data: Record<string, unknown>,
+    key: CryptoKey,
+  ): Promise<{ ciphertext: ArrayBuffer; iv: Uint8Array }> {
     const encoder = new TextEncoder();
     const encodedData = encoder.encode(JSON.stringify(data));
     // 12 bytes IV is standard for GCM
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
 
     const ciphertext = await window.crypto.subtle.encrypt(
-      { name: "AES-GCM", iv },
+      { name: 'AES-GCM', iv },
       key,
-      encodedData
+      encodedData,
     );
 
     return { ciphertext, iv };
@@ -43,7 +46,7 @@ export const CryptoService = {
     const dataBuffer = encoder.encode(data);
     const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
   },
 
   /**
@@ -57,5 +60,5 @@ export const CryptoService = {
       binary += String.fromCharCode(bytes[i]);
     }
     return btoa(binary);
-  }
+  },
 };

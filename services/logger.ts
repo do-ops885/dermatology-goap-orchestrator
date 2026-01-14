@@ -10,7 +10,7 @@ export interface LogEntry {
 
 class LoggerService {
   private static instance: LoggerService;
-  
+
   private constructor() {
     // Private constructor for singleton pattern
   }
@@ -22,13 +22,18 @@ class LoggerService {
     return LoggerService.instance;
   }
 
-  public log(level: LogLevel, component: string, event: string, metadata?: Record<string, unknown>) {
+  public log(
+    level: LogLevel,
+    component: string,
+    event: string,
+    metadata?: Record<string, unknown>,
+  ) {
     const entry: LogEntry = {
       timestamp: Date.now(),
       level,
       component,
       event,
-      metadata: this.sanitize(metadata)
+      metadata: this.sanitize(metadata),
     };
 
     if (level === 'error') {
@@ -43,12 +48,12 @@ class LoggerService {
   private sanitize(data?: Record<string, unknown>): Record<string, unknown> | undefined {
     if (!data) return undefined;
     const sanitized = { ...data };
-    
+
     // Redact PII or large binary data
     const redactionKeys = ['base64Image', 'imageBytes', 'ciphertext', 'iv'];
-    
-    redactionKeys.forEach(key => {
-        if (key in sanitized) sanitized[key] = '[REDACTED]';
+
+    redactionKeys.forEach((key) => {
+      if (key in sanitized) sanitized[key] = '[REDACTED]';
     });
 
     return sanitized;

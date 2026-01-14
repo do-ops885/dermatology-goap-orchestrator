@@ -20,7 +20,7 @@ describe('imageVerificationExecutor', () => {
 
   it('should return metadata with SHA-256 method', async () => {
     const context: AgentContext = {
-      imageHash: 'abc123def456ghi789jkl012mno345pqr678stu901vwx234yz'
+      imageHash: 'abc123def456ghi789jkl012mno345pqr678stu901vwx234yz',
     };
 
     const resultPromise = imageVerificationExecutor(context);
@@ -35,7 +35,7 @@ describe('imageVerificationExecutor', () => {
   it('should return truncated hash in metadata', async () => {
     const fullHash = 'abcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678';
     const context: AgentContext = {
-      imageHash: fullHash
+      imageHash: fullHash,
     };
 
     const resultPromise = imageVerificationExecutor(context);
@@ -48,7 +48,7 @@ describe('imageVerificationExecutor', () => {
 
   it('should include first 16 characters of hash', async () => {
     const context: AgentContext = {
-      imageHash: '0123456789abcdefghijklmnop'
+      imageHash: '0123456789abcdefghijklmnop',
     };
 
     const resultPromise = imageVerificationExecutor(context);
@@ -60,7 +60,7 @@ describe('imageVerificationExecutor', () => {
 
   it('should handle short hashes gracefully', async () => {
     const context: AgentContext = {
-      imageHash: '12345'
+      imageHash: '12345',
     };
 
     const resultPromise = imageVerificationExecutor(context);
@@ -72,15 +72,15 @@ describe('imageVerificationExecutor', () => {
 
   it('should complete after 400ms delay', async () => {
     const context: AgentContext = {
-      imageHash: 'test123'
+      imageHash: 'test123',
     };
 
     const resultPromise = imageVerificationExecutor(context);
-    
+
     // Should not resolve immediately
     const beforeAdvance = await Promise.race([
       resultPromise.then(() => 'resolved'),
-      Promise.resolve('not-resolved')
+      Promise.resolve('not-resolved'),
     ]);
     expect(beforeAdvance).toBe('not-resolved');
 
@@ -92,7 +92,7 @@ describe('imageVerificationExecutor', () => {
 
   it('should handle empty imageHash', async () => {
     const context: AgentContext = {
-      imageHash: ''
+      imageHash: '',
     };
 
     const resultPromise = imageVerificationExecutor(context);
@@ -106,7 +106,7 @@ describe('imageVerificationExecutor', () => {
     const hashes = [
       'aaaaaaaaaaaaaaaa1111111111111111',
       'bbbbbbbbbbbbbbbb2222222222222222',
-      'cccccccccccccccc3333333333333333'
+      'cccccccccccccccc3333333333333333',
     ];
 
     for (const hash of hashes) {
@@ -123,7 +123,7 @@ describe('imageVerificationExecutor', () => {
   it('should not modify the input context', async () => {
     const originalHash = 'original_hash_value_1234567890';
     const context: AgentContext = {
-      imageHash: originalHash
+      imageHash: originalHash,
     };
 
     const resultPromise = imageVerificationExecutor(context);

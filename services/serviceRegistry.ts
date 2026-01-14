@@ -17,10 +17,10 @@ export class ServiceRegistry {
     const db = await createDatabase('./agent-memory.db');
     this.register('agentDB', db);
 
-    const embedder = new EmbeddingService({ 
+    const embedder = new EmbeddingService({
       model: 'Xenova/all-MiniLM-L6-v2',
       dimension: 384,
-      provider: 'transformers'
+      provider: 'transformers',
     });
     await embedder.initialize();
     this.register('embedder', embedder);
@@ -51,7 +51,7 @@ export class ServiceRegistry {
   getOrInitialize<T>(key: string, initializer: () => Promise<T>): Promise<T> {
     const existing = this.services.get(key);
     if (existing !== undefined) return Promise.resolve(existing);
-    return initializer().then(service => {
+    return initializer().then((service) => {
       this.register(key, service);
       return service;
     });

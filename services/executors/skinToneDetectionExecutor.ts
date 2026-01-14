@@ -4,17 +4,28 @@ import { cleanAndParseJSON } from './types';
 
 import type { AgentContext, ExecutorResult } from './types';
 
-export const skinToneDetectionExecutor = async ({ ai, file, base64Image, setWarning, analysisPayload, privacyMode }: AgentContext): Promise<ExecutorResult> => {
+export const skinToneDetectionExecutor = async ({
+  ai,
+  file,
+  base64Image,
+  setWarning,
+  analysisPayload,
+  privacyMode,
+}: AgentContext): Promise<ExecutorResult> => {
   if (privacyMode) {
     Logger.info('Skin-Tone-Agent', 'Privacy Mode Enabled: Skipping Cloud Analysis');
-    Object.assign(analysisPayload, { 
+    Object.assign(analysisPayload, {
       skinTone: 'Unspecified',
-      skinToneConfidence: 0.5 
+      skinToneConfidence: 0.5,
     });
     return {
       metadata: { fitzpatrick: 'Unspecified', confidence: '50% (Privacy Mode)' },
-      newStateUpdates: { fitzpatrick_type: 'IV', skin_tone_detected: true, is_low_confidence: true },
-      shouldReplan: false
+      newStateUpdates: {
+        fitzpatrick_type: 'IV',
+        skin_tone_detected: true,
+        is_low_confidence: true,
+      },
+      shouldReplan: false,
     };
   }
 
@@ -26,39 +37,49 @@ export const skinToneDetectionExecutor = async ({ ai, file, base64Image, setWarn
     "skin_tone_confidence": number (0.0-1.0), 
     "reasoning": "string" 
   }`;
-  
+
   const toneResponse = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: [{ parts: [{ inlineData: { mimeType: file.type, data: base64Image } }, { text: skinTonePrompt }] }],
-    config: { responseMimeType: 'application/json' }
+    contents: [
+      {
+        parts: [
+          { inlineData: { mimeType: file.type, data: base64Image } },
+          { text: skinTonePrompt },
+        ],
+      },
+    ],
+    config: { responseMimeType: 'application/json' },
   });
 
   const toneJson = cleanAndParseJSON(toneResponse.text);
-  const confidence = typeof toneJson.skin_tone_confidence === 'number' ? toneJson.skin_tone_confidence : 0.5;
-  
+  const confidence =
+    typeof toneJson.skin_tone_confidence === 'number' ? toneJson.skin_tone_confidence : 0.5;
+
   const isLowConfidence = confidence < 0.65;
-  
+
   if (isLowConfidence) {
-    setWarning(`Low detection confidence (${(confidence * 100).toFixed(0)}%). Triggering Safety Calibration.`);
+    setWarning(
+      `Low detection confidence (${(confidence * 100).toFixed(0)}%). Triggering Safety Calibration.`,
+    );
   }
 
-  Object.assign(analysisPayload, { 
+  Object.assign(analysisPayload, {
     skinTone: toneJson.fitzpatrick_type,
-    skinToneConfidence: confidence 
+    skinToneConfidence: confidence,
   });
 
   return {
     metadata: {
       fitzpatrick: toneJson.fitzpatrick_type,
       confidence: `${(confidence * 100).toFixed(1)}%`,
-      status: isLowConfidence ? 'LOW_CONFIDENCE_FALLBACK' : 'HIGH_CONFIDENCE'
+      status: isLowConfidence ? 'LOW_CONFIDENCE_FALLBACK' : 'HIGH_CONFIDENCE',
     },
     newStateUpdates: {
       fitzpatrick_type: toneJson.fitzpatrick_type,
       confidence_score: confidence,
       is_low_confidence: isLowConfidence,
-      skin_tone_detected: true
+      skin_tone_detected: true,
     },
-    shouldReplan: isLowConfidence
+    shouldReplan: isLowConfidence,
   };
 };

@@ -1,4 +1,3 @@
-
 import { Logger } from '../logger';
 
 import type { AgentAction, WorldState } from '../../types';
@@ -23,7 +22,11 @@ export interface ExecutionTrace {
   finalWorldState: WorldState;
 }
 
-export type ExecutorFn = (_ctx: Record<string, unknown>) => Promise<{ metadata?: Record<string, unknown>; newStateUpdates?: Partial<WorldState>; shouldReplan?: boolean }>;
+export type ExecutorFn = (_ctx: Record<string, unknown>) => Promise<{
+  metadata?: Record<string, unknown>;
+  newStateUpdates?: Partial<WorldState>;
+  shouldReplan?: boolean;
+}>;
 
 export type ExecutorMap = Record<string, ExecutorFn>;
 
@@ -42,7 +45,11 @@ export class GoapAgent {
     return this.planner.plan(startState, goalState);
   }
 
-  public async execute(startState: WorldState, goalState: Partial<WorldState>, ctx: Record<string, unknown>): Promise<ExecutionTrace> {
+  public async execute(
+    startState: WorldState,
+    goalState: Partial<WorldState>,
+    ctx: Record<string, unknown>,
+  ): Promise<ExecutionTrace> {
     const runId = 'run_' + Math.random().toString(36).slice(2, 9);
     const startTime = Date.now();
     Logger.info('goap-agent', 'plan_start', { runId, goalState });
@@ -60,21 +67,27 @@ export class GoapAgent {
         agentId: action.agentId,
         name: action.name,
         startTime: Date.now(),
-        status: 'running'
+        status: 'running',
       };
 
       trace.agents.push(agentRecord);
-      Logger.info('goap-agent', 'agent_start', { runId, agent: action.agentId, action: action.name });
+      Logger.info('goap-agent', 'agent_start', {
+        runId,
+        agent: action.agentId,
+        action: action.name,
+      });
 
       // UI callbacks (if provided) and capture returned UI log id
       let uiLogId: string | undefined;
       if (typeof ctx.onAgentStart === 'function') {
-        try { 
+        try {
           const result = ctx.onAgentStart(action);
           if (typeof result === 'string') {
             uiLogId = result;
           }
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }
 
       const executor = this.executors[action.agentId];
@@ -94,7 +107,11 @@ export class GoapAgent {
         const execPromise = executor({ ...ctx, currentState, action });
         const result = await Promise.race([
           execPromise,
-          new Promise<never>((_, reject) => setTimeout(() => { reject(new Error('executor_timeout')); }, this.perAgentTimeoutMs))
+          new Promise<never>((_, reject) =>
+            setTimeout(() => {
+              reject(new Error('executor_timeout'));
+            }, this.perAgentTimeoutMs),
+          ),
         ]);
 
         agentRecord.endTime = Date.now();
@@ -109,7 +126,12 @@ export class GoapAgent {
 
         if (typeof ctx.onAgentEnd === 'function') ctx.onAgentEnd(action, agentRecord);
 
-        Logger.info('goap-agent', 'agent_end', { runId, agent: action.agentId, status: 'completed', durationMs: agentRecord.endTime - agentRecord.startTime });
+        Logger.info('goap-agent', 'agent_end', {
+          runId,
+          agent: action.agentId,
+          status: 'completed',
+          durationMs: agentRecord.endTime - agentRecord.startTime,
+        });
 
         // Replan if needed
         if (result?.shouldReplan === true) {
@@ -117,13 +139,21 @@ export class GoapAgent {
           const replanStart = Date.now();
           plan = this.planner.plan(currentState, goalState);
           index = -1; // will increment to 0 for next loop
-          Logger.info('goap-agent', 'replan_complete', { runId, durationMs: Date.now() - replanStart, newPlan: plan.map(a => a.name) });
+          Logger.info('goap-agent', 'replan_complete', {
+            runId,
+            durationMs: Date.now() - replanStart,
+            newPlan: plan.map((a) => a.name),
+          });
         }
       } catch (e: unknown) {
         agentRecord.endTime = Date.now();
         agentRecord.status = 'failed';
         agentRecord.error = e instanceof Error ? e.message : String(e);
-        Logger.error('goap-agent', 'agent_failed', { runId, agent: action.agentId, error: e instanceof Error ? e.message : String(e) });
+        Logger.error('goap-agent', 'agent_failed', {
+          runId,
+          agent: action.agentId,
+          error: e instanceof Error ? e.message : String(e),
+        });
 
         if (typeof ctx.onAgentEnd === 'function') ctx.onAgentEnd(action, agentRecord);
 

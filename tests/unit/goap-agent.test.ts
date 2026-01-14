@@ -12,7 +12,9 @@ const noopExecutor: ExecutorFn = async () => Promise.resolve({ metadata: { ok: t
 // Build an executor map that returns noop for all agent ids used in the domain
 const buildExecutorMap = (actions: AgentAction[]) => {
   const map: Record<string, ExecutorFn> = {};
-  actions.forEach(a => { map[a.agentId] = noopExecutor; });
+  actions.forEach((a) => {
+    map[a.agentId] = noopExecutor;
+  });
   return map;
 };
 
@@ -31,10 +33,10 @@ describe('GoapAgent', () => {
         ...INITIAL_STATE,
         image_verified: true,
         skin_tone_detected: true,
-        is_low_confidence: true
+        is_low_confidence: true,
       };
       const plan = planner.plan(lowConfidenceState, { calibration_complete: true });
-      const calibrationAction = plan.find(a => a.name.includes('Calibration'));
+      const calibrationAction = plan.find((a) => a.name.includes('Calibration'));
       expect(calibrationAction?.agentId).toBe('Safety-Calibration-Agent');
     });
   });
@@ -64,10 +66,14 @@ describe('GoapAgent', () => {
       const onAgentStart = vi.fn();
       const onAgentEnd = vi.fn();
 
-      await agent.execute(INITIAL_STATE, { image_verified: true }, {
-        onAgentStart,
-        onAgentEnd
-      });
+      await agent.execute(
+        INITIAL_STATE,
+        { image_verified: true },
+        {
+          onAgentStart,
+          onAgentEnd,
+        },
+      );
 
       expect(onAgentStart).toHaveBeenCalled();
       expect(onAgentEnd).toHaveBeenCalled();
@@ -75,8 +81,9 @@ describe('GoapAgent', () => {
 
     it('should handle executor failures gracefully for non-critical agents', async () => {
       const planner = new GOAPPlanner();
-      const failingExecutor: ExecutorFn = async () => Promise.reject(new Error('Non-critical failure'));
-      
+      const failingExecutor: ExecutorFn = async () =>
+        Promise.reject(new Error('Non-critical failure'));
+
       const executors: Record<string, ExecutorFn> = {
         'Image-Verification-Agent': noopExecutor,
         'Skin-Tone-Detection-Agent': failingExecutor,
@@ -86,37 +93,41 @@ describe('GoapAgent', () => {
 
       const trace = await agent.execute(INITIAL_STATE, { skin_tone_detected: true }, {});
 
-      const failedAgent = trace.agents.find(a => a.status === 'skipped');
+      const failedAgent = trace.agents.find((a) => a.status === 'skipped');
       expect(failedAgent).toBeDefined();
     });
 
     it('should abort on critical failures', async () => {
       const planner = new GOAPPlanner();
-      const criticalFailureExecutor: ExecutorFn = async () => Promise.reject(new Error('Critical: System failure'));
-      
+      const criticalFailureExecutor: ExecutorFn = async () =>
+        Promise.reject(new Error('Critical: System failure'));
+
       const executors: Record<string, ExecutorFn> = {
         'Image-Verification-Agent': criticalFailureExecutor,
       };
 
       const agent = new GoapAgent(planner, executors);
 
-      await expect(
-        agent.execute(INITIAL_STATE, { image_verified: true }, {})
-      ).rejects.toThrow('Critical');
+      await expect(agent.execute(INITIAL_STATE, { image_verified: true }, {})).rejects.toThrow(
+        'Critical',
+      );
     });
 
     it('should support replanning when shouldReplan is returned', async () => {
       const planner = new GOAPPlanner();
       let callCount = 0;
-      
+
       const replanningExecutor: ExecutorFn = async () => {
         callCount++;
         if (callCount === 1) {
-          return Promise.resolve({ shouldReplan: true, newStateUpdates: { is_low_confidence: true } });
+          return Promise.resolve({
+            shouldReplan: true,
+            newStateUpdates: { is_low_confidence: true },
+          });
         }
         return Promise.resolve({ metadata: { ok: true } });
       };
-      
+
       const executors: Record<string, ExecutorFn> = {
         'Image-Verification-Agent': noopExecutor,
         'Skin-Tone-Detection-Agent': replanningExecutor,
@@ -133,12 +144,13 @@ describe('GoapAgent', () => {
 
     it('should apply state updates from executors', async () => {
       const planner = new GOAPPlanner();
-      
-      const stateUpdatingExecutor: ExecutorFn = async () => Promise.resolve({ 
-        metadata: { ok: true },
-        newStateUpdates: { confidence_score: 0.95 }
-      });
-      
+
+      const stateUpdatingExecutor: ExecutorFn = async () =>
+        Promise.resolve({
+          metadata: { ok: true },
+          newStateUpdates: { confidence_score: 0.95 },
+        });
+
       const executors: Record<string, ExecutorFn> = {
         'Image-Verification-Agent': stateUpdatingExecutor,
       };

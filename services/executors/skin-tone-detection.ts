@@ -10,14 +10,14 @@ export function detectSkinTone(imageData: ImageData): {
 
   let totalL = 0;
   let pixelCount = 0;
-  
+
   for (let y = 0; y < imageData.height; y += 10) {
     for (let x = 0; x < imageData.width; x += 10) {
       const idx = (y * imageData.width + x) * 4;
       const r = imageData.data[idx];
       const g = imageData.data[idx + 1];
       const b = imageData.data[idx + 2];
-      
+
       const l = 0.299 * r + 0.587 * g + 0.114 * b;
       totalL += l;
       pixelCount++;
@@ -51,7 +51,7 @@ export function detectSkinTone(imageData: ImageData): {
   } else if (normalizedITA > 10) {
     fitzpatrick = 'V';
     monkScale = 'F7';
-    confidence = 0.80;
+    confidence = 0.8;
   } else {
     fitzpatrick = 'VI';
     monkScale = 'F10';
@@ -66,6 +66,6 @@ export function detectSkinTone(imageData: ImageData): {
     fitzpatrick,
     monkScale,
     confidence: Math.round(confidence * 100) / 100,
-    itaEstimate: Math.round(normalizedITA)
+    itaEstimate: Math.round(normalizedITA),
   };
 }

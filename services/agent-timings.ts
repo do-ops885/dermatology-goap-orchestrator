@@ -35,7 +35,7 @@ export const AgentTimings = {
         avg: this.getAverage(agentId),
         p95: this.getP95(agentId),
         p99: this.getP99(agentId),
-        count: agentTimings.length
+        count: agentTimings.length,
       };
     }
     return report;
@@ -51,7 +51,7 @@ export const AgentTimings = {
     } else {
       timings.clear();
     }
-  }
+  },
 };
 
 export const PERFORMANCE_BUDGETS = {
@@ -70,7 +70,7 @@ export const PERFORMANCE_BUDGETS = {
   learning: 3000,
   encryption: 2000,
   audit: 1000,
-  total: 72000
+  total: 72000,
 } as const;
 
 export type PerformanceBudgetKey = keyof typeof PERFORMANCE_BUDGETS;

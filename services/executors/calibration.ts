@@ -16,25 +16,24 @@ export interface SafetyCalibrationConfig {
 
 const DEFAULT_CONFIG: SafetyCalibrationConfig = {
   standardThreshold: 0.65,
-  safetyThreshold: 0.50,
-  maxSafetyMargin: 0.15
+  safetyThreshold: 0.5,
+  maxSafetyMargin: 0.15,
 };
 
 export function calibrateForConfidence(
   confidence: number,
   mode: 'standard' | 'safety' = 'standard',
-  config: SafetyCalibrationConfig = DEFAULT_CONFIG
+  config: SafetyCalibrationConfig = DEFAULT_CONFIG,
 ): CalibrationResult {
   const isLowConfidence = confidence < config.standardThreshold;
   const actualMode = isLowConfidence ? 'safety' : mode;
-  
-  const threshold = actualMode === 'standard' 
-    ? config.standardThreshold 
-    : config.safetyThreshold;
-  
-  const safetyMargin = actualMode === 'safety'
-    ? Math.min(config.maxSafetyMargin, (config.standardThreshold - confidence) * 0.5)
-    : 0;
+
+  const threshold = actualMode === 'standard' ? config.standardThreshold : config.safetyThreshold;
+
+  const safetyMargin =
+    actualMode === 'safety'
+      ? Math.min(config.maxSafetyMargin, (config.standardThreshold - confidence) * 0.5)
+      : 0;
 
   return {
     threshold,
@@ -43,6 +42,6 @@ export function calibrateForConfidence(
     safetyMargin: Math.round(safetyMargin * 100) / 100,
     isLowConfidence,
     calibrationComplete: true,
-    safetyCalibrated: actualMode === 'safety'
+    safetyCalibrated: actualMode === 'safety',
   };
 }

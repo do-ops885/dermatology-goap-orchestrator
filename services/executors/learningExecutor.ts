@@ -28,7 +28,11 @@ interface ClinicianFeedback {
   isCorrection: boolean;
 }
 
-export const learningExecutor = async ({ reasoningBank, currentState, analysisPayload }: AgentContext): Promise<ExecutorResult> => {
+export const learningExecutor = async ({
+  reasoningBank,
+  currentState,
+  analysisPayload,
+}: AgentContext): Promise<ExecutorResult> => {
   try {
     // Store the AI diagnosis pattern for similarity search and fairness tracking
     const lesions = analysisPayload.lesions as Lesion[] | undefined;
@@ -45,7 +49,7 @@ export const learningExecutor = async ({ reasoningBank, currentState, analysisPa
         fairness_score: currentState.fairness_score,
         safety_calibrated: currentState.safety_calibrated,
         context: `Fitzpatrick ${fitzpatrick}, ${primaryLesion.type}, Risk: ${primaryLesion.risk}`,
-        analysis_timestamp: Date.now()
+        analysis_timestamp: Date.now(),
       };
 
       const pattern: ReasoningPattern = {
@@ -55,7 +59,7 @@ export const learningExecutor = async ({ reasoningBank, currentState, analysisPa
         outcome: analysisPayload.risk_label ?? primaryLesion.type,
         successRate: (analysisPayload.confidence as number) || primaryLesion.confidence || 0.9,
         timestamp: Date.now(),
-        metadata
+        metadata,
       };
 
       await reasoningBank.storePattern(pattern as unknown as ReasoningPattern);
@@ -63,7 +67,7 @@ export const learningExecutor = async ({ reasoningBank, currentState, analysisPa
       Logger.info('Learning-Agent', 'Diagnosis pattern stored', {
         lesion: primaryLesion.type,
         fitzpatrick,
-        fairness: currentState.fairness_score
+        fairness: currentState.fairness_score,
       });
     }
 
@@ -83,7 +87,7 @@ export const learningExecutor = async ({ reasoningBank, currentState, analysisPa
         isCorrection: feedback.isCorrection,
         verified: true, // Human-verified data is gold standard
         feedback_source: 'clinician',
-        learning_weight: feedback.isCorrection ? 2.0 : 1.0
+        learning_weight: feedback.isCorrection ? 2.0 : 1.0,
       };
 
       const pattern: ReasoningPattern = {
@@ -93,7 +97,7 @@ export const learningExecutor = async ({ reasoningBank, currentState, analysisPa
         outcome: feedback.correctedDiagnosis ?? feedback.diagnosis,
         successRate: feedback.confidence,
         timestamp: feedback.timestamp,
-        metadata
+        metadata,
       };
 
       await reasoningBank.storePattern(pattern as unknown as ReasoningPattern);
@@ -101,27 +105,27 @@ export const learningExecutor = async ({ reasoningBank, currentState, analysisPa
       Logger.info('Learning-Agent', 'Clinician feedback integrated', {
         feedbackId: feedback.id,
         isCorrection: feedback.isCorrection,
-        fitzpatrick: feedback.fitzpatrickType
+        fitzpatrick: feedback.fitzpatrickType,
       });
     }
 
     // Simulate learning/indexing delay
-    await new Promise<void>(r => setTimeout(r, 200));
+    await new Promise<void>((r) => setTimeout(r, 200));
 
     return {
       metadata: {
         memory_updated: 'pattern_committed',
         patterns_stored: lesions ? 1 : 0,
-        feedback_integrated: !!feedback
-      }
+        feedback_integrated: !!feedback,
+      },
     };
   } catch (error) {
     Logger.error('Learning-Agent', 'Failed to store patterns', { error });
     return {
       metadata: {
         memory_updated: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
     };
   }
 };

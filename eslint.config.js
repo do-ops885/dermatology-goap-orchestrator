@@ -22,8 +22,8 @@ export default [
       globals: globals.browser,
     },
     plugins: {
-      'security': eslintPluginSecurity,
-      'sonarjs': sonarjs,
+      security: eslintPluginSecurity,
+      sonarjs: sonarjs,
     },
     rules: {
       'no-console': ['warn', { allow: ['warn', 'error'] }],
@@ -35,8 +35,8 @@ export default [
     files: ['**/*.{ts,tsx}'],
     plugins: {
       '@typescript-eslint': tseslint.plugin,
-      'security': eslintPluginSecurity,
-      'sonarjs': sonarjs,
+      security: eslintPluginSecurity,
+      sonarjs: sonarjs,
     },
     languageOptions: {
       ecmaVersion: 2020,
@@ -51,24 +51,31 @@ export default [
       ...tseslint.configs.strictTypeChecked.rules,
       ...tseslint.configs.stylisticTypeChecked.rules,
       ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': [
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      'import/order': [
         'warn',
-        { allowConstantExport: true },
+        {
+          groups: [
+            'builtin',
+            'external',
+            'internal',
+            'parent',
+            'sibling',
+            'index',
+            'object',
+            'type',
+          ],
+          pathGroups: [{ pattern: '@/**', group: 'internal', position: 'after' }],
+          pathGroupsExcludedImportTypes: ['builtin'],
+          'newlines-between': 'always',
+          alphabetize: { order: 'asc', caseInsensitive: true },
+        },
       ],
-      'import/order': ['warn', {
-        'groups': ['builtin', 'external', 'internal', 'parent', 'sibling', 'index', 'object', 'type'],
-        'pathGroups': [
-          { pattern: '@/**', group: 'internal', position: 'after' }
-        ],
-        'pathGroupsExcludedImportTypes': ['builtin'],
-        'newlines-between': 'always',
-        'alphabetize': { order: 'asc', caseInsensitive: true }
-      }],
       'import/no-duplicates': 'error',
       'import/no-cycle': 'error',
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
       'max-lines': ['error', { max: 500, skipBlankLines: true, skipComments: true }],
-      'complexity': ['warn', 12],
+      complexity: ['warn', 12],
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unsafe-assignment': 'warn',
@@ -129,23 +136,30 @@ export default [
     plugins: {
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
-      'import': importPluginFixup,
-      'unicorn': unicornFixup,
+      import: importPluginFixup,
+      unicorn: unicornFixup,
     },
     rules: {
-      'react-refresh/only-export-components': [
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      'import/order': [
         'warn',
-        { allowConstantExport: true },
+        {
+          groups: [
+            'builtin',
+            'external',
+            'internal',
+            'parent',
+            'sibling',
+            'index',
+            'object',
+            'type',
+          ],
+          pathGroups: [{ pattern: '@/**', group: 'internal', position: 'after' }],
+          pathGroupsExcludedImportTypes: ['builtin'],
+          'newlines-between': 'always',
+          alphabetize: { order: 'asc', caseInsensitive: true },
+        },
       ],
-      'import/order': ['warn', {
-        'groups': ['builtin', 'external', 'internal', 'parent', 'sibling', 'index', 'object', 'type'],
-        'pathGroups': [
-          { pattern: '@/**', group: 'internal', position: 'after' }
-        ],
-        'pathGroupsExcludedImportTypes': ['builtin'],
-        'newlines-between': 'always',
-        'alphabetize': { order: 'asc', caseInsensitive: true }
-      }],
       'import/no-duplicates': 'error',
       'import/no-cycle': 'error',
     },
@@ -171,11 +185,7 @@ export default [
     },
   },
   {
-    files: [
-      'playwright.config.ts',
-      'tests/setup.ts',
-      'tests/e2e/**/*.{ts,js}',
-    ],
+    files: ['playwright.config.ts', 'tests/setup.ts', 'tests/e2e/**/*.{ts,js}'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: {

@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import type { NotificationService } from '../services/notifications';
 import type { ClinicianNotification, SafetyLevel } from '../types';
 
-
 interface NotificationCenterProps {
   clinicianId: string;
 }
@@ -20,7 +19,7 @@ export function NotificationCenter({ clinicianId }: NotificationCenterProps) {
       setNotificationService(service);
 
       const unsubscribe = service.onNotification((n: ClinicianNotification) => {
-        setNotifications(prev => [n, ...prev]);
+        setNotifications((prev) => [n, ...prev]);
       });
 
       setNotifications(service.getPendingNotifications());
@@ -34,7 +33,7 @@ export function NotificationCenter({ clinicianId }: NotificationCenterProps) {
   const handleAcknowledge = (notificationId: string) => {
     if (notificationService) {
       notificationService.acknowledgeNotification(notificationId, clinicianId, 'Reviewed');
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
     }
   };
 
@@ -76,19 +75,21 @@ export function NotificationCenter({ clinicianId }: NotificationCenterProps) {
         <p className="text-xs text-stone-500">No pending notifications</p>
       ) : (
         <div className="space-y-3">
-          {notifications.map(n => (
-            <div
-              key={n.id}
-              className={`p-3 border rounded-xl ${getAlertClass(n.safetyLevel)}`}
-            >
+          {notifications.map((n) => (
+            <div key={n.id} className={`p-3 border rounded-xl ${getAlertClass(n.safetyLevel)}`}>
               <div className="flex items-start gap-3">
                 {getSafetyIcon(n.safetyLevel)}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-xs font-bold ${
-                      n.safetyLevel === 'HIGH' ? 'text-red-700' :
-                      n.safetyLevel === 'MEDIUM' ? 'text-amber-700' : 'text-blue-700'
-                    }`}>
+                    <span
+                      className={`text-xs font-bold ${
+                        n.safetyLevel === 'HIGH'
+                          ? 'text-red-700'
+                          : n.safetyLevel === 'MEDIUM'
+                            ? 'text-amber-700'
+                            : 'text-blue-700'
+                      }`}
+                    >
                       {n.safetyLevel}
                     </span>
                     <span className="text-[10px] text-stone-500">
@@ -102,8 +103,10 @@ export function NotificationCenter({ clinicianId }: NotificationCenterProps) {
                   {n.riskLevel !== undefined && (
                     <p className="text-xs text-stone-600 mb-2">Risk: {n.riskLevel}</p>
                   )}
-                    <button
-                    onClick={() => { handleAcknowledge(n.id); }}
+                  <button
+                    onClick={() => {
+                      handleAcknowledge(n.id);
+                    }}
                     className="flex items-center gap-1 px-2 py-1 text-xs font-bold text-white bg-stone-600 hover:bg-stone-700 rounded-lg transition-colors"
                   >
                     <Check className="w-3 h-3" />

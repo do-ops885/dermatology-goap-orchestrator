@@ -22,7 +22,7 @@ export class NotificationService {
     patientId?: string;
   }): Promise<ClinicianNotification> {
     const notification: ClinicianNotification = {
-       id: 'notif_' + Math.random().toString(36).substring(2, 11),
+      id: 'notif_' + Math.random().toString(36).substring(2, 11),
       timestamp: Date.now(),
       safetyLevel: 'HIGH',
       analysisId: params.analysisId,
@@ -31,48 +31,46 @@ export class NotificationService {
       diagnosis: params.diagnosis,
       riskLevel: params.riskLevel as 'Low' | 'Medium' | 'High' | undefined,
       actions: [],
-      status: 'pending'
+      status: 'pending',
     };
 
     this.notifications.push(notification);
-    
+
     Logger.error('ClinicianNotification', 'CRITICAL_ALERT', {
       notificationId: notification.id,
       analysisId: params.analysisId,
-      triggerReason: params.triggerReason
+      triggerReason: params.triggerReason,
     });
 
-    this.listeners.forEach(listener => { listener(notification); });
+    this.listeners.forEach((listener) => {
+      listener(notification);
+    });
 
     const { AgentDB } = await import('./agentDB');
     await AgentDB.getInstance().logAuditEvent({
       type: 'CRITICAL_ALERT',
       notificationId: notification.id,
-      ...params
+      ...params,
     });
 
     return notification;
   }
 
-  acknowledgeNotification(
-    notificationId: string,
-    clinicianId: string,
-    notes?: string
-  ): void {
-    const notification = this.notifications.find(n => n.id === notificationId);
+  acknowledgeNotification(notificationId: string, clinicianId: string, notes?: string): void {
+    const notification = this.notifications.find((n) => n.id === notificationId);
     if (notification) {
       notification.status = 'acknowledged';
       notification.actions.push({
         type: 'review',
         timestamp: Date.now(),
         clinicianId,
-        notes
+        notes,
       });
     }
   }
 
   getPendingNotifications(): ClinicianNotification[] {
-    return this.notifications.filter(n => n.status === 'pending');
+    return this.notifications.filter((n) => n.status === 'pending');
   }
 
   onNotification(listener: (_n: ClinicianNotification) => void): () => void {

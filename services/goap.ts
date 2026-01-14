@@ -5,9 +5,9 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     name: 'Verify Image',
     agentId: 'Image-Verification-Agent',
     cost: 1,
-    preconditions: {}, 
+    preconditions: {},
     effects: { image_verified: true },
-    description: 'Verifying image authenticity via Ed25519 signatures.'
+    description: 'Verifying image authenticity via Ed25519 signatures.',
   },
   {
     name: 'Detect Skin Tone',
@@ -15,7 +15,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 2,
     preconditions: { image_verified: true },
     effects: { skin_tone_detected: true },
-    description: 'Classifying skin tone (Monk Scale/ITA) and measuring detection confidence.'
+    description: 'Classifying skin tone (Monk Scale/ITA) and measuring detection confidence.',
   },
   {
     name: 'Standard Calibration',
@@ -23,7 +23,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 1,
     preconditions: { skin_tone_detected: true, is_low_confidence: false },
     effects: { calibration_complete: true, safety_calibrated: false },
-    description: 'Applying standard fairness thresholds for high-confidence classification.'
+    description: 'Applying standard fairness thresholds for high-confidence classification.',
   },
   {
     name: 'Safety Calibration',
@@ -31,7 +31,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 1,
     preconditions: { skin_tone_detected: true, is_low_confidence: true },
     effects: { calibration_complete: true, safety_calibrated: true },
-    description: 'Enforcing conservative safety margins due to low detection confidence.'
+    description: 'Enforcing conservative safety margins due to low detection confidence.',
   },
   {
     name: 'Preprocess Image',
@@ -39,7 +39,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 2,
     preconditions: { calibration_complete: true },
     effects: { image_preprocessed: true },
-    description: 'Applying melanin-preserving histogram equalization.'
+    description: 'Applying melanin-preserving histogram equalization.',
   },
   {
     name: 'Segment Skin',
@@ -47,7 +47,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 5,
     preconditions: { image_preprocessed: true },
     effects: { segmentation_complete: true },
-    description: 'Isolating skin regions using calibrated thresholds.'
+    description: 'Isolating skin regions using calibrated thresholds.',
   },
   {
     name: 'Extract Features',
@@ -55,7 +55,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 8,
     preconditions: { segmentation_complete: true },
     effects: { features_extracted: true },
-    description: 'Running MobileNetV2 with FairDisCo disentanglement.'
+    description: 'Running MobileNetV2 with FairDisCo disentanglement.',
   },
   {
     name: 'Detect Lesions',
@@ -63,15 +63,15 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 10,
     preconditions: { features_extracted: true },
     effects: { lesions_detected: true },
-    description: 'Identifying patterns using YOLOv11 + Skin Color Analysis.'
+    description: 'Identifying patterns using YOLOv11 + Skin Color Analysis.',
   },
   {
     name: 'Search Similar Cases',
     agentId: 'Similarity-Search-Agent',
-    cost: 1, 
+    cost: 1,
     preconditions: { lesions_detected: true },
     effects: { similarity_searched: true },
-    description: 'Querying AgentDB vector store for diverse historical cases.'
+    description: 'Querying AgentDB vector store for diverse historical cases.',
   },
   {
     name: 'Assess Risk',
@@ -79,7 +79,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 3,
     preconditions: { similarity_searched: true },
     effects: { risk_assessed: true },
-    description: 'Calculating risk score with equalized odds correction.'
+    description: 'Calculating risk score with equalized odds correction.',
   },
   {
     name: 'Validate Fairness',
@@ -87,7 +87,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 2,
     preconditions: { risk_assessed: true },
     effects: { fairness_validated: true },
-    description: 'Checking TPR/FPR gaps against thresholds.'
+    description: 'Checking TPR/FPR gaps against thresholds.',
   },
   {
     name: 'Verify Diagnosis (Web)',
@@ -95,7 +95,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 4,
     preconditions: { fairness_validated: true },
     effects: { web_verified: true },
-    description: 'Grounding diagnosis with real-time medical literature search.'
+    description: 'Grounding diagnosis with real-time medical literature search.',
   },
   {
     name: 'Generate Recommendations',
@@ -103,7 +103,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 4,
     preconditions: { web_verified: true },
     effects: { recommendations_generated: true },
-    description: 'Synthesizing actionable advice calibrated for skin tone.'
+    description: 'Synthesizing actionable advice calibrated for skin tone.',
   },
   {
     name: 'Update Learning Model',
@@ -111,7 +111,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 2,
     preconditions: { recommendations_generated: true },
     effects: { learning_updated: true },
-    description: 'Updating cognitive patterns with bias monitoring.'
+    description: 'Updating cognitive patterns with bias monitoring.',
   },
   {
     name: 'Encrypt Data',
@@ -119,7 +119,7 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 2,
     preconditions: { learning_updated: true },
     effects: { data_encrypted: true },
-    description: 'Encrypting patient data with AES-256.'
+    description: 'Encrypting patient data with AES-256.',
   },
   {
     name: 'Log Audit Trail',
@@ -127,8 +127,8 @@ export const AVAILABLE_ACTIONS: AgentAction[] = [
     cost: 1,
     preconditions: { data_encrypted: true },
     effects: { audit_logged: true },
-    description: 'Committing Merkle proof to AgentDB.'
-  }
+    description: 'Committing Merkle proof to AgentDB.',
+  },
 ];
 
 interface PlannerNode {
@@ -146,7 +146,7 @@ export class GOAPPlanner {
   constructor(actions: AgentAction[] = AVAILABLE_ACTIONS) {
     this.actions = actions;
   }
-  
+
   /**
    * Main Planning Method: A* Search
    * Finds the lowest-cost sequence of actions to transform startState to goalState.
@@ -154,17 +154,17 @@ export class GOAPPlanner {
   public plan(startState: WorldState, goalState: Partial<WorldState>): AgentAction[] {
     const openList: PlannerNode[] = [];
     const closedSet = new Set<string>();
-    
+
     // Initial Heuristic Calculation
     const h = this.calculateRobustHeuristic(startState, goalState);
-    
+
     openList.push({
       state: startState,
       parent: null,
       action: null,
       g: 0,
       h: h,
-      f: h
+      f: h,
     });
 
     // Safety break to prevent infinite loops in pathological cases
@@ -173,7 +173,7 @@ export class GOAPPlanner {
 
     while (openList.length > 0) {
       if (iterations++ > MAX_ITERATIONS) {
-        throw new Error("GOAP Planner exceeded maximum iterations. No valid path found.");
+        throw new Error('GOAP Planner exceeded maximum iterations. No valid path found.');
       }
 
       // Sort by F-score (lowest first) - Mimics Priority Queue
@@ -191,7 +191,7 @@ export class GOAPPlanner {
 
       // Expand Neighbors (Applicable Actions)
       const neighbors = this.getApplicableActions(currentNode.state);
-      
+
       for (const action of neighbors) {
         const newState = this.applyEffects(currentNode.state, action.effects);
         const newStateKey = this.getStateKey(newState);
@@ -203,7 +203,9 @@ export class GOAPPlanner {
         const f = g + h;
 
         // Check if this state is already in open list with a better path
-        const existingNodeIndex = openList.findIndex(n => this.getStateKey(n.state) === newStateKey);
+        const existingNodeIndex = openList.findIndex(
+          (n) => this.getStateKey(n.state) === newStateKey,
+        );
 
         if (existingNodeIndex !== -1) {
           if (g < openList[existingNodeIndex].g) {
@@ -221,13 +223,13 @@ export class GOAPPlanner {
             action,
             g,
             h,
-            f
+            f,
           });
         }
       }
     }
 
-    throw new Error("No plan found to satisfy the goal state.");
+    throw new Error('No plan found to satisfy the goal state.');
   }
 
   /**
@@ -236,49 +238,54 @@ export class GOAPPlanner {
    * This provides a much more informed H-value than simple summation, as it accounts
    * for the deep precondition tree (e.g., Audit needs Encryption, which needs Learning...).
    */
-  private calculateRobustHeuristic(currentState: WorldState, goalState: Partial<WorldState>): number {
+  private calculateRobustHeuristic(
+    currentState: WorldState,
+    goalState: Partial<WorldState>,
+  ): number {
     let estimatedCost = 0;
     const visited = new Set<string>();
-    const queue: { key: keyof WorldState, value: unknown }[] = [];
+    const queue: { key: keyof WorldState; value: unknown }[] = [];
 
     // Initialize queue with unsatisfied goals
     for (const key in goalState) {
-        const k = key as keyof WorldState;
-        if (currentState[k] !== goalState[k]) {
-            queue.push({ key: k, value: goalState[k] });
-        }
+      const k = key as keyof WorldState;
+      if (currentState[k] !== goalState[k]) {
+        queue.push({ key: k, value: goalState[k] });
+      }
     }
 
     while (queue.length > 0) {
-        const item = queue.shift();
-        const itemKeyStr = `${item.key}:${item.value}`;
-        
-        if (visited.has(itemKeyStr)) continue;
-        visited.add(itemKeyStr);
+      const item = queue.shift();
+      const itemKeyStr = `${item.key}:${item.value}`;
 
-        // Check if already satisfied in current state
-        if (currentState[item.key] === item.value) continue;
+      if (visited.has(itemKeyStr)) continue;
+      visited.add(itemKeyStr);
 
-        // Find best action to satisfy this requirement
-        // We filter for actions that produce the specific effect value we need
-        const relevantActions = this.actions.filter(action => action.effects[item.key] === item.value);
-        
-        if (relevantActions.length === 0) continue; // No action produces this state (should be error in well-formed domain)
+      // Check if already satisfied in current state
+      if (currentState[item.key] === item.value) continue;
 
-        // Optimistic: Pick the cheapest action
-        const bestAction = relevantActions.reduce((min, cur) => cur.cost < min.cost ? cur : min);
-        
-        estimatedCost += bestAction.cost;
+      // Find best action to satisfy this requirement
+      // We filter for actions that produce the specific effect value we need
+      const relevantActions = this.actions.filter(
+        (action) => action.effects[item.key] === item.value,
+      );
 
-        // Add preconditions of this action to the queue
-        for (const preKey in bestAction.preconditions) {
-            const pk = preKey as keyof WorldState;
-            const requiredVal = bestAction.preconditions[pk];
-            
-            if (currentState[pk] !== requiredVal) {
-                queue.push({ key: pk, value: requiredVal });
-            }
+      if (relevantActions.length === 0) continue; // No action produces this state (should be error in well-formed domain)
+
+      // Optimistic: Pick the cheapest action
+      const bestAction = relevantActions.reduce((min, cur) => (cur.cost < min.cost ? cur : min));
+
+      estimatedCost += bestAction.cost;
+
+      // Add preconditions of this action to the queue
+      for (const preKey in bestAction.preconditions) {
+        const pk = preKey as keyof WorldState;
+        const requiredVal = bestAction.preconditions[pk];
+
+        if (currentState[pk] !== requiredVal) {
+          queue.push({ key: pk, value: requiredVal });
         }
+      }
     }
 
     return estimatedCost;
@@ -295,7 +302,7 @@ export class GOAPPlanner {
   }
 
   private getApplicableActions(state: WorldState): AgentAction[] {
-    return this.actions.filter(action => {
+    return this.actions.filter((action) => {
       for (const key in action.preconditions) {
         const k = key as keyof WorldState;
         if (action.preconditions[k] !== undefined && state[k] !== action.preconditions[k]) {
@@ -314,7 +321,7 @@ export class GOAPPlanner {
     // Generate a unique string key for the state to use in Sets/Maps
     // We sort keys to ensure deterministic output
     const relevantKeys = Object.keys(state).sort() as (keyof WorldState)[];
-    const values = relevantKeys.map(k => `${k}:${String(state[k])}`);
+    const values = relevantKeys.map((k) => `${k}:${String(state[k])}`);
     return values.join('|');
   }
 

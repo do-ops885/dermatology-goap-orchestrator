@@ -3,11 +3,13 @@
 Thanks for helping improve the project — we follow a lightweight, fast local workflow with CI enforcement.
 
 ## Local setup
+
 1. npm install
-2. npm run prepare  # installs Husky git hooks
-3. npm run format   # optional: format the repo before submitting
+2. npm run prepare # installs Husky git hooks
+3. npm run format # optional: format the repo before submitting
 
 ## Pre-commit checks (what runs locally)
+
 - Staged files are run through `lint-staged` (ESLint + Prettier).
 - A lightweight secrets heuristic scans staged files for obvious secrets.
 - A TypeScript typecheck runs by default (set `SKIP_TYPECHECK=1` to skip locally).
@@ -15,15 +17,17 @@ Thanks for helping improve the project — we follow a lightweight, fast local w
 
 Example:
 
-  SKIP_TYPECHECK=1 RUN_UNIT_TESTS=1 git commit -m "fix: example"
+SKIP_TYPECHECK=1 RUN_UNIT_TESTS=1 git commit -m "fix: example"
 
 > NOTE: Avoid routinely bypassing pre-commit hooks. Use `--no-verify` or bypass env variables only in emergencies and always follow up with a proper fix.
 
 ## How to bypass hooks (emergency only)
+
 - To skip all hooks: `git commit --no-verify -m "..."` (not recommended)
 - To skip only typecheck: `SKIP_TYPECHECK=1 git commit -m "..."`
 
 ## CI checks
+
 - GitHub Actions CI runs on push & pull requests and includes:
   - Prettier check
   - ESLint
@@ -36,6 +40,7 @@ If the secret scanner flags something, do NOT commit secrets. Revoke and rotate 
 > Recommendation: Protect the `main` branch using GitHub Branch Protection rules and require the **CI** workflow and the **secret_scan** job to pass before merging. This ensures secrets or failing checks cannot be merged without review.
 
 ### Apply branch protection automatically
+
 We provide a helper script `scripts/apply-branch-protection.sh` and a manual GitHub Action to apply branch-protection rules.
 
 - To run locally (requires `gh` CLI or `GITHUB_TOKEN`):
@@ -55,15 +60,17 @@ We provide a helper script `scripts/apply-branch-protection.sh` and a manual Git
 > Note: running these requires repository admin permissions (or a token with `contents:write` and `administration:write` permissions). Ensure `GITHUB_TOKEN` used by Actions has the required scopes (org admins may use a PAT stored in a repo secret for cross-repo enforcement).
 
 ## Commit message conventions
+
 We use Conventional Commits. Commit messages are validated by `commitlint`. Example:
 
-  feat(lesion-detection): add new threshold calibration
+feat(lesion-detection): add new threshold calibration
 
 Run locally:
 
-  npx --no-install commitlint --from=HEAD~5 --to=HEAD
+npx --no-install commitlint --from=HEAD~5 --to=HEAD
 
 ## Helpful scripts
+
 - `npm run format` — format the whole repo
 - `npm run lint` — run full ESLint
 - `npm run typecheck` — run TypeScript checks

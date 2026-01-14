@@ -7,25 +7,21 @@ interface ThemeContextType {
   setTheme: (_theme: Theme) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType>({ 
-  theme: 'light', 
+const ThemeContext = createContext<ThemeContextType>({
+  theme: 'light',
   setTheme: (_theme: Theme) => {
     // Default no-op, overridden by provider
-  } 
+  },
 });
 
 export const useTheme = () => useContext(ThemeContext);
 
-export const ThemeProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>('light');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
 };

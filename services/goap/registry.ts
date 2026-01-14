@@ -18,7 +18,7 @@ import {
   recommendationExecutor,
   learningExecutor,
   privacyEncryptionExecutor,
-  auditTrailExecutor
+  auditTrailExecutor,
 } from '../executors';
 
 import type { ExecutorMap } from './agent';
@@ -43,10 +43,11 @@ export const EXECUTOR_REGISTRY: ExecutorMap = {
   'Recommendation-Agent': recommendationExecutor,
   'Learning-Agent': learningExecutor,
   'Privacy-Encryption-Agent': privacyEncryptionExecutor,
-  'Audit-Trail-Agent': auditTrailExecutor
+  'Audit-Trail-Agent': auditTrailExecutor,
 };
 
 import { GOAPPlanner } from '../goap';
+
 import { GoapAgent } from './agent';
 
 /**

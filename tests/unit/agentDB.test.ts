@@ -38,30 +38,36 @@ describe('AgentDB', () => {
     expect(stats.I.count).toBe(2);
     expect(stats.VI.count).toBe(1);
     expect(stats.II.count).toBe(0);
-    
+
     // Check if TPR calculation logic ran (stats should not be 0)
     expect(stats.I.tpr).toBeGreaterThan(0);
   });
 
   it('should return default stats if db is empty or error occurs', async () => {
-    mockGetAllPatterns.mockRejectedValue(new Error("DB Error"));
+    mockGetAllPatterns.mockRejectedValue(new Error('DB Error'));
     const stats = await agentDB.getLiveStats();
     expect(stats.I.count).toBe(0);
   });
 
   it('should format unified audit log correctly', async () => {
     mockGetAllPatterns.mockResolvedValue([
-      { id: '1', timestamp: 1000, taskType: 'AUDIT_LOG', metadata: { context: 'Encrypted' }, outcome: 'Hash123' },
-      { id: '2', timestamp: 2000, taskType: 'diagnosis', outcome: 'Melanoma', confidence: 0.9 }
+      {
+        id: '1',
+        timestamp: 1000,
+        taskType: 'AUDIT_LOG',
+        metadata: { context: 'Encrypted' },
+        outcome: 'Hash123',
+      },
+      { id: '2', timestamp: 2000, taskType: 'diagnosis', outcome: 'Melanoma', confidence: 0.9 },
     ]);
 
     const logs = await agentDB.getUnifiedAuditLog();
-    
+
     expect(logs).toHaveLength(2);
     // Sort desc by timestamp
     expect(logs[0].id).toBe('2');
     expect(logs[1].id).toBe('1');
-    
+
     expect(logs[1].type).toBe('audit');
     expect(logs[0].type).toBe('learning');
   });

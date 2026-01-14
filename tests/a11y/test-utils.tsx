@@ -11,5 +11,5 @@ export const axe = configureAxe({
     { id: 'aria-required-attr', enabled: true },
     { id: 'aria-valid-attr-value', enabled: true },
     { id: 'analysis-status', enabled: true },
-  ]
+  ],
 });

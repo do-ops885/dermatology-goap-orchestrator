@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 
-import { calibrateForConfidence, type SafetyCalibrationConfig } from '../../../services/executors/calibration';
+import {
+  calibrateForConfidence,
+  type SafetyCalibrationConfig,
+} from '../../../services/executors/calibration';
 
 describe('Calibration Agent', () => {
   describe('Standard Calibration', () => {
@@ -11,7 +14,7 @@ describe('Calibration Agent', () => {
     });
 
     it('should return standard calibration result', () => {
-      const result = calibrateForConfidence(0.90, 'standard');
+      const result = calibrateForConfidence(0.9, 'standard');
       expect(result.calibrated).toBe(true);
       expect(result.safetyMargin).toBe(0);
     });
@@ -20,23 +23,23 @@ describe('Calibration Agent', () => {
   describe('Safety Calibration', () => {
     it('should apply conservative thresholds for low confidence (<0.65)', () => {
       const result = calibrateForConfidence(0.45, 'safety');
-      expect(result.threshold).toBe(0.50);
+      expect(result.threshold).toBe(0.5);
       expect(result.mode).toBe('safety');
     });
 
     it('should add safety margin for low confidence cases', () => {
-      const result = calibrateForConfidence(0.30, 'safety');
+      const result = calibrateForConfidence(0.3, 'safety');
       expect(result.safetyMargin).toBeGreaterThan(0);
       expect(result.calibrated).toBe(true);
     });
 
     it('should flag is_low_confidence when confidence < 0.65', () => {
-      const result = calibrateForConfidence(0.50, 'standard');
+      const result = calibrateForConfidence(0.5, 'standard');
       expect(result.isLowConfidence).toBe(true);
     });
 
     it('should not flag low confidence when confidence >= 0.65', () => {
-      const result = calibrateForConfidence(0.70, 'standard');
+      const result = calibrateForConfidence(0.7, 'standard');
       expect(result.isLowConfidence).toBe(false);
     });
   });
@@ -45,17 +48,17 @@ describe('Calibration Agent', () => {
     it('should have correct default thresholds', () => {
       const config: SafetyCalibrationConfig = {
         standardThreshold: 0.65,
-        safetyThreshold: 0.50,
-        maxSafetyMargin: 0.15
+        safetyThreshold: 0.5,
+        maxSafetyMargin: 0.15,
       };
       expect(config.standardThreshold).toBe(0.65);
-      expect(config.safetyThreshold).toBe(0.50);
+      expect(config.safetyThreshold).toBe(0.5);
     });
 
     it('should calculate appropriate safety margin based on confidence', () => {
-      const veryLowConfidence = calibrateForConfidence(0.20, 'safety');
+      const veryLowConfidence = calibrateForConfidence(0.2, 'safety');
       const borderlineConfidence = calibrateForConfidence(0.49, 'safety');
-      
+
       expect(veryLowConfidence.safetyMargin).toBeGreaterThan(borderlineConfidence.safetyMargin);
     });
   });
@@ -67,9 +70,9 @@ describe('Calibration Agent', () => {
     });
 
     it('should set safety_calibrated correctly based on mode', () => {
-      const standardResult = calibrateForConfidence(0.80, 'standard');
-      const safetyResult = calibrateForConfidence(0.40, 'safety');
-      
+      const standardResult = calibrateForConfidence(0.8, 'standard');
+      const safetyResult = calibrateForConfidence(0.4, 'safety');
+
       expect(standardResult.safetyCalibrated).toBe(false);
       expect(safetyResult.safetyCalibrated).toBe(true);
     });

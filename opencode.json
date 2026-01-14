@@ -7,36 +7,28 @@
       "name": "Perplexity AI",
       "options": {
         "baseURL": "https://api.perplexity.ai",
-        "search_language_filter": [
-          "en"
-        ]
+        "search_language_filter": ["en"]
       },
       "models": {
         "sonar": {
           "name": "Perplexity Sonar",
           "options": {
-            "search_language_filter": [
-              "en"
-            ]
+            "search_language_filter": ["en"]
           }
         },
         "sonar-pro": {
           "name": "Perplexity Sonar Pro",
           "options": {
-            "search_language_filter": [
-              "en"
-            ]
+            "search_language_filter": ["en"]
           }
         },
         "sonar-reasoning": {
           "name": "Perplexity Sonar Reasoning",
           "options": {
-            "search_language_filter": [
-              "en"
-            ]
+            "search_language_filter": ["en"]
           }
         }
       }
     }
-  }  
+  }
 }

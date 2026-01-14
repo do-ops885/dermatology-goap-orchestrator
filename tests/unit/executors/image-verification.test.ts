@@ -15,7 +15,7 @@ describe('Image-Verification-Agent', () => {
   });
 
   it('should reject files with empty type', async () => {
-    const mockFile = new File([new Uint8Array([0xFF, 0xD8, 0xFF])], 'test.jpg', { type: '' });
+    const mockFile = new File([new Uint8Array([0xff, 0xd8, 0xff])], 'test.jpg', { type: '' });
     const result = verifyImage(mockFile as unknown as File);
     expect(result.valid).toBe(false);
     expect(result.error).toContain('Invalid file type');

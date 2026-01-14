@@ -24,7 +24,11 @@ const getStatusColor = (status: ExecutionAgentRecord['status']): string => {
   }
 };
 
-export const TraceTimeline: React.FC<TraceTimelineProps> = ({ trace, currentAgent, height = 80 }) => {
+export const TraceTimeline: React.FC<TraceTimelineProps> = ({
+  trace,
+  currentAgent,
+  height = 80,
+}) => {
   const { bars, totalDuration } = useMemo(() => {
     if (!trace) return { bars: [], totalDuration: 0 };
 
@@ -35,7 +39,7 @@ export const TraceTimeline: React.FC<TraceTimelineProps> = ({ trace, currentAgen
 
     const bars = trace.agents.map((agent, index) => {
       const agentStart = ((agent.startTime - startTime) / totalDuration) * 100;
-      const agentEnd = ((agent.endTime ?? endTime) - startTime) / totalDuration * 100;
+      const agentEnd = (((agent.endTime ?? endTime) - startTime) / totalDuration) * 100;
       const width = Math.max(agentEnd - agentStart, 1);
 
       return {
@@ -60,33 +64,35 @@ export const TraceTimeline: React.FC<TraceTimelineProps> = ({ trace, currentAgen
   return (
     <div className="glass-panel rounded-lg p-3 overflow-hidden">
       <div className="flex justify-between items-center mb-2">
-        <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wide">Timeline</span>
+        <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wide">
+          Timeline
+        </span>
         <span className="text-[9px] font-mono text-stone-400">
           {(totalDuration / 1000).toFixed(2)}s total
         </span>
       </div>
-      
-      <div 
+
+      <div
         className="relative rounded bg-stone-100 border border-stone-200 overflow-hidden"
         style={{ height }}
       >
         <div className="absolute inset-0 flex items-center">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div 
-              key={i} 
+            <div
+              key={i}
               className="flex-1 border-r border-stone-200/50"
               style={{ marginLeft: i === 0 ? 0 : undefined }}
             />
           ))}
         </div>
-        
+
         <AnimatePresence>
           {bars.map((bar) => (
             <motion.div
               key={bar.id}
               initial={{ opacity: 0, scaleX: 0 }}
-              animate={{ 
-                opacity: 1, 
+              animate={{
+                opacity: 1,
                 scaleX: 1,
                 left: `${bar.left.toString()}%`,
                 width: `${bar.width.toString()}%`,
@@ -94,9 +100,7 @@ export const TraceTimeline: React.FC<TraceTimelineProps> = ({ trace, currentAgen
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
               className={`absolute h-4 rounded-full cursor-pointer transition-all ${
-                bar.agentId === currentAgent 
-                  ? 'ring-2 ring-blue-400 ring-offset-1 z-10' 
-                  : ''
+                bar.agentId === currentAgent ? 'ring-2 ring-blue-400 ring-offset-1 z-10' : ''
               } ${getStatusColor(bar.status)}`}
               style={{ top: bar.top }}
               title={`${bar.name ?? bar.agentId}: ${bar.status} (${bar.width.toFixed(1)}%)`}
@@ -110,10 +114,14 @@ export const TraceTimeline: React.FC<TraceTimelineProps> = ({ trace, currentAgen
           ))}
         </AnimatePresence>
       </div>
-      
+
       <div className="flex justify-between mt-1 text-[9px] text-stone-400 font-mono">
         <span>{new Date(trace.startTime).toLocaleTimeString([], { hour12: false })}</span>
-        <span>{trace.endTime !== undefined ? new Date(trace.endTime).toLocaleTimeString([], { hour12: false }) : 'now'}</span>
+        <span>
+          {trace.endTime !== undefined
+            ? new Date(trace.endTime).toLocaleTimeString([], { hour12: false })
+            : 'now'}
+        </span>
       </div>
     </div>
   );

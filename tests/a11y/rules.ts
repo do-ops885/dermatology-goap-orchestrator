@@ -5,11 +5,12 @@ export const agentStatusRule: Rule = {
   evaluate: (node: any): boolean => {
     const statusElement = node.querySelector('[data-status]');
     if (statusElement) {
-      return statusElement.hasAttribute('aria-live') || 
-             statusElement.hasAttribute('role') === 'status';
+      return (
+        statusElement.hasAttribute('aria-live') || statusElement.hasAttribute('role') === 'status'
+      );
     }
     return true;
-  }
+  },
 };
 
 export const chartRule: Rule = {
@@ -17,9 +18,8 @@ export const chartRule: Rule = {
   evaluate: (node: any): boolean => {
     const chart = node.querySelector('[data-testid="chart"]');
     if (chart) {
-      return chart.hasAttribute('aria-label') ||
-             chart.hasAttribute('role') === 'img';
+      return chart.hasAttribute('aria-label') || chart.hasAttribute('role') === 'img';
     }
     return true;
-  }
+  },
 };

@@ -1,4 +1,5 @@
 # Agent Plan: Clinical Pipeline Details
+
 **Focus:** Complete 16-agent analysis workflow, data flow, and state transitions
 **Last Updated:** 2025-01-10
 
@@ -11,6 +12,7 @@ User Upload → 16 Agents → Diagnostic Summary (Encrypted, Audited)
 ```
 
 ### 1.1 State Model
+
 ```typescript
 interface WorldState {
   // Pipeline Flags (boolean)
@@ -31,11 +33,11 @@ interface WorldState {
   audit_logged: boolean;
 
   // Metrics (numeric)
-  confidence_score: number;      // 0-1 from skin tone detection
-  fairness_score: number;        // 0-1 from fairness audit
+  confidence_score: number; // 0-1 from skin tone detection
+  fairness_score: number; // 0-1 from fairness audit
   fitzpatrick_type: FitzpatrickType | null;
-  is_low_confidence: boolean;    // Trigger safety path
-  safety_calibrated: boolean;    // Safety path taken
+  is_low_confidence: boolean; // Trigger safety path
+  safety_calibrated: boolean; // Safety path taken
 }
 ```
 
@@ -44,160 +46,177 @@ interface WorldState {
 ### Stage 1: Verification & Detection
 
 #### 1.1 Image-Verification-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 1 |
-| **Preconditions** | None |
-| **Effects** | `image_verified: true` |
-| **Inputs** | Raw File |
-| **Outputs** | SHA-256 hash, validation status |
-| **Logic** | Magic bytes validation (JPEG/PNG/WebP) |
+
+| Property          | Value                                  |
+| :---------------- | :------------------------------------- |
+| **Cost**          | 1                                      |
+| **Preconditions** | None                                   |
+| **Effects**       | `image_verified: true`                 |
+| **Inputs**        | Raw File                               |
+| **Outputs**       | SHA-256 hash, validation status        |
+| **Logic**         | Magic bytes validation (JPEG/PNG/WebP) |
 
 #### 1.2 Skin-Tone-Detection-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 2 |
-| **Preconditions** | `image_verified: true` |
-| **Effects** | `skin_tone_detected`, `fitzpatrick_type`, `confidence_score`, `is_low_confidence` |
-| **Inputs** | Optimized image, GoogleGenAI client |
-| **Outputs** | Fitzpatrick type (I-VI), confidence (0-1) |
-| **Logic** | Gemini 2.5 Flash classification |
-| **Safety** | If confidence < 0.65, sets `is_low_confidence: true` |
+
+| Property          | Value                                                                             |
+| :---------------- | :-------------------------------------------------------------------------------- |
+| **Cost**          | 2                                                                                 |
+| **Preconditions** | `image_verified: true`                                                            |
+| **Effects**       | `skin_tone_detected`, `fitzpatrick_type`, `confidence_score`, `is_low_confidence` |
+| **Inputs**        | Optimized image, GoogleGenAI client                                               |
+| **Outputs**       | Fitzpatrick type (I-VI), confidence (0-1)                                         |
+| **Logic**         | Gemini 2.5 Flash classification                                                   |
+| **Safety**        | If confidence < 0.65, sets `is_low_confidence: true`                              |
 
 #### 1.3 Standard-Calibration-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 1 |
-| **Preconditions** | `skin_tone_detected: true`, `is_low_confidence: false` |
-| **Effects** | `calibration_complete: true`, `safety_calibrated: false` |
-| **Logic** | Apply standard threshold (0.65) |
+
+| Property          | Value                                                    |
+| :---------------- | :------------------------------------------------------- |
+| **Cost**          | 1                                                        |
+| **Preconditions** | `skin_tone_detected: true`, `is_low_confidence: false`   |
+| **Effects**       | `calibration_complete: true`, `safety_calibrated: false` |
+| **Logic**         | Apply standard threshold (0.65)                          |
 
 #### 1.4 Safety-Calibration-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 1 |
-| **Preconditions** | `skin_tone_detected: true`, `is_low_confidence: true` |
-| **Effects** | `calibration_complete: true`, `safety_calibrated: true` |
-| **Logic** | Apply conservative threshold (0.50), display warning UI |
+
+| Property          | Value                                                   |
+| :---------------- | :------------------------------------------------------ |
+| **Cost**          | 1                                                       |
+| **Preconditions** | `skin_tone_detected: true`, `is_low_confidence: true`   |
+| **Effects**       | `calibration_complete: true`, `safety_calibrated: true` |
+| **Logic**         | Apply conservative threshold (0.50), display warning UI |
 
 ### Stage 2: Preprocessing & Segmentation
 
 #### 2.1 Image-Preprocessing-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 2 |
-| **Preconditions** | `calibration_complete: true` |
-| **Effects** | `image_preprocessed: true` |
-| **Logic** | Melanin-preserving histogram equalization |
+
+| Property          | Value                                     |
+| :---------------- | :---------------------------------------- |
+| **Cost**          | 2                                         |
+| **Preconditions** | `calibration_complete: true`              |
+| **Effects**       | `image_preprocessed: true`                |
+| **Logic**         | Melanin-preserving histogram equalization |
 
 #### 2.2 Segmentation-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 5 |
-| **Preconditions** | `image_preprocessed: true` |
-| **Effects** | `segmentation_complete: true` |
-| **Logic** | Isolate skin regions using calibrated thresholds |
+
+| Property          | Value                                            |
+| :---------------- | :----------------------------------------------- |
+| **Cost**          | 5                                                |
+| **Preconditions** | `image_preprocessed: true`                       |
+| **Effects**       | `segmentation_complete: true`                    |
+| **Logic**         | Isolate skin regions using calibrated thresholds |
 
 ### Stage 3: Feature Extraction & Detection
 
 #### 3.1 Feature-Extraction-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 8 |
-| **Preconditions** | `segmentation_complete: true` |
-| **Effects** | `features_extracted: true` |
-| **Logic** | MobileNetV2 + FairDisCo disentanglement |
-| **Outputs** | Bias score, disentanglement index |
+
+| Property          | Value                                   |
+| :---------------- | :-------------------------------------- |
+| **Cost**          | 8                                       |
+| **Preconditions** | `segmentation_complete: true`           |
+| **Effects**       | `features_extracted: true`              |
+| **Logic**         | MobileNetV2 + FairDisCo disentanglement |
+| **Outputs**       | Bias score, disentanglement index       |
 
 #### 3.2 Lesion-Detection-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 10 |
-| **Preconditions** | `features_extracted: true` |
-| **Effects** | `lesions_detected: true` |
-| **Inputs** | Preprocessed image, VisionSpecialist |
-| **Outputs** | Classification results (HAM10000 classes), heatmap |
-| **Logic** | TF.js MobileNetV3 inference |
+
+| Property          | Value                                              |
+| :---------------- | :------------------------------------------------- |
+| **Cost**          | 10                                                 |
+| **Preconditions** | `features_extracted: true`                         |
+| **Effects**       | `lesions_detected: true`                           |
+| **Inputs**        | Preprocessed image, VisionSpecialist               |
+| **Outputs**       | Classification results (HAM10000 classes), heatmap |
+| **Logic**         | TF.js MobileNetV3 inference                        |
 
 ### Stage 4: Analysis & Risk
 
 #### 4.1 Similarity-Search-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 1 |
-| **Preconditions** | `lesions_detected: true` |
-| **Effects** | `similarity_searched: true` |
-| **Inputs** | Current case embeddings |
-| **Outputs** | 10 similar historical cases |
-| **Logic** | AgentDB vector store RAG query |
+
+| Property          | Value                          |
+| :---------------- | :----------------------------- |
+| **Cost**          | 1                              |
+| **Preconditions** | `lesions_detected: true`       |
+| **Effects**       | `similarity_searched: true`    |
+| **Inputs**        | Current case embeddings        |
+| **Outputs**       | 10 similar historical cases    |
+| **Logic**         | AgentDB vector store RAG query |
 
 #### 4.2 Risk-Assessment-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 3 |
-| **Preconditions** | `similarity_searched: true` |
-| **Effects** | `risk_assessed: true` |
-| **Logic** | Equalized odds correction via WebLLM/SmolLM2 |
+
+| Property          | Value                                        |
+| :---------------- | :------------------------------------------- |
+| **Cost**          | 3                                            |
+| **Preconditions** | `similarity_searched: true`                  |
+| **Effects**       | `risk_assessed: true`                        |
+| **Logic**         | Equalized odds correction via WebLLM/SmolLM2 |
 
 #### 4.3 Fairness-Audit-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 2 |
-| **Preconditions** | `risk_assessed: true` |
-| **Effects** | `fairness_validated: true` |
-| **Logic** | TPR/FPR gap validation across Fitzpatrick groups |
-| **Outputs** | `fairness_score` |
+
+| Property          | Value                                            |
+| :---------------- | :----------------------------------------------- |
+| **Cost**          | 2                                                |
+| **Preconditions** | `risk_assessed: true`                            |
+| **Effects**       | `fairness_validated: true`                       |
+| **Logic**         | TPR/FPR gap validation across Fitzpatrick groups |
+| **Outputs**       | `fairness_score`                                 |
 
 ### Stage 5: Verification & Recommendations
 
 #### 5.1 Web-Verification-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 4 |
-| **Preconditions** | `fairness_validated: true` |
-| **Effects** | `web_verified: true` |
-| **Inputs** | Preliminary diagnosis |
-| **Outputs** | Verified sources, web summary |
-| **Logic** | Google Search grounding via Gemini |
+
+| Property          | Value                              |
+| :---------------- | :--------------------------------- |
+| **Cost**          | 4                                  |
+| **Preconditions** | `fairness_validated: true`         |
+| **Effects**       | `web_verified: true`               |
+| **Inputs**        | Preliminary diagnosis              |
+| **Outputs**       | Verified sources, web summary      |
+| **Logic**         | Google Search grounding via Gemini |
 
 #### 5.2 Recommendation-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 4 |
-| **Preconditions** | `web_verified: true` |
-| **Effects** | `recommendations_generated: true` |
-| **Outputs** | Clinical advice (max 25 words) |
-| **Logic** | WebLLM/Gemini synthesis, skin-tone calibrated |
+
+| Property          | Value                                         |
+| :---------------- | :-------------------------------------------- |
+| **Cost**          | 4                                             |
+| **Preconditions** | `web_verified: true`                          |
+| **Effects**       | `recommendations_generated: true`             |
+| **Outputs**       | Clinical advice (max 25 words)                |
+| **Logic**         | WebLLM/Gemini synthesis, skin-tone calibrated |
 
 ### Stage 6: Learning & Privacy
 
 #### 6.1 Learning-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 2 |
-| **Preconditions** | `recommendations_generated: true` |
-| **Effects** | `learning_updated: true` |
-| **Logic** | Update AgentDB with bias monitoring |
+
+| Property          | Value                               |
+| :---------------- | :---------------------------------- |
+| **Cost**          | 2                                   |
+| **Preconditions** | `recommendations_generated: true`   |
+| **Effects**       | `learning_updated: true`            |
+| **Logic**         | Update AgentDB with bias monitoring |
 
 #### 6.2 Privacy-Encryption-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 2 |
-| **Preconditions** | `learning_updated: true` |
-| **Effects** | `data_encrypted: true` |
-| **Logic** | AES-256-GCM encryption with ephemeral key |
+
+| Property          | Value                                     |
+| :---------------- | :---------------------------------------- |
+| **Cost**          | 2                                         |
+| **Preconditions** | `learning_updated: true`                  |
+| **Effects**       | `data_encrypted: true`                    |
+| **Logic**         | AES-256-GCM encryption with ephemeral key |
 
 #### 6.3 Audit-Trail-Agent
-| Property | Value |
-|:---|:---|
-| **Cost** | 1 |
-| **Preconditions** | `data_encrypted: true` |
-| **Effects** | `audit_logged: true` |
-| **Logic** | SHA-256 Merkle proof to AgentDB |
+
+| Property          | Value                           |
+| :---------------- | :------------------------------ |
+| **Cost**          | 1                               |
+| **Preconditions** | `data_encrypted: true`          |
+| **Effects**       | `audit_logged: true`            |
+| **Logic**         | SHA-256 Merkle proof to AgentDB |
 
 ## 3. Confidence-Driven Routing
 
 ### 3.1 Standard Path (High Confidence)
+
 ```
 confidence_score ≥ 0.65
   → Standard-Calibration-Agent (threshold: 0.65)
@@ -206,6 +225,7 @@ confidence_score ≥ 0.65
 ```
 
 ### 3.2 Safety Path (Low Confidence)
+
 ```
 confidence_score < 0.65
   → Safety-Calibration-Agent (threshold: 0.50)
@@ -215,7 +235,9 @@ confidence_score < 0.65
 ```
 
 ### 3.3 Dynamic Replanning
+
 When `is_low_confidence` is set mid-pipeline:
+
 1. Current agent completes
 2. `shouldReplan: true` returned
 3. GOAP planner recalculates path
@@ -225,22 +247,25 @@ When `is_low_confidence` is set mid-pipeline:
 ## 4. Error Handling
 
 ### 4.1 Critical Errors
+
 - Precondition violations → Abort pipeline
 - Model unavailable → Abort with error message
 - Error message contains "Critical" → Full abort
 
 ### 4.2 Non-Critical Errors
+
 - Single agent fails → Mark `skipped`, continue
 - Timeout → Mark `skipped`, continue
 - Network error → Retry once, then skip
 
 ### 4.3 Graceful Degradation
-| Failure | Behavior |
-|:---|:---|
-| WebGPU unavailable | Fallback to WebGL/CPU |
-| Gemini API failure | Use local WebLLM fallback |
-| Vision model unavailable | Abort (critical) |
-| AgentDB unavailable | Continue without RAG |
+
+| Failure                  | Behavior                  |
+| :----------------------- | :------------------------ |
+| WebGPU unavailable       | Fallback to WebGL/CPU     |
+| Gemini API failure       | Use local WebLLM fallback |
+| Vision model unavailable | Abort (critical)          |
+| AgentDB unavailable      | Continue without RAG      |
 
 ## 5. Data Flow Example
 
@@ -297,45 +322,49 @@ Output: ExecutionTrace with all agents, final encrypted state
 
 ## 6. Performance Budgets
 
-| Stage | Max Duration | Agent |
-|:---|---:|:---|
-| Verification | 2s | Image-Verification-Agent |
-| Detection | 5s | Skin-Tone-Detection-Agent |
-| Calibration | 1s | Standard/Safety |
-| Preprocessing | 3s | Image-Preprocessing-Agent |
-| Segmentation | 5s | Segmentation-Agent |
-| Feature Extraction | 10s | Feature-Extraction-Agent |
-| Lesion Detection | 15s | Lesion-Detection-Agent |
-| Similarity Search | 2s | Similarity-Search-Agent |
-| Risk Assessment | 5s | Risk-Assessment-Agent |
-| Fairness Audit | 3s | Fairness-Audit-Agent |
-| Web Verification | 10s | Web-Verification-Agent |
-| Recommendations | 5s | Recommendation-Agent |
-| Learning | 3s | Learning-Agent |
-| Encryption | 2s | Privacy-Encryption-Agent |
-| Audit | 1s | Audit-Trail-Agent |
+| Stage              | Max Duration | Agent                     |
+| :----------------- | -----------: | :------------------------ |
+| Verification       |           2s | Image-Verification-Agent  |
+| Detection          |           5s | Skin-Tone-Detection-Agent |
+| Calibration        |           1s | Standard/Safety           |
+| Preprocessing      |           3s | Image-Preprocessing-Agent |
+| Segmentation       |           5s | Segmentation-Agent        |
+| Feature Extraction |          10s | Feature-Extraction-Agent  |
+| Lesion Detection   |          15s | Lesion-Detection-Agent    |
+| Similarity Search  |           2s | Similarity-Search-Agent   |
+| Risk Assessment    |           5s | Risk-Assessment-Agent     |
+| Fairness Audit     |           3s | Fairness-Audit-Agent      |
+| Web Verification   |          10s | Web-Verification-Agent    |
+| Recommendations    |           5s | Recommendation-Agent      |
+| Learning           |           3s | Learning-Agent            |
+| Encryption         |           2s | Privacy-Encryption-Agent  |
+| Audit              |           1s | Audit-Trail-Agent         |
 
 **Total Budget:** ~72 seconds (worst case)
 
 ## 7. Observability
 
 ### 7.1 Per-Agent Metrics
+
 - Start/end timestamps
 - Duration
 - Status (completed/skipped/failed)
 - Metadata (confidence scores, classifications)
 
 ### 7.2 Pipeline Metrics
+
 - Total execution time
 - Replan count
 - Safety interception count
 - Final state completeness
 
 ### 7.3 Trace Events
+
 ```
 plan_start → agent_start → agent_end → ... → plan_end
             ↳ replan_triggered → replan_complete
 ```
 
 ---
-*Signed: Clinical Pipeline Plan (Created 2025-01-10)*
+
+_Signed: Clinical Pipeline Plan (Created 2025-01-10)_

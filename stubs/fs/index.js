@@ -6,4 +6,13 @@ export const promises = { readFile: () => Promise.resolve(''), writeFile: () => 
 export const dirname = () => '';
 export const readFile = () => Promise.resolve('');
 export const writeFile = () => Promise.resolve();
-export default { readFileSync, writeFileSync, existsSync, mkdirSync, promises, dirname, readFile, writeFile };
+export default {
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  mkdirSync,
+  promises,
+  dirname,
+  readFile,
+  writeFile,
+};

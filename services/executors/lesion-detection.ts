@@ -3,7 +3,7 @@ export function detectLesions(features: Float32Array): {
   modelVersion: string;
 } {
   const lesions: { type: string; confidence: number; risk: 'Low' | 'Medium' | 'High' }[] = [];
-  
+
   if (features.length === 0) {
     return { lesions: [], modelVersion: 'MobileNetV3-YOLOv11' };
   }
@@ -24,7 +24,7 @@ export function detectLesions(features: Float32Array): {
     lesions.push({
       type: 'Melanoma',
       confidence: Math.round(confidence * 100) / 100,
-      risk: confidence > 0.8 ? 'High' : confidence > 0.6 ? 'Medium' : 'Low'
+      risk: confidence > 0.8 ? 'High' : confidence > 0.6 ? 'Medium' : 'Low',
     });
   }
 
@@ -33,16 +33,16 @@ export function detectLesions(features: Float32Array): {
     lesions.push({
       type: 'Basal Cell Carcinoma',
       confidence: Math.round(confidence * 100) / 100,
-      risk: confidence > 0.7 ? 'Medium' : 'Low'
+      risk: confidence > 0.7 ? 'Medium' : 'Low',
     });
   }
 
   if (dysplasticScore > 0.3) {
-    const confidence = Math.min(0.90, dysplasticScore / 6);
+    const confidence = Math.min(0.9, dysplasticScore / 6);
     lesions.push({
       type: 'Dysplastic Nevus',
       confidence: Math.round(confidence * 100) / 100,
-      risk: 'Medium'
+      risk: 'Medium',
     });
   }
 
@@ -52,13 +52,13 @@ export function detectLesions(features: Float32Array): {
       lesions.push({
         type: 'Benign Nevus',
         confidence: 0.75,
-        risk: 'Low'
+        risk: 'Low',
       });
     }
   }
 
   return {
     lesions,
-    modelVersion: 'MobileNetV3-YOLOv11'
+    modelVersion: 'MobileNetV3-YOLOv11',
   };
 }

@@ -23,7 +23,7 @@ describe('Clinician Feedback Integration', () => {
         timestamp: Date.now(),
         fitzpatrickType: 'III',
         clinicianId: 'doc_789',
-        isCorrection: true
+        isCorrection: true,
       };
 
       await expect(agentDB.storeClinicianFeedback(feedback)).resolves.not.toThrow();
@@ -39,11 +39,11 @@ describe('Clinician Feedback Integration', () => {
         notes: 'Histology confirms SCC',
         timestamp: Date.now(),
         fitzpatrickType: 'IV',
-        isCorrection: true
+        isCorrection: true,
       };
 
       await expect(agentDB.storeClinicianFeedback(feedback)).resolves.not.toThrow();
-      
+
       // Verify the feedback is marked as a correction
       expect(feedback.isCorrection).toBe(true);
       expect(feedback.correctedDiagnosis).toBeDefined();
@@ -58,11 +58,11 @@ describe('Clinician Feedback Integration', () => {
         notes: 'Diagnosis confirmed',
         timestamp: Date.now(),
         fitzpatrickType: 'II',
-        isCorrection: false
+        isCorrection: false,
       };
 
       await expect(agentDB.storeClinicianFeedback(feedback)).resolves.not.toThrow();
-      
+
       // Verify the feedback is marked as confirmation
       expect(feedback.isCorrection).toBe(false);
       expect(feedback.correctedDiagnosis).toBeUndefined();
@@ -73,7 +73,7 @@ describe('Clinician Feedback Integration', () => {
     it('should return valid stats structure when no feedback exists', async () => {
       // Reset memory first
       await agentDB.resetMemory();
-      
+
       const stats = await agentDB.getFeedbackStats();
 
       expect(stats).toBeDefined();
@@ -96,7 +96,7 @@ describe('Clinician Feedback Integration', () => {
           notes: '',
           timestamp: Date.now(),
           fitzpatrickType: 'I',
-          isCorrection: false
+          isCorrection: false,
         },
         {
           id: 'f2',
@@ -106,8 +106,8 @@ describe('Clinician Feedback Integration', () => {
           notes: '',
           timestamp: Date.now(),
           fitzpatrickType: 'II',
-          isCorrection: false
-        }
+          isCorrection: false,
+        },
       ];
 
       // Should not throw
@@ -116,7 +116,7 @@ describe('Clinician Feedback Integration', () => {
       }
 
       const stats = await agentDB.getFeedbackStats();
-      
+
       // Stats should be valid numbers
       expect(typeof stats.avgConfidence).toBe('number');
       expect(stats.avgConfidence).toBeGreaterThanOrEqual(0);
@@ -134,14 +134,14 @@ describe('Clinician Feedback Integration', () => {
         notes: '',
         timestamp: Date.now(),
         fitzpatrickType: 'V',
-        isCorrection: true
+        isCorrection: true,
       };
 
       await agentDB.storeClinicianFeedback(feedback);
-      
+
       // Wait for database write
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       const stats = await agentDB.getFeedbackStats();
 
       // May be 0 if database doesn't support querying yet
@@ -162,7 +162,7 @@ describe('Clinician Feedback Integration', () => {
         timestamp: Date.now(),
         fitzpatrickType: 'VI',
         clinicianId: 'expert_001',
-        isCorrection: true
+        isCorrection: true,
       };
 
       // Should not throw
@@ -179,7 +179,7 @@ describe('Clinician Feedback Integration', () => {
         notes: '',
         timestamp: Date.now(),
         fitzpatrickType: 'III',
-        isCorrection: true
+        isCorrection: true,
       };
 
       // Should not throw and should mark as correction
@@ -200,7 +200,7 @@ describe('Clinician Feedback Integration', () => {
         confidence: 0.8,
         notes: '',
         timestamp: Date.now(),
-        isCorrection: false
+        isCorrection: false,
       };
 
       await expect(agentDBNoBank.storeClinicianFeedback(feedback)).resolves.not.toThrow();

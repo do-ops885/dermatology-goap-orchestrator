@@ -10,7 +10,7 @@ const reportHandler = (metric: Metric) => {
     value: metric.value,
     rating: metric.rating,
     delta: metric.delta,
-    id: metric.id
+    id: metric.id,
   });
 
   // Example: Send to analytics endpoint (if configured)

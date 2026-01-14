@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
@@ -64,14 +64,14 @@ jobs:
         run: |
           echo "Verifying GOAP Agent test coverage..."
           npm test -- --coverage --reporter=json --outputFile=coverage.json
-          
+
           # Check if goap-agent tests were executed
           if grep -q "goap-agent" coverage.json; then
             echo "✓ GOAP Agent tests found in coverage report"
           else
             echo "⚠ Warning: GOAP Agent tests not found in coverage"
           fi
-          
+
           # Check if goap-agent source files are covered
           if grep -q "services/goap/agent.ts" coverage.json; then
             echo "✓ GOAP Agent source files covered"
