@@ -25,19 +25,19 @@ if command -v gh >/dev/null 2>&1; then
   # Build JSON payload for required_status_checks with contexts
   # gh api's -f doesn't allow direct nested JSON reliably across shells, so use a temp file
   payload=$(mktemp)
-  cat > "$payload" <<-JSON
-  {
-    "required_status_checks": { "strict": true, "contexts": $CONTEXTS },
-    "enforce_admins": true,
-    "required_pull_request_reviews": { "dismiss_stale_reviews": true, "require_code_owner_reviews": false, "required_approving_review_count": 1 },
-    "restrictions": null,
-    "required_linear_history": { "enabled": true },
-    "allow_force_pushes": false,
-    "allow_deletions": false
-  }
-  JSON
+  cat > "$payload" <<JSON
+{
+  "required_status_checks": { "strict": true, "contexts": $CONTEXTS },
+  "enforce_admins": true,
+  "required_pull_request_reviews": { "dismiss_stale_reviews": true, "require_code_owner_reviews": false, "required_approving_review_count": 1 },
+  "restrictions": null,
+  "required_linear_history": { "enabled": true },
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+JSON
 
-  gh api --method PUT "/repos/$REPO_FULL/branches/$BRANCH/protection" -f "$(cat $payload)" >/dev/null && echo "Branch protection applied via gh CLI" || { echo "gh CLI failed to apply protection"; rm -f "$payload"; exit 1; }
+  gh api --method PUT "/repos/$REPO_FULL/branches/$BRANCH/protection" -H "Content-Type: application/json" --input "$payload" >/dev/null && echo "Branch protection applied via gh CLI" || { echo "gh CLI failed to apply protection"; rm -f "$payload"; exit 1; }
   rm -f "$payload"
 fi
 
