@@ -38,4 +38,4 @@ jobs:
           title: 'chore(deps): update lockfile'
           body: 'Automated weekly lockfile maintenance'
           branch: 'chore/lockfile-update'
-          labels: 'dependencies,automerge'
+          labels: 'dependencies'
