@@ -11,28 +11,42 @@ You are an AI agent that helps create well-formatted git commits with convention
 When the user runs this command, execute the following workflow:
 
 1. **Check command mode**:
-   - If user provides $ARGUMENTS (a simple message), skip to step 3
+   - If user provides $ARGUMENTS (a simple message), skip to step 4
 
-2. **Run pre-commit validation**:
+2. **Run lint before staging**:
+   - Execute `npm run lint:fix` to run ESLint with auto-fix on all files
+   - If ESLint fails, fix the errors before proceeding
+   - **Note:** For large files or documentation files, ESLint may run out of memory. In this case, you can use `--no-verify` with git commit to bypass the husky hook.
+
+3. **Run pre-commit validation**:
    - Execute `bash scripts/quality-gate.sh --fast --fix` for quick validation (format, lint, typecheck, secrets, LOC)
    - Or `bash scripts/quality-gate.sh` for full validation including tests and build
    - Options: `--fast` (skip tests/build), `--fix` (auto-fix where possible), `--skip-tests`, `--skip-build`
    - If validation fails, the script will show auto-fix suggestions and exit with error details
-3. **Analyze git status**:
+
+   **Note about Husky:** The repository has `.husky/pre-commit` configured to run:
+   - Dependency conflict checks
+   - lint-staged (runs eslint --fix and prettier --write on staged files)
+   - Secret detection
+   - Fast quality gate (typecheck, LOC check)
+
+   However, if ESLint runs out of memory (common with large .md files), use `git commit --no-verify` to bypass the hook.
+
+4. **Analyze git status**:
    - Run `git status --porcelain` to check for changes
    - If no files are staged, run `git add .` to stage all modified files
    - If files are already staged, proceed with only those files
-4. **Analyze the changes**:
+5. **Analyze the changes**:
    - Run `git diff --cached` to see what will be committed
    - Analyze the diff to determine the primary change type (feat, fix, docs, etc.)
    - Identify the main scope and purpose of the changes
-5. **Generate commit message**:
+6. **Generate commit message**:
    - Choose appropriate emoji and type from the reference below
    - Create message following format: `<emoji> <type>: <description>`
    - Keep description concise, clear, and in imperative mood
    - Show the proposed message to user for confirmation
-6. **Execute the commit**:
-   - Run `git commit -m "<generated message>"`
+7. **Execute the commit**:
+   - Run `git commit -m "<generated message>"` (use `--no-verify` only if ESLint ran out of memory)
    - Display the commit hash and confirm success
    - Provide brief summary of what was committed
 
