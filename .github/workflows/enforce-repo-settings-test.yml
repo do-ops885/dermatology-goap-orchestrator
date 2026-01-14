@@ -1,0 +1,26 @@
+name: Test Enforce Repository Settings (Dry Run)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Print the settings file
+        run: |
+          echo "---- repository-settings.yml ----"
+          sed -n '1,200p' .github/repository-settings.yml
+          echo "---- end ----"
+
+      - name: Validate YAML parse (js-yaml)
+        run: |
+          node -e "const fs=require('fs'); const yaml=require('js-yaml'); const cfg=yaml.load(fs.readFileSync('.github/repository-settings.yml','utf8')); console.log(Object.keys(cfg))"
+        env:
+          NODE_OPTIONS: --unhandled-rejections=strict

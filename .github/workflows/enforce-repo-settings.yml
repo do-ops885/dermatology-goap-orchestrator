@@ -1,0 +1,87 @@
+name: Enforce Repository Settings
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 0' # weekly (UTC) - adjust as needed
+
+permissions:
+  contents: write
+  administration: write
+
+jobs:
+  enforce:
+    name: Enforce repository settings
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (to access .github/repository-settings.yml)
+        uses: actions/checkout@v4
+
+      - name: Read repository settings
+        id: settings
+        run: |
+          echo "Loading .github/repository-settings.yml"
+          cat .github/repository-settings.yml
+          echo "::set-output name=settings::$(cat .github/repository-settings.yml | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}')"
+
+      - name: Apply repository settings via GitHub Script
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const yaml = require('js-yaml');
+            const settingsText = fs.readFileSync('.github/repository-settings.yml', 'utf8');
+            const cfg = yaml.load(settingsText);
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Apply repository-level settings
+            await github.rest.repos.update({
+              owner,
+              repo,
+              default_branch: cfg.default_branch || 'main',
+              allow_squash_merge: !!cfg.allow_squash_merge,
+              allow_merge_commit: !!cfg.allow_merge_commit,
+              allow_rebase_merge: !!cfg.allow_rebase_merge,
+              has_wiki: !!cfg.has_wiki,
+              has_projects: !!cfg.has_projects,
+              allow_forking: !!cfg.allow_forking,
+              archived: !!cfg.archived
+            });
+
+            console.log('Repository settings updated');
+
+            // Apply branch protections declared in branch_protection
+            if (Array.isArray(cfg.branch_protection)) {
+              for (const bp of cfg.branch_protection) {
+                const branch = bp.branch;
+                const contexts = (bp.required_status_checks && bp.required_status_checks.contexts) || [];
+
+                await github.rest.repos.updateBranchProtection({
+                  owner,
+                  repo,
+                  branch,
+                  required_status_checks: { strict: !!(bp.required_status_checks && bp.required_status_checks.strict), contexts },
+                  enforce_admins: !!bp.enforce_admins,
+                  required_pull_request_reviews: bp.required_pull_request_reviews || null,
+                  restrictions: null,
+                  required_linear_history: bp.required_linear_history || null,
+                  allow_force_pushes: !!bp.allow_force_pushes,
+                  allow_deletions: !!bp.allow_deletions
+                });
+
+                console.log(`Applied branch protection to ${branch} with contexts: ${contexts.join(',')}`);
+              }
+            }
+
+            return { ok: true };
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # js-yaml is not available by default in the runtime; install it in a setup step if needed
+
+      - name: Install js-yaml (if needed)
+        if: failure()
+        run: |
+          npm ci --no-audit --no-fund
+          npm install js-yaml@4

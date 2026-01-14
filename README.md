@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB)](https://react.dev/)
-[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-green)](.github/workflows)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-green)](.github/workflows) [![CI](https://github.com/do-ops885/dermatology-goap-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/do-ops885/dermatology-goap-orchestrator/actions/workflows/ci.yml)
 
 A **Clinical AI Orchestrator** powered by a **Goal-Oriented Action Planning (GOAP)** system. The orchestrator coordinates multiple autonomous AI agents to perform skin lesion analysis with a focus on diagnostic equity across all skin tones.
 
