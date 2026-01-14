@@ -95,6 +95,9 @@ export default defineConfig({
       'fs/promises': path.resolve(__dirname, './stubs/fs/promises.js'),
     },
   },
+  optimizeDeps: {
+    exclude: ['@ruvector/sona', '@ruvector/graph-node', '@ruvector/attention', '@ruvector/gnn'],
+  },
   build: {
     rollupOptions: {
       external: [/(.*)\.node$/, /node_modules\/@ruvector/],

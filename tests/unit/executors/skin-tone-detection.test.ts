@@ -56,6 +56,6 @@ describe('Skin-Tone-Detection-Agent', () => {
 
   it('should throw error for invalid image data', async () => {
     const invalidImageData = { width: 0, height: 0, data: new Uint8ClampedArray(0) } as ImageData;
-    await expect(detectSkinTone(invalidImageData)).rejects.toThrow('Invalid image data');
+    expect(() => detectSkinTone(invalidImageData)).toThrow('Invalid image data');
   });
 });

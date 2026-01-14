@@ -83,5 +83,4 @@ jobs:
       - name: Install js-yaml (if needed)
         if: failure()
         run: |
-          npm ci --no-audit --no-fund
           npm install js-yaml@4
