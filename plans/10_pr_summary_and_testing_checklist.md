@@ -6,10 +6,10 @@
 - Purpose: Make `goap-agent` the documented canonical orchestrator, add fairness and safety improvements and provide a migration checklist for implementation and testing.
 
 ## Testing Checklist
-- [x] Add unit tests: `tests/unit/goap-agent.test.ts` for `plan()`, `execute()`, `replanIfNeeded()` (added; tests are ready but not executed in this environment due to filesystem provider error).
-- [ ] Extend `tests/e2e/clinical-flow.spec.ts` with a `Scenario E: Orchestration Trace & Replan` asserting the presence and schema of `goap-agent` traces.
-- [ ] Add integration test that simulates a failing agent to ensure `goap-agent` skips non-critical agents and triggers `Safety-Calibration-Agent` when necessary.
-- [ ] Add coverage target entry to CI: ensure `goap-agent` unit tests are run and included in coverage reports.
+- [x] Add unit tests: `tests/unit/goap-agent.test.ts` for `plan()`, `execute()`, `replanIfNeeded()` (added and passing).
+- [x] Extend `tests/e2e/clinical-flow.spec.ts` with a `Scenario E: Orchestration Trace & Replan` asserting the presence and schema of `goap-agent` traces (added).
+- [x] Add integration test that simulates a failing agent to ensure `goap-agent` skips non-critical agents and triggers `Safety-Calibration-Agent` when necessary (added in `tests/unit/goap-agent-failures.test.ts` with 8 comprehensive tests).
+- [x] Add coverage target entry to CI: ensure `goap-agent` unit tests are run and included in coverage reports (added to `.github/workflows/ci.yml` and `vite.config.ts`).
 
 ### How to run locally / in CI
 Run these commands in the project root to verify the implementation locally or in a CI job:

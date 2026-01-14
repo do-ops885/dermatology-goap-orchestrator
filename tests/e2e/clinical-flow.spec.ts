@@ -316,6 +316,57 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     expect(goapLogText).toMatch(/run_[a-z0-9]+/); // Trace ID format: run_xxxxx
   });
 
+  test('Scenario E: Orchestration Trace & Replan', async ({ page }) => {
+    // This test verifies that the GOAP agent produces proper traces and can replan
+    
+    const buffer = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
+    
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles({
+      name: 'skin-sample-trace.jpg',
+      mimeType: 'image/jpeg',
+      buffer: buffer
+    });
+
+    const runBtn = page.locator('button', { hasText: 'Run Clinical Analysis' });
+    await runBtn.click();
+
+    // Wait for analysis to complete
+    await page.waitForSelector('[data-testid="analysis-result"], text=/Analysis Complete/i, text=/Diagnostic Summary/i', { 
+      timeout: 60000 
+    });
+
+    // Verify orchestration trace is present in logs or UI
+    const traceElement = page.locator('[data-testid="agent-trace"], [data-testid="agent-flow"]').first();
+    await expect(traceElement).toBeVisible({ timeout: 5000 });
+
+    // Check for trace schema elements
+    // A proper trace should include: runId, agents array, finalWorldState, timestamps
+    const agentFlowContent = await traceElement.textContent();
+    
+    // Verify key agents are shown in the trace
+    expect(agentFlowContent).toMatch(/Image-Verification|Skin-Tone-Detection|Calibration/i);
+    
+    // Verify trace includes timing information (agents should show as completed)
+    const completedAgents = page.locator('[data-status="completed"], .agent-completed, text=/completed/i');
+    const completedCount = await completedAgents.count();
+    expect(completedCount).toBeGreaterThan(0);
+
+    // Verify trace ID format (should be run_xxxxx)
+    const traceIdElement = page.locator('text=/run_[a-z0-9]+/i').first();
+    await expect(traceIdElement).toBeVisible({ timeout: 5000 });
+    
+    // Verify world state progression is logged
+    const stateTransitions = page.locator('text=/state|world|transition/i');
+    const stateCount = await stateTransitions.count();
+    expect(stateCount).toBeGreaterThan(0);
+
+    // Check that finalWorldState has required completion flags
+    // This would be in logs or debug output
+    const auditLoggedIndicator = page.locator('text=/audit_logged|audit.*true|encrypted/i').first();
+    await expect(auditLoggedIndicator).toBeVisible({ timeout: 5000 });
+  });
+
   test('Scenario F: Safety Calibration Routing on Low Confidence', async ({ page }) => {
     // Override mock to return low confidence
     await page.route('**/models/*:generateContent?key=*', async (route) => {

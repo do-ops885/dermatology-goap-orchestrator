@@ -3,8 +3,6 @@
  * Maps agent IDs to their executor functions for runtime lookup
  */
 
-import type { ExecutorMap } from './agent';
-
 import {
   imageVerificationExecutor,
   skinToneDetectionExecutor,
@@ -22,6 +20,8 @@ import {
   privacyEncryptionExecutor,
   auditTrailExecutor
 } from '../executors';
+
+import type { ExecutorMap } from './agent';
 
 /**
  * Runtime registry of all clinical pipeline agents
@@ -46,12 +46,12 @@ export const EXECUTOR_REGISTRY: ExecutorMap = {
   'Audit-Trail-Agent': auditTrailExecutor
 };
 
+import { GOAPPlanner } from '../goap';
+import { GoapAgent } from './agent';
+
 /**
  * Create a GoapAgent instance with the standard executor registry
  */
-import { GOAPPlanner } from '../goap';
-
-import { GoapAgent } from './agent';
 
 export function createGoapAgent(opts?: { perAgentTimeoutMs?: number }): GoapAgent {
   const planner = new GOAPPlanner();

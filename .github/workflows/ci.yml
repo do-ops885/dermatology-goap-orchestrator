@@ -54,6 +54,26 @@ jobs:
       - name: Run unit tests with coverage
         run: npm test -- --coverage
 
+      - name: Check GOAP Agent coverage
+        run: |
+          echo "Verifying GOAP Agent test coverage..."
+          npm test -- --coverage --reporter=json --outputFile=coverage.json
+          
+          # Check if goap-agent tests were executed
+          if grep -q "goap-agent" coverage.json; then
+            echo "✓ GOAP Agent tests found in coverage report"
+          else
+            echo "⚠ Warning: GOAP Agent tests not found in coverage"
+          fi
+          
+          # Check if goap-agent source files are covered
+          if grep -q "services/goap/agent.ts" coverage.json; then
+            echo "✓ GOAP Agent source files covered"
+          else
+            echo "⚠ Warning: GOAP Agent source files not in coverage"
+          fi
+        continue-on-error: true
+
       - name: Upload coverage to Codecov
         if: always()
         uses: codecov/codecov-action@v4
@@ -61,6 +81,8 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/coverage-final.json
           fail_ci_if_error: false
+          flags: unittests,goap-agent
+          name: codecov-umbrella
 
   build:
     name: Build Production Bundle

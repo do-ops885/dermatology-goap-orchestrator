@@ -9,8 +9,9 @@ import FairnessReport from './components/FairnessReport';
 import { Header } from './components/Header';
 import { PatientSafetyState } from './components/PatientSafetyState';
 import { ThemeProvider } from './context/ThemeContext';
-import type { AnalysisResult } from './types';
 import { useClinicalAnalysis } from './hooks/useClinicalAnalysis';
+
+import type { AnalysisResult } from './types';
 
 export default function App() {
   const [showFairnessReport, setShowFairnessReport] = useState(false);
