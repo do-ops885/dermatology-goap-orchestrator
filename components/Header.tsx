@@ -12,7 +12,7 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-export const Header: React.FC<HeaderProps> = ({ dbReady }) => {
+export function Header({ dbReady }: HeaderProps) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
@@ -106,4 +106,4 @@ export const Header: React.FC<HeaderProps> = ({ dbReady }) => {
       </div>
     </header>
   );
-};
+}

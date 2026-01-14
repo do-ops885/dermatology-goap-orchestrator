@@ -17,7 +17,7 @@ interface FairnessDashboardProps {
   onOpenReport?: () => void;
 }
 
-const FairnessDashboard: React.FC<FairnessDashboardProps> = ({ onOpenReport }) => {
+function FairnessDashboard({ onOpenReport }: FairnessDashboardProps) {
   const agentDB = AgentDB.getInstance();
   const [metrics, setMetrics] = useState<
     Record<string, { tpr: number; fpr: number; count: number }>
@@ -210,6 +210,6 @@ const FairnessDashboard: React.FC<FairnessDashboardProps> = ({ onOpenReport }) =
       )}
     </div>
   );
-};
+}
 
 export default FairnessDashboard;

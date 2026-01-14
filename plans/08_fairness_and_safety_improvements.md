@@ -16,9 +16,10 @@
 
 ### 0.2 Priority Actions
 
-1. **P0:** Implement per-group TPR/FPR metrics in `services/agentDB.ts`
-2. **P1:** Create FairnessDashboard component
-3. **P2:** Add clinician feedback path
+1. **P0:** Implement per-group TPR/FPR metrics in `services/agentDB.ts` ✅ COMPLETE (Partial implementation)
+2. **P1:** Create FairnessDashboard component ❌ MISSING
+3. **P2:** Add clinician feedback path ❌ MISSING
+4. **P3:** Add nightly batch analytics ❌ MISSING
 
 ## 1. Objectives
 
@@ -64,6 +65,7 @@ interface WorldState {
 ### 3.1 Data & Metrics
 
 - [x] AgentDB records `caseMetadata: {skinToneEst, method, confidence}`
+- [x] AgentDB records `caseMetadata: {skinToneEst, method, confidence}` (COMPLETE)
 - [ ] Add nightly batch job (client-run cron via service worker) to compute historical TPR/FPR per group
 - [ ] Compute moving averages for real-time fairness stats
 

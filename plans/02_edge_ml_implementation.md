@@ -6,11 +6,22 @@
 
 **Status:** ✅ IMPLEMENTED (WebLLM `SmolLM2-1.7B`)
 
-### 1.1 Optimizations Status
+### 1.1 Optimizations Status (Updated 2026-01-14)
 
 - [x] **Model Caching:** Service Worker configured to cache ML weights
 - [x] **Initialization UX:** `ModelProgress.tsx` component created for model downloading progress
 - [x] **Idle Timer:** 5-minute idle timer implemented in `LocalLLMService`
+- [x] **Memory Safety:** All TF.js operations wrapped in `tf.tidy()`
+- [x] **Backend Fallback:** WebGPU → WebGL → CPU selection implemented
+- [x] **Vision Pipeline:** MobileNetV2 with saliency heatmaps functional (201 LOC)
+
+### 1.2 Missing Implementations (2026-01-14)
+
+- [ ] **GPUMemoryPool class:** Not implemented (tiered memory pools)
+- [ ] **WebGPU Error Scopes:** No error scope wrapping
+- [ ] **INT8 Quantization:** Not implemented
+- [ ] **Model Pruning:** Not implemented
+- [ ] **Worker-based Inference:** Not implemented
 
 ### 1.2 2025: WebGPU Memory Pooling
 

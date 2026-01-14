@@ -108,7 +108,7 @@ test.describe('Performance Benchmarks', () => {
     const progressUpdated = await page.waitForFunction(
       () => {
         const progress = document.querySelector('[data-testid="model-progress"]');
-        return progress && parseInt(progress.textContent) > 0;
+        return progress && progress.textContent !== null && parseInt(progress.textContent, 10) > 0;
       },
       { timeout: 30000 },
     );

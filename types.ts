@@ -87,12 +87,12 @@ export interface ClinicianFeedback {
   id: string;
   analysisId: string;
   diagnosis: string;
-  correctedDiagnosis?: string;
+  correctedDiagnosis?: string | undefined;
   confidence: number;
   notes: string;
   timestamp: number;
-  fitzpatrickType?: FitzpatrickType;
-  clinicianId?: string;
+  fitzpatrickType?: FitzpatrickType | undefined;
+  clinicianId?: string | undefined;
   isCorrection: boolean;
 }
 
@@ -117,14 +117,16 @@ export interface AnalysisResult {
     sources: { title: string; uri: string }[];
     summary: string;
   };
-  securityContext?: {
-    encrypted: boolean;
-    algorithm: string;
-    timestamp: number;
-    iv: number[]; // Array from Uint8Array
-    payloadSize: number;
-    ciphertext?: string; // Base64 encoded ciphertext
-  };
+  securityContext?:
+    | {
+        encrypted?: boolean;
+        algorithm: string;
+        timestamp: number;
+        iv: number[];
+        payloadSize: number;
+        ciphertext?: string | undefined;
+      }
+    | undefined;
   clinicianFeedback?: ClinicianFeedback;
 }
 
@@ -134,7 +136,7 @@ export interface AgentLogEntry {
   status: 'pending' | 'running' | 'completed' | 'failed';
   message: string;
   timestamp: number;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, unknown> | undefined;
 }
 
 // AgentDB Pattern Types

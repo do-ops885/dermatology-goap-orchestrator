@@ -4,6 +4,8 @@
 #   --skip-tests     Skip running tests
 #   --skip-coverage  Skip coverage check
 #   --skip-build     Skip production build check
+#   --skip-format    Skip formatting check (handled by lint-staged)
+#   --skip-lint      Skip linting check (handled by lint-staged)
 #   --fast           Fast mode (skip build, coverage, full test suite)
 #   --fix            Auto-fix linting issues where possible
 #   -h, --help       Show this help message
@@ -21,6 +23,8 @@ NC='\033[0m' # No Color
 SKIP_TESTS=false
 SKIP_COVERAGE=true  # Coverage not configured by default
 SKIP_BUILD=true      # Build check optional by default
+SKIP_FORMAT=false    # Format check enabled by default
+SKIP_LINT=false      # Lint check enabled by default
 AUTO_FIX=false
 
 # Parse arguments
@@ -36,6 +40,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-build)
       SKIP_BUILD=true
+      shift
+      ;;
+    --skip-format)
+      SKIP_FORMAT=true
+      shift
+      ;;
+    --skip-lint)
+      SKIP_LINT=true
       shift
       ;;
     --fast)
@@ -55,6 +67,8 @@ while [[ $# -gt 0 ]]; do
       echo "  --skip-tests     Skip running tests"
       echo "  --skip-coverage  Skip coverage check"
       echo "  --skip-build     Skip production build check"
+      echo "  --skip-format    Skip formatting check"
+      echo "  --skip-lint      Skip linting check"
       echo "  --fast           Fast mode (skip build, coverage, full test suite)"
       echo "  --fix            Auto-fix linting issues where possible"
       echo "  -h, --help       Show this help message"
@@ -100,26 +114,36 @@ run_check() {
 }
 
 # 1. Prettier Check
-echo -e "${BLUE}─────────────────────────────────────────────────────────────${NC}"
-echo -e "${BLUE}📝 Formatting Check${NC}"
-echo -e "${BLUE}─────────────────────────────────────────────────────────────${NC}"
-if [ "$AUTO_FIX" = "true" ]; then
-  run_check "Prettier (auto-fix)" "npm run format" "true"
+if [ "$SKIP_FORMAT" = "false" ]; then
+  echo -e "${BLUE}─────────────────────────────────────────────────────────────${NC}"
+  echo -e "${BLUE}📝 Formatting Check${NC}"
+  echo -e "${BLUE}─────────────────────────────────────────────────────────────${NC}"
+  if [ "$AUTO_FIX" = "true" ]; then
+    run_check "Prettier (auto-fix)" "npm run format" "true"
+  else
+    run_check "Prettier" "npm run prettier:check" "true"
+  fi
+  echo ""
 else
-  run_check "Prettier" "npm run prettier:check" "true"
+  echo -e "${YELLOW}⊘ Formatting check skipped (use --skip-format)${NC}"
+  echo ""
 fi
-echo ""
 
 # 2. ESLint Check
-echo -e "${BLUE}─────────────────────────────────────────────────────────────${NC}"
-echo -e "${BLUE}🔍 Linting Check${NC}"
-echo -e "${BLUE}─────────────────────────────────────────────────────────────${NC}"
-if [ "$AUTO_FIX" = "true" ]; then
-  run_check "ESLint (auto-fix)" "npm run lint:fix" "true"
+if [ "$SKIP_LINT" = "false" ]; then
+  echo -e "${BLUE}─────────────────────────────────────────────────────────────${NC}"
+  echo -e "${BLUE}🔍 Linting Check${NC}"
+  echo -e "${BLUE}─────────────────────────────────────────────────────────────${NC}"
+  if [ "$AUTO_FIX" = "true" ]; then
+    run_check "ESLint (auto-fix)" "npm run lint:fix" "true"
+  else
+    run_check "ESLint" "npm run lint" "true"
+  fi
+  echo ""
 else
-  run_check "ESLint" "npm run lint" "true"
+  echo -e "${YELLOW}⊘ Linting check skipped (use --skip-lint)${NC}"
+  echo ""
 fi
-echo ""
 
 # 3. TypeScript Type Check
 echo -e "${BLUE}─────────────────────────────────────────────────────────────${NC}"
@@ -188,5 +212,8 @@ else
   echo "  npm run format        # Format code"
   echo "  npm run typecheck     # Check types"
   echo "  npm run test          # Run tests"
+  echo ""
+  echo -e "${YELLOW}Note: Format and lint checks are handled by lint-staged in pre-commit.${NC}"
+  echo "      Use --skip-format and --skip-lint if running separately."
   exit 1
 fi

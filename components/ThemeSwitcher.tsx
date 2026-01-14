@@ -3,7 +3,7 @@ import React from 'react';
 
 import { useTheme, type Theme } from '../context/ThemeContext';
 
-export const ThemeSwitcher: React.FC = () => {
+export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
 
   const themes: { id: Theme; icon: React.ReactNode; label: string }[] = [
@@ -33,4 +33,4 @@ export const ThemeSwitcher: React.FC = () => {
       ))}
     </div>
   );
-};
+}

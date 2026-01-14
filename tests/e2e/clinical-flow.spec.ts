@@ -240,11 +240,14 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     // Track initial memory state if available
     const initialMemoryCheck = await page.evaluate(() => {
       if ('gc' in window) {
-        (window as any).gc();
+        (window as { gc?: () => void }).gc?.();
       }
+      const memory = (
+        performance as unknown as { memory?: { usedJSHeapSize: number; totalJSHeapSize: number } }
+      ).memory;
       return {
-        heapUsed: performance.memory?.usedJSHeapSize || 0,
-        heapLimit: performance.memory?.totalJSHeapSize || 0,
+        heapUsed: memory?.usedJSHeapSize ?? 0,
+        heapLimit: memory?.totalJSHeapSize ?? 0,
       };
     });
 
@@ -277,11 +280,14 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     // Memory check after 10 analyses
     const finalMemoryCheck = await page.evaluate(() => {
       if ('gc' in window) {
-        (window as any).gc();
+        (window as { gc?: () => void }).gc?.();
       }
+      const memory = (
+        performance as unknown as { memory?: { usedJSHeapSize: number; totalJSHeapSize: number } }
+      ).memory;
       return {
-        heapUsed: performance.memory?.usedJSHeapSize || 0,
-        heapLimit: performance.memory?.totalJSHeapSize || 0,
+        heapUsed: memory?.usedJSHeapSize ?? 0,
+        heapLimit: memory?.totalJSHeapSize ?? 0,
       };
     });
 

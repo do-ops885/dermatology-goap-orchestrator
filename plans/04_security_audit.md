@@ -4,29 +4,34 @@
 
 ## 0. Current Security Status (2026-01-11)
 
-### 0.1 Security Posture
+### 0.1 Security Posture (Updated 2026-01-14)
 
-| Security Area         | Status                 | Implementation                      | Priority |
-| --------------------- | ---------------------- | ----------------------------------- | -------- |
-| Input Validation      | ✅ Complete            | Magic Bytes, Size Limit (10MB)      | LOW      |
-| CSP Headers           | ❌ **Not Implemented** | No CSP in vite.config.ts            | **HIGH** |
-| Encryption            | ✅ Complete            | AES-GCM-256 in `services/crypto.ts` | LOW      |
-| Audit Logging         | ✅ Complete            | SHA-256 hash chaining in AgentDB    | LOW      |
-| PII Redaction         | ⚠️ Partial             | Only in logger (base64/image)       | MEDIUM   |
-| HTTP Security Headers | ❌ **Not Implemented** | No security headers in Vite         | **HIGH** |
-| Zod Validation        | ❌ **Not Implemented** | No runtime schema validation        | MEDIUM   |
-| ESLint Security       | ✅ Complete            | 10+ security rules configured       | LOW      |
+| Security Area         | Status                 | Implementation                                        | Priority |
+| --------------------- | ---------------------- | ----------------------------------------------------- | -------- |
+| Input Validation      | ✅ Complete            | Magic Bytes, Size Limit (10MB)                        | LOW      |
+| CSP Headers           | ✅ **Implemented**     | CSP in vite.config.ts (server & preview)              | **HIGH** |
+| Encryption            | ✅ Complete            | AES-GCM-256 in `services/crypto.ts`                   | LOW      |
+| Audit Logging         | ✅ Complete            | SHA-256 hash chaining in AgentDB                      | LOW      |
+| PII Redaction         | ⚠️ Partial             | Only in logger (base64/image)                         | MEDIUM   |
+| HTTP Security Headers | ✅ **Implemented**     | X-Content-Type-Options, X-Frame-Options, etc. in Vite | **HIGH** |
+| Zod Validation        | ❌ **Not Implemented** | No runtime schema validation                          | MEDIUM   |
+| ESLint Security       | ✅ Complete            | 10+ security rules configured                         | LOW      |
+| Subresource Integrity | ✅ **Partial**         | SRI for Buffer.js (Tailwind CDN is dynamic, noted)    | MEDIUM   |
 
-### 0.2 Critical Issues Requiring Immediate Action
+### 0.2 Critical Issues Requiring Immediate Action (Updated 2026-01-14)
 
-1. **Missing CSP Headers**: No Content-Security-Policy in Vite config
-2. **Missing HTTP Security Headers**: No X-Frame-Options, X-Content-Type-Options, etc.
+**✅ RESOLVED:**
+
+1. ~~**Missing CSP Headers**: No Content-Security-Policy in Vite config~~ → **Implemented**
+2. ~~**Missing HTTP Security Headers**: No X-Frame-Options, X-Content-Type-Options, etc.~~ → **Implemented**
 
 ## 1. Threat Model & Status
 
 - **Input Validation:** ✅ Implemented (Magic Bytes, Size Limit).
-- **CSP:** ⚠️ **NOT IMPLEMENTED** - No CSP headers found in `vite.config.ts`
+- **CSP:** ✅ **IMPLEMENTED** - CSP headers in `vite.config.ts` (lines 14-60).
+- **HTTP Security Headers:** ✅ **IMPLEMENTED** - Complete header set in `vite.config.ts`.
 - **Data At Rest:** ✅ Implemented (`AES-GCM-256` via `Privacy-Encryption-Agent`).
+- **Subresource Integrity:** ✅ **IMPLEMENTED** - SRI for Buffer.js, partial for CDN resources.
 
 ## 2. Hardening Tasks (Immediate)
 
@@ -66,7 +71,7 @@
 
 ### 2.3 2025: Content Security Policy Enhancement
 
-- [ ] **Implement CSP Headers in Vite Config:**
+- [x] **✅ IMPLEMENTED - CSP Headers in Vite Config (2026-01-14):**
   ```typescript
   // vite.config.ts
   export default defineConfig({
@@ -74,15 +79,23 @@
       headers: {
         'Content-Security-Policy': [
           "default-src 'self'",
-          "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
-          "connect-src 'self' https://generativelanguage.googleapis.com https://www.googleapis.com",
-          "img-src 'self' data: blob:",
+          "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://esm.sh",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+          "img-src 'self' blob: data: https://*.googleusercontent.com",
+          "font-src 'self' https://fonts.gstatic.com",
+          "connect-src 'self' https://esm.sh https://generativelanguage.googleapis.com https://storage.googleapis.com https://huggingface.co https://raw.githubusercontent.com blob: data:",
           "worker-src 'self' blob:",
           "frame-src 'none'",
           "object-src 'none'",
           "base-uri 'self'",
           "form-action 'self'",
         ].join('; '),
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
       },
     },
   });
@@ -211,21 +224,25 @@
 
 ## 6. 2025: Security Headers & Best Practices
 
-### 5.1 HTTP Security Headers
+### 5.1 HTTP Security Headers (Updated 2026-01-14)
 
-- [ ] **X-Content-Type-Options:** nosniff
-- [ ] **X-Frame-Options:** DENY
-- [ ] **X-XSS-Protection:** 1; mode=block
-- [ ] **Referrer-Policy:** strict-origin-when-cross-origin
-- [ ] **Permissions-Policy:** Limit camera, microphone, geolocation
+- [x] **✅ IMPLEMENTED - X-Content-Type-Options:** nosniff
+- [x] **✅ IMPLEMENTED - X-Frame-Options:** DENY
+- [x] **✅ IMPLEMENTED - X-XSS-Protection:** 1; mode=block
+- [x] **✅ IMPLEMENTED - Referrer-Policy:** strict-origin-when-cross-origin
+- [x] **✅ IMPLEMENTED - Strict-Transport-Security:** max-age=31536000; includeSubDomains
+- [x] **✅ IMPLEMENTED - Permissions-Policy:** camera=(), microphone=(), geolocation=()
 
 ### 5.2 Subresource Integrity (SRI)
 
-- [ ] **Add SRI for CDN Resources:**
+- [x] **✅ IMPLEMENTED - SRI for CDN Resources (2026-01-14):**
+  - **Buffer.js** (`sha256-dT9+wTRBYkdVnbPTeuGWpD9qUMrUmrZ3+fkhBYEHUUc=`): ✅ Implemented
+  - **Tailwind CSS CDN**: ⚠️ **Note:** Dynamic CDN (redirects) - consider pinning to specific version or hosting locally
+  - **Google Fonts**: ⚠️ **Note:** Google Fonts CDN doesn't support SRI - consider self-hosting for production
   ```html
   <script
-    src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"
-    integrity="sha384-..."
+    src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"
+    integrity="sha256-dT9+wTRBYkdVnbPTeuGWpD9qUMrUmrZ3+fkhBYEHUUc="
     crossorigin="anonymous"
   ></script>
   ```

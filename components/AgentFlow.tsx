@@ -187,6 +187,10 @@ export const AgentFlow = React.forwardRef<HTMLDivElement, AgentFlowProps>(
 
 AgentFlow.displayName = 'AgentFlow';
 
+export const MemoizedAgentFlow = React.memo(AgentFlow, (prevProps, nextProps) => {
+  return prevProps.trace?.runId === nextProps.trace?.runId;
+});
+
 // Helper Functions
 function formatTime(timestamp: number): string {
   return new Date(timestamp).toLocaleTimeString('en-US', {

@@ -65,7 +65,12 @@ const optimizeImage = (file: File): Promise<string> => {
           file.type === 'image/png' ? 'image/png' : 'image/jpeg',
           0.85,
         );
-        resolve(dataUrl.split(',')[1]);
+        const base64Part = dataUrl.split(',')[1];
+        if (!base64Part) {
+          reject(new Error('Failed to extract base64 data from data URL'));
+          return;
+        }
+        resolve(base64Part);
       };
       img.onerror = (err) => {
         reject(new Error(err instanceof Error ? err.message : 'Image load failed'));
@@ -190,7 +195,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     const initCoreServices = async () => {
       try {
         encryptionKeyRef.current = await CryptoService.generateEphemeralKey();
-        const db = (await createDatabase('./agent-memory.db')) as unknown;
+        const db = await createDatabase('./agent-memory.db');
         const embedder = new EmbeddingService({
           model: 'Xenova/all-MiniLM-L6-v2',
           dimension: 384,

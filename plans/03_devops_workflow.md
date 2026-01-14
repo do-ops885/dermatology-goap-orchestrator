@@ -89,14 +89,20 @@
 
 **Status:** ✅ IMPLEMENTED (Basic CI)
 
-### 3.1 Current Pipeline Stages (2026-01-11)
+### 3.1 Current Pipeline Stages (Updated 2026-01-14)
 
-1.  **Checkout & Cache:** ✅ Using `@v4` actions with npm caching (lines 14-21)
-2.  **AgentDB init:** ✅ Optional initialization (lines 25-29)
-3.  **Lint:** ✅ `npm run lint` with TypeScript strict mode (line 32)
-4.  **Unit Tests:** ✅ `npm run test` (Vitest) (line 35)
-5.  **Build:** ✅ `npm run build` (line 38)
-6.  **Coverage Upload:** ⚠️ Optional artifact upload (lines 40-45)
+1.  **Checkout & Cache:** ✅ Using `@v4` actions with npm caching
+2.  **AgentDB init:** ✅ Optional initialization
+3.  **Lint:** ✅ `npm run lint` with TypeScript strict mode
+4.  **Unit Tests:** ✅ `npm run test` (Vitest)
+5.  **Build:** ✅ `npm run build` (manual chunking configured)
+6.  **Coverage Upload:** ❌ NOT WORKING due to `pretty-quick` dependency conflict
+
+### 3.2 Current Status (2026-01-14)
+
+- **URGENT:** 🚨 All workflows failing due to `pretty-quick@3.1.3` peer dependency conflict with `prettier@^3.0.0`
+- **Impact:** Complete CI/CD breakdown blocking all PR merges and deployments
+- **Solution:** Replace `pretty-quick` with `lint-staged` (already available in devDependencies)
 
 ### 3.2 Missing Features in CI/CD
 

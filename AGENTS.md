@@ -1,181 +1,145 @@
-# Agent Registry & Directives
+# AGENTS.md
 
-Current year: 2026
+**For AI Coding Agents** — A machine-readable guide to working with this codebase.
 
-## 1. System Architecture: GOAP Orchestrator
-
-This repository implements a **Goal-Oriented Action Planning (GOAP)** system. Unlike traditional procedural code, the logic is driven by autonomous agents satisfying specific state transitions to reach a goal (e.g., `{ audit_logged: true }`).
-
-### 1.1 Core Directives
-
-- **Atomic Responsibility**: Each agent performs exactly one semantic task.
-- **State-Driven**: Agents operate based on `WorldState` preconditions and effects.
-- **Source Limits**: To ensure maintainability and agent readability, **no source file shall exceed 500 Lines of Code (LOC)**. Refactor immediately if this limit is breached.
+**Last Updated:** 2026-01-01
 
 ---
 
-## 2. Runtime Agents (Clinical Pipeline)
+## 1. Quick Start
 
-These agents execute within the user's browser, orchestrated by the `GOAP-Agent` (implemented in `services/goap.ts`).
-
-| Agent ID                       | Role                                                                                  | Tooling             | Precondition                |
-| :----------------------------- | :------------------------------------------------------------------------------------ | :------------------ | :-------------------------- |
-| **GOAP-Agent**                 | Central orchestrator (plan & execution). See `plans/07_goap_agent_orchestration.md`.  | `services/goap.ts`  | None                        |
-| **Image-Verification-Agent**   | Validates file signatures (Magic Bytes) & calculates SHA-256 hash.                    | `crypto.subtle`     | None                        |
-| **Skin-Tone-Detection-Agent**  | Classifies Fitzpatrick/Monk scale & outputs confidence score.                         | Gemini 3 Flash      | `image_verified`            |
-| **Standard-Calibration-Agent** | Sets standard decision thresholds (0.65) for high-confidence inputs.                  | Logic               | `skin_tone_detected`        |
-| **Safety-Calibration-Agent**   | **[Fallback]** Enforces conservative thresholds (0.50) if detection confidence < 65%. | Logic               | `is_low_confidence`         |
-| **Image-Preprocessing-Agent**  | Normalizes histograms to preserve melanin features.                                   | Canvas API          | `calibration_complete`      |
-| **Segmentation-Agent**         | Isolates skin regions from background clutter.                                        | Logic               | `image_preprocessed`        |
-| **Feature-Extraction-Agent**   | Extracts vector embeddings for fairness analysis.                                     | Gemini 3 Flash      | `segmentation_complete`     |
-| **Lesion-Detection-Agent**     | Classifies skin conditions (e.g., Melanoma, BCC).                                     | TF.js (MobileNetV3) | `features_extracted`        |
-| **Similarity-Search-Agent**    | RAG: Retrieves 10 similar historical cases from Vector DB.                            | AgentDB             | `lesions_detected`          |
-| **Risk-Assessment-Agent**      | Synthesizes lesion data + history into a risk profile.                                | WebLLM (SmolLM2)    | `similarity_searched`       |
-| **Fairness-Audit-Agent**       | Validates True Positive Rate (TPR) gaps across demographics.                          | AgentDB             | `risk_assessed`             |
-| **Web-Verification-Agent**     | Grounds diagnosis via live medical literature search.                                 | Google Search Tool  | `fairness_validated`        |
-| **Recommendation-Agent**       | Generates actionable clinical advice (max 25 words).                                  | WebLLM / Gemini     | `web_verified`              |
-| **Learning-Agent**             | Updates the local vector store with the new case pattern.                             | AgentDB             | `recommendations_generated` |
-| **Privacy-Encryption-Agent**   | Encrypts patient payload using AES-256-GCM.                                           | `crypto.subtle`     | `learning_updated`          |
-| **Audit-Trail-Agent**          | Commits the transaction hash to the immutable ledger.                                 | AgentDB             | `data_encrypted`            |
-
----
-
-## 3. Development Agents (CI/CD Personas)
-
-These meta-agents define the SDLC process, represented by plan files in `plans/`.
-
-### 🛡️ Sec-Ops
-
-- **Plan:** `04_security_audit.md`
-- **Mandate:** Enforce CSP, sanitization, encryption, and GDPR compliance.
-- **Trigger:** Architecture changes or new dependencies.
-
-### 🧪 QA-Specialist
-
-- **Plan:** `01_testing_strategy.md`
-- **Mandate:** Maintain >80% coverage. Write E2E scenarios for "Safety Interception".
-- **Trigger:** Codebase stability.
-
-### 🧠 ML-Edge-Engineer
-
-- **Plan:** `02_edge_ml_implementation.md`
-- **Mandate:** Optimize TF.js WebGPU backend, WebLLM offline inference, and memory safety.
-- **Trigger:** Performance regression or model updates.
-
-### 🏗️ DevOps-Lead
-
-- **Plan:** `03_devops_workflow.md`
-- **Mandate:** CI/CD pipelines, Linting (Security/SonarJS), and release tagging.
-- **Trigger:** Build failures.
-
-### 🎨 UX-A11y-Lead
-
-- **Plan:** `05_ux_pwa_strategy.md`
-- **Mandate:** WCAG 2.1 compliance, Dark Mode, and PWA installability.
-- **Trigger:** UI component changes.
-
-### ⚙️ Reliability-Architect
-
-- **Plan:** `06_reliability_observability.md`
-- **Mandate:** Global Error Boundaries, Structured Logging, Telemetry.
-- **Trigger:** Crash reports or unhandled exceptions.
-
----
-
-## 4. Operational Constraints & Best Practices
-
-### 4.1 Code Quality
-
-1.  **Strict Types**: `no-explicit-any` is enforced as error (2025 best practice). Use defined interfaces in `types.ts` or `unknown` for uncertain types.
-2.  **Modular Services**: Business logic lives in `services/`, not React components.
-3.  **File Size**: **MAX 500 LINES**.
-    - ⚠️ **VIOLATION:** `hooks/useClinicalAnalysis.ts` is **739 lines** (needs immediate refactor)
-    - Extract agent executors to `services/executors/` per `plans/13_code_organization_refactor.md`
-4.  **Type Safety**: TypeScript strict mode enabled with `strictTypeChecked` and `stylisticTypeChecked` configs (2025 best practice).
-
-### 4.2 AI Safety Protocols
-
-1.  **Confidence Check**: All visual inference must return a confidence score.
-2.  **Fail-Safe**: If `is_low_confidence` is true, the Planner **MUST** route through `Safety-Calibration-Agent`.
-3.  **Human-in-the-Loop**: The `DiagnosticSummary` must clearly flag AI-generated reasoning vs. grounded web sources.
-
-### 4.3 Memory Management (Anti-Leak)
-
-1.  **Tensor Cleanup**: All TF.js operations must use `tf.tidy()` or explicitly call `.dispose()`.
-2.  **Engine Unload**: Heavy ML engines (WebLLM) must expose an `unload()` method and be cleaned up on component unmount.
-3.  **Event Listeners**: Always remove event listeners in `useEffect` cleanup functions.
-
-### 4.4 Global Error Handling
-
-1.  **Graceful Degradation**: Agents must catch internal errors. If a non-critical agent fails (e.g., `Web-Verification`), it should return a "skipped" status rather than crashing the whole orchestrator.
-2.  **Structured Logs**: Use the standardized JSON logging format defined in `plans/06_reliability_observability.md`.
-
----
-
-## 5. Build, Lint, Test Commands
-
-| Command                                | Purpose                                                         |
-| -------------------------------------- | --------------------------------------------------------------- |
-| `npm run dev`                          | Start Vite dev server (http://localhost:5173)                   |
-| `npm run build`                        | Production bundle with manual chunks                            |
-| `npm run preview`                      | Preview production build                                        |
-| `npm run lint`                         | ESLint with TypeScript strict mode, security rules, and SonarJS |
-| `npm run test`                         | Run Vitest suite (jsdom, non-threaded)                          |
-| `npm run test -- path/to/test.test.ts` | Run single test file                                            |
-| `npx playwright test`                  | Run E2E tests (Playwright)                                      |
-| `npx playwright test --ui`             | Run E2E with UI mode                                            |
-| `npm run agentdb:init`                 | Initialize AgentDB vector store                                 |
+| Command               | Purpose                                       |
+| :-------------------- | :-------------------------------------------- |
+| `npm run dev`         | Start Vite dev server (http://localhost:5173) |
+| `npm run build`       | Production bundle with manual chunks          |
+| `npm run preview`     | Preview production build                      |
+| `npm run lint`        | ESLint + TypeScript strict + security rules   |
+| `npm run test`        | Vitest suite (jsdom)                          |
+| `npx playwright test` | E2E tests (Playwright)                        |
 
 **Test Locations:**
 
-- Unit tests: `tests/unit/*.test.ts` - use Vitest + @testing-library/react
-- E2E tests: `tests/e2e/*.spec.ts` - use Playwright
-- Test setup: `tests/setup.ts` (polyfills crypto, ResizeObserver, etc.)
+- Unit tests: `tests/unit/*.test.ts` (Vitest + @testing-library/react)
+- E2E tests: `tests/e2e/*.spec.ts` (Playwright)
+- Setup: `tests/setup.ts` (polyfills crypto, ResizeObserver)
 
 ---
 
-## 6. Code Style Guidelines
+## 2. Core Principles
 
-### 6.1 TypeScript & Imports
+### 2.1 Type Safety (Non-Negotiable)
 
-- **Strict Mode**: `no-explicit-any` enforced as error (2025 best practice) - use interfaces from `types.ts` or `unknown`
-- **Import Order**: External libs → internal modules (`@/...`) → relative paths
-- **Type Imports**: Use `import type { ... }` for type-only imports
-- **File Extensions**: `.ts` for logic, `.tsx` for React components
-- **Type-Aware Linting**: Enabled with `strictTypeChecked` and `stylisticTypeChecked` configs
+- **`no-explicit-any` is an error** — Use defined interfaces in `types.ts` or `unknown`
+- **Enable `--strict` by default** — TypeScript 5.8+ sets this automatically
+- **Type imports** — Use `import type { ... }` for type-only imports
 
-### 6.2 Naming Conventions
+### 2.2 Code Organization
 
-- **Variables/Functions**: `camelCase` (e.g., `calculateImageHash`)
-- **Types/Interfaces**: `PascalCase` (e.g., `WorldState`, `AgentAction`)
-- **Constants**: `UPPER_SNAKE_CASE` (e.g., `INITIAL_STATE`, `MAX_SIZE`)
-- **Components**: `PascalCase` (e.g., `DiagnosticSummary`, `AnalysisIntake`)
-- **Private Methods**: `private` prefix or `_` prefix (e.g., `_sanitize`)
+- **Max 500 LOC per file** — Refactor to `services/executors/` if exceeded
+- **Single responsibility** — One purpose per file (crypto, vision, router, logger)
+- **Business logic in services/** — Not in React components
+- **Shared types in types.ts** — Centralized type definitions
 
-### 6.3 React & Hooks
+### 2.3 React 19 Patterns
 
-- **Component Structure**: State → Refs → Effects → Handlers → Return
-- **useEffect Cleanup**: Always remove event listeners, dispose TF.js tensors
-- **Custom Hooks**: Prefix with `use` (e.g., `useClinicalAnalysis`)
-- **Dependencies Array**: Always include all reactive dependencies
+- **Functional components only** — No class components
+- **Hooks with dependencies** — Always include all reactive dependencies
+- **Component structure** — State → Refs → Effects → Handlers → Return
+- **Cleanup in useEffect** — Remove listeners, dispose tensors
 
-### 6.4 Error Handling
+---
 
-- **Try-Catch**: Wrap all async operations in try-catch blocks
-- **Logging**: Use `Logger.error/warn/info/debug` from `services/logger.ts`
-- **User Messages**: Provide user-friendly error messages, log technical details separately
-- **Graceful Degradation**: Return "skipped" status for non-critical failures
+## 3. Runtime Agents (Clinical Pipeline)
 
-### 6.5 Code Organization
+| Agent ID                       | Role                               | Tooling             | Precondition                |
+| :----------------------------- | :--------------------------------- | :------------------ | :-------------------------- |
+| **GOAP-Agent**                 | Central orchestrator               | `services/goap.ts`  | None                        |
+| **Image-Verification-Agent**   | Validates file signatures, SHA-256 | `crypto.subtle`     | None                        |
+| **Skin-Tone-Detection-Agent**  | Fitzpatrick/Monk classification    | Gemini 3 Flash      | `image_verified`            |
+| **Standard-Calibration-Agent** | High-confidence thresholds (0.65)  | Logic               | `skin_tone_detected`        |
+| **Safety-Calibration-Agent**   | Conservative thresholds (0.50)     | Logic               | `is_low_confidence`         |
+| **Image-Preprocessing-Agent**  | Histogram normalization            | Canvas API          | `calibration_complete`      |
+| **Segmentation-Agent**         | Skin region isolation              | Logic               | `image_preprocessed`        |
+| **Feature-Extraction-Agent**   | Vector embeddings                  | Gemini 3 Flash      | `segmentation_complete`     |
+| **Lesion-Detection-Agent**     | Melanoma, BCC classification       | TF.js (MobileNetV3) | `features_extracted`        |
+| **Similarity-Search-Agent**    | RAG: 10 similar cases              | AgentDB             | `lesions_detected`          |
+| **Risk-Assessment-Agent**      | Risk profile synthesis             | WebLLM (SmolLM2)    | `similarity_searched`       |
+| **Fairness-Audit-Agent**       | TPR validation across demographics | AgentDB             | `risk_assessed`             |
+| **Web-Verification-Agent**     | Medical literature search          | Google Search       | `fairness_validated`        |
+| **Recommendation-Agent**       | Clinical advice (max 25 words)     | WebLLM / Gemini     | `web_verified`              |
+| **Learning-Agent**             | Vector store update                | AgentDB             | `recommendations_generated` |
+| **Privacy-Encryption-Agent**   | AES-256-GCM encryption             | `crypto.subtle`     | `learning_updated`          |
+| **Audit-Trail-Agent**          | Transaction hash to ledger         | AgentDB             | `data_encrypted`            |
 
-- **Max 500 LOC** per file - refactor to `services/executors/` if exceeded
-- **Business Logic**: Lives in `services/`, not React components
-- **Types**: Shared interfaces in `types.ts`
-- **Services**: Single responsibility per file (crypto, vision, router, logger)
+---
 
-### 6.6 AI/ML Safety
+## 4. Development Agents (CI/CD Personas)
 
-- **Confidence Scores**: All inference must return confidence (0-1)
-- **Tensor Cleanup**: Use `tf.tidy()` or `.dispose()` for all TF.js operations
-- **Heavy Models**: Lazy load on user interaction, expose `unload()` method
-- **Privacy Mode**: Always provide offline/local fallback for cloud services
+| Persona                  | Plan File                                | Mandate                              | Trigger                |
+| :----------------------- | :--------------------------------------- | :----------------------------------- | :--------------------- |
+| 🛡️ Sec-Ops               | `@plans/04_security_audit.md`            | CSP, sanitization, encryption, GDPR  | Architecture changes   |
+| 🧪 QA-Specialist         | `@plans/01_testing_strategy.md`          | >80% coverage, E2E safety scenarios  | Codebase stability     |
+| 🧠 ML-Edge-Engineer      | `@plans/02_edge_ml_implementation.md`    | TF.js WebGPU, WebLLM offline, memory | Performance regression |
+| 🏗️ DevOps-Lead           | `@plans/03_devops_workflow.md`           | CI/CD, linting, release tagging      | Build failures         |
+| 🎨 UX-A11y-Lead          | `@plans/05_ux_pwa_strategy.md`           | WCAG 2.1, Dark Mode, PWA             | UI component changes   |
+| ⚙️ Reliability-Architect | `@plans/06_reliability_observability.md` | Error boundaries, logging, telemetry | Crash reports          |
+| 📝 Documentation-Manager | `@plans/18_developer_quick_reference.md` | Consistent docs structure            | New .md files          |
+
+---
+
+## 5. AI Safety Protocols
+
+1. **Confidence Score Required** — All visual inference must return (0-1)
+2. **Fail-Safe Routing** — If `is_low_confidence` is true, MUST route through `Safety-Calibration-Agent`
+3. **Human-in-the-Loop** — `DiagnosticSummary` must flag AI vs. grounded sources
+
+---
+
+## 6. Memory Management
+
+1. **Tensor Cleanup** — Use `tf.tidy()` or `.dispose()` for all TF.js operations
+2. **Engine Unload** — Heavy models (WebLLM) must expose `unload()` method
+3. **Event Listeners** — Remove in `useEffect` cleanup functions
+
+---
+
+## 7. Error Handling
+
+1. **Graceful Degradation** — Non-critical agents return "skipped" status
+2. **Try-Catch All Async** — Wrap all async operations
+3. **Structured Logging** — Use `services/logger.ts` with JSON format
+
+---
+
+## 8. Code Style Guidelines
+
+### 8.1 Naming Conventions
+
+| Type                | Convention             | Example                     |
+| :------------------ | :--------------------- | :-------------------------- |
+| Variables/Functions | `camelCase`            | `calculateImageHash`        |
+| Types/Interfaces    | `PascalCase`           | `WorldState`, `AgentAction` |
+| Constants           | `UPPER_SNAKE_CASE`     | `INITIAL_STATE`, `MAX_SIZE` |
+| Components          | `PascalCase`           | `DiagnosticSummary`         |
+| Private Methods     | `_prefix` or `private` | `_sanitize`                 |
+
+### 8.2 Import Order
+
+1. External libraries
+2. Internal modules (`@/...`)
+3. Relative paths
+
+---
+
+## 9. Documentation Organization
+
+All documentation files **MUST** be created in `@plans/`:
+
+- `*summary*.md` — Summary documents
+- `*analyze*.md`, `*analysis*.md` — Analysis documents
+- `*plan*.md` — Plan documents
+- `*strategy*.md` — Strategy documents
+- `*checklist*.md` — Checklist documents
+- `*reference*.md` — Reference documents
+
+**Do not** create .md files in root or other locations.

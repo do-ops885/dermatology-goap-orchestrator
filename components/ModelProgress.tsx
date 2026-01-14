@@ -1,12 +1,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { BrainCircuit, CheckCircle2, Loader2 } from 'lucide-react';
-import React from 'react';
+
 
 interface ModelProgressProps {
   progress: { text: string; percent: number } | null;
 }
 
-export const ModelProgress: React.FC<ModelProgressProps> = ({ progress }) => {
+export function ModelProgress({ progress }: ModelProgressProps) {
   return (
     <AnimatePresence>
       {progress && (
@@ -59,4 +59,4 @@ export const ModelProgress: React.FC<ModelProgressProps> = ({ progress }) => {
       )}
     </AnimatePresence>
   );
-};
+}

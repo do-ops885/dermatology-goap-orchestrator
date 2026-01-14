@@ -24,11 +24,7 @@ const getStatusColor = (status: ExecutionAgentRecord['status']): string => {
   }
 };
 
-export const TraceTimeline: React.FC<TraceTimelineProps> = ({
-  trace,
-  currentAgent,
-  height = 80,
-}) => {
+export function TraceTimeline({ trace, currentAgent, height = 80 }: TraceTimelineProps) {
   const { bars, totalDuration } = useMemo(() => {
     if (!trace) return { bars: [], totalDuration: 0 };
 

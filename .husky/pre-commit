@@ -3,15 +3,33 @@
 
 echo "Running pre-commit quality gate..."
 
-# Run quality gate in fast mode (format, lint, typecheck, secrets, LOC check)
+# 1. Check for dependency conflicts first
+if [ -f "./scripts/check-dependencies.sh" ]; then
+  echo "Checking dependency resolution..."
+  sh ./scripts/check-dependencies.sh || exit $?
+  echo ""
+fi
+
+# 2. Run lint-staged for formatting and linting
+echo "Running lint-staged..."
+npx lint-staged || exit $?
+echo ""
+
+# 3. Run secret detection
+echo "Checking for secrets in staged files..."
+sh ./scripts/pre-commit-secrets.sh || exit $?
+echo ""
+
+# 4. Run fast quality gate (typecheck, LOC check)
 # Tests are skipped by default for speed, but can be enabled with RUN_UNIT_TESTS=1
 
 if [ "$RUN_UNIT_TESTS" = "1" ]; then
   echo "Running full quality gate with tests..."
-  npx --no-install --no bash scripts/quality-gate.sh --fix || exit $?
+  npx --no-install --no bash scripts/quality-gate.sh --skip-format --skip-lint --fix || exit $?
 else
-  echo "Running fast quality gate (format, lint, typecheck, secrets)..."
-  npx --no-install --no bash scripts/quality-gate.sh --fast --fix || exit $?
+  echo "Running fast quality gate (typecheck, LOC check)..."
+  npx --no-install --no bash scripts/quality-gate.sh --fast --skip-format --skip-lint --fix || exit $?
 fi
 
+echo ""
 echo "Pre-commit quality gate passed ✅"

@@ -6,12 +6,12 @@ import type { GOAPPlanner } from '../goap';
 export interface ExecutionAgentRecord {
   id: string;
   agentId: string;
-  name?: string;
+  name?: string | undefined;
   startTime: number;
-  endTime?: number;
+  endTime?: number | undefined;
   status: 'running' | 'completed' | 'failed' | 'skipped';
-  metadata?: Record<string, unknown>;
-  error?: string;
+  metadata?: Record<string, unknown> | undefined;
+  error?: string | undefined;
 }
 
 export interface ExecutionTrace {
@@ -62,6 +62,9 @@ export class GoapAgent {
     let index = 0;
     while (index < plan.length) {
       const action = plan[index];
+      if (!action) {
+        throw new Error(`Action at index ${index} is undefined`);
+      }
       const agentRecord: ExecutionAgentRecord = {
         id: Math.random().toString(36).substring(2, 11),
         agentId: action.agentId,
