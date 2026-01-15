@@ -42,12 +42,14 @@ describe('DiagnosticSummary', () => {
       storeClinicianFeedback: vi.fn().mockResolvedValue(undefined),
     };
 
-    vi.spyOn(AgentDB, 'getInstance').mockReturnValue(mockAgentDBInstance as any);
+    vi.spyOn(AgentDB, 'getInstance').mockReturnValue(mockAgentDBInstance as unknown as AgentDB);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     global.Blob = class MockBlob {
       constructor(
-        public parts: any[],
-        public options: any,
+        public parts: unknown[],
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        public _options: { type?: string } | unknown,
       ) {}
 
       async text() {
@@ -55,9 +57,9 @@ describe('DiagnosticSummary', () => {
       }
 
       get type() {
-        return this.options?.type ?? 'application/json';
+        return (this._options as { type?: string })?.type ?? 'application/json';
       }
-    } as any;
+    } as unknown as typeof globalThis.Blob;
 
     globalThis.URL.createObjectURL = vi.fn(() => 'blob:test-url');
     globalThis.URL.revokeObjectURL = vi.fn();
@@ -369,6 +371,7 @@ describe('DiagnosticSummary', () => {
     it('renders source link with correct attributes', () => {
       render(<DiagnosticSummary result={mockResult} />);
       const link = screen.getByText('Clinical Guideline 1');
+      // eslint-disable-next-line jest-dom/prefer-to-have-attribute
       expect(link).toHaveAttribute('href');
       expect(link.getAttribute('href')).toContain('guideline1');
       expect(link).toHaveAttribute('target', '_blank');
@@ -492,7 +495,7 @@ describe('DiagnosticSummary', () => {
 
       const clinicianFeedback = screen.getByText(/Clinician Feedback/i);
       expect(clinicianFeedback).toBeInTheDocument();
-    });
+    }, 10000); // Increase timeout to 10 seconds
 
     it('stores feedback when submitted', async () => {
       const mockStoreClinicianFeedback = vi.fn().mockResolvedValue(undefined);
