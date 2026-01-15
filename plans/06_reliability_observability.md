@@ -2,20 +2,39 @@
 
 **Focus:** Resilience, Observability, Telemetry, Crash Reporting
 
-## 0. Current Status (2026-01-11 UPDATED)
+**Last Updated:** 2026-01-15
 
 ### 0.1 Reliability Posture
 
-| Component          | Status                 | Implementation                         | Notes                                        |
-| ------------------ | ---------------------- | -------------------------------------- | -------------------------------------------- |
-| Error Boundaries   | ✅ Complete            | `components/ErrorBoundary.tsx`         | Wrapped in key components                    |
-| Structured Logging | ✅ Complete            | `services/logger.ts` (68 lines)        | PII redaction active                         |
-| Core Web Vitals    | ✅ Complete            | `services/reportWebVitals.ts`          | CLS, FID, LCP captured                       |
-| GOAP Tracing       | ✅ Complete            | `services/goap/agent.ts` (144 lines)   | plan_start, agent_start, agent_end, plan_end |
-| Agent Timings      | ✅ Complete            | `services/agent-timings.ts` (81 lines) | Per-agent timing collection                  |
-| Circuit Breaker    | ❌ **Not Implemented** | N/A                                    | Missing pattern                              |
-| Error Recovery     | ⚠️ Partial             | Basic try/catch only                   | No recovery strategies                       |
-| Memory Monitoring  | ⚠️ Partial             | TF.js cleanup only                     | No JS heap monitoring                        |
+| Component          | Status                 | Implementation                          | Notes                                        |
+| ------------------ | ---------------------- | --------------------------------------- | -------------------------------------------- |
+| Error Boundaries   | ✅ Complete            | `components/ErrorBoundary.tsx`          | Wrapped in key components                    |
+| Structured Logging | ✅ Complete            | `services/logger.ts` (68 lines)         | PII redaction active                         |
+| Core Web Vitals    | ✅ Complete            | `services/reportWebVitals.ts`           | CLS, FID, LCP captured                       |
+| GOAP Tracing       | ✅ Complete            | `services/goap/agent.ts` (144 lines)    | plan_start, agent_start, agent_end, plan_end |
+| Agent Timings      | ✅ Complete            | `services/agent-timings.ts` (~50 lines) | Per-agent timing collection                  |
+| Metrics Dashboard  | ✅ Complete            | `components/FairnessDashboard.tsx`      | Real-time metrics visualization              |
+| Circuit Breaker    | ❌ **Not Implemented** | N/A                                     | Missing pattern                              |
+| Error Recovery     | ⚠️ Partial             | Basic try/catch only                    | No recovery strategies                       |
+| Memory Monitoring  | ⚠️ Partial             | TF.js cleanup only                      | No JS heap monitoring                        |
+
+## 0.2 Observability Implementation Status
+
+| Feature           | Status         | Implementation              |
+| ----------------- | -------------- | --------------------------- |
+| Agent timing      | ✅ Implemented | `services/agent-timings.ts` |
+| JSON logging      | ✅ Implemented | `services/logger.ts`        |
+| Error boundaries  | ✅ Implemented | `components/`               |
+| Metrics dashboard | ✅ Implemented | `FairnessDashboard.tsx`     |
+
+## 0.3 Agent Timeout Recommendations (Handoff Protocol)
+
+| Agent Category              | Timeout | Examples                                   |
+| --------------------------- | ------- | ------------------------------------------ |
+| Quick checks (verification) | 5s      | Image-Verification-Agent, Safety checks    |
+| ML inference                | 30s     | Lesion-Detection-Agent, Feature-Extraction |
+| Web search (verification)   | 15s     | Web-Verification-Agent                     |
+| Database operations         | 10s     | Learning-Agent, Similarity-Search-Agent    |
 
 ## 1. Global Error Handling Strategy
 
@@ -26,13 +45,20 @@
 - **Implementation:** ✅ Wrapped main `AgentFlow`, `FairnessDashboard`, and `AnalysisIntake`.
 - **Fallback UI:** ✅ Displays module-specific crash messages with "Restart" button.
 
-### 1.2 Async Error Handling (GOAP)
+### 1.2 Error Boundary Coverage
+
+- **Implementation:** ErrorBoundary components wrapped in `components/` directory
+- **Coverage:** Main `AgentFlow`, `FairnessDashboard`, and `AnalysisIntake` components protected
+- **Fallback UI:** Module-specific crash messages with "Restart" button
+- **Recovery:** Graceful degradation with user notification
+
+### 1.3 Async Error Handling (GOAP)
 
 - **Pattern:** ✅ `useClinicalAnalysis.ts` wraps execution in Try/Catch.
 - **Propagation:** ✅ Critical errors halt pipeline; Warnings trigger re-planning.
 - **GOAP-Agent Tracing:** ✅ `runId` correlation and events `plan_start`, `agent_start`, `agent_end`, `plan_end` implemented (see `services/goap/agent.ts`)
 
-### 1.3 2025: Enhanced Error Handling
+### 1.4 2025: Enhanced Error Handling
 
 - [ ] **Error Recovery Strategies:**
 
@@ -80,15 +106,20 @@
 
 **Status:** ✅ FULLY IMPLEMENTED
 
-### 2.1 Logger Specification (2026-01-11)
+### 2.1 Structured Logging Format
 
-- **Service:** `services/logger.ts` (68 lines) handles generic logging with sanitation.
-- **Privacy:** ✅ PII/Base64 redaction logic active (lines 46-50).
-- **Log Levels:** ✅ 'debug', 'info', 'warn', 'error' defined (line 1).
-- **LogEntry Interface:** ✅ Structured with timestamp, level, component, event, metadata (lines 3-9).
-- **GOAP-Agent Events:** Emit structured logs with `eventType: 'goap-agent'`, `runId`, and per-agent timings.
+- **JSON Structure:** Each log entry contains `timestamp`, `level`, `message`, `agentId`, `runId`, and optional `metadata`
+- **Log Levels:** `debug`, `info`, `warn`, `error`, `fatal`
+- **PII Redaction:** Automatically sanitizes sensitive data before logging
+- **GOAP Events:** Structured logs with `eventType: 'goap-agent'` for agent lifecycle tracking
 
-### 2.2 2025: Enhanced Logging
+### 2.2 Logger Specification (2026-01-11)
+
+- **Service:** `services/logger.ts` handles generic logging with sanitation.
+- **Privacy:** PII/Base64 redaction logic active.
+- **LogEntry Interface:** Structured with timestamp, level, component, event, metadata.
+
+### 2.3 2025: Enhanced Logging
 
 - [ ] **Log Levels & Filtering:**
 
@@ -132,7 +163,14 @@
 - **Metric:** ✅ Core Web Vitals (CLS, FID, LCP) captured via `reportWebVitals.ts`.
 - **Reporting:** Logs to internal `Logger` (debug level) for analysis.
 
-### 3.1 GOAP-Agent Metrics & Tasks
+### 3.1 Agent Execution Timing Tracking
+
+- **Service:** `services/agent-timings.ts` (~50 lines) provides per-agent timing collection
+- **Metrics Captured:** Agent latency, success/failure counts, plan duration, replan count
+- **Correlation:** Timing data linked to `runId` for trace analysis
+- **GOAP Integration:** `plan_start`, `agent_start`, `agent_end`, `plan_end` events tracked
+
+### 3.2 GOAP-Agent Metrics & Tasks
 
 - [ ] **Instrument `goap-agent` to emit Metrics:**
   ```typescript
@@ -146,7 +184,7 @@
   ```
 - [ ] **Add Realtime Dashboard:** Visualize `runId` traces when debugging incidents.
 
-### 3.2 2025: Enhanced Performance Monitoring
+### 3.3 2025: Enhanced Performance Monitoring
 
 - [ ] **Custom Web Vitals:**
 
