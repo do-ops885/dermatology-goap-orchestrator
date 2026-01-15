@@ -413,7 +413,7 @@ const FairnessReport: React.FC<FairnessReportProps> = ({ onClose }) => {
                       </td>
                       <td className="px-8 py-5">
                         <div className="font-bold text-stone-800 text-[13px] font-grotesk">
-                          {item.message}
+                          {String(item.message)}
                         </div>
                       </td>
                       <td className="px-8 py-5">
@@ -421,7 +421,7 @@ const FairnessReport: React.FC<FairnessReportProps> = ({ onClose }) => {
                           {item.type !== 'learning' && (
                             <Activity className="w-3 h-3 text-slate-400" />
                           )}
-                          {item.mitigation}
+                          {String(item.mitigation)}
                         </div>
                       </td>
                       <td className="px-8 py-5 text-right">

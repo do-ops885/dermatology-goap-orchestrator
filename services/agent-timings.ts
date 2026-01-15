@@ -18,14 +18,16 @@ export const AgentTimings = {
     const agentTimings = timings.get(agentId);
     if (!agentTimings || agentTimings.length === 0) return 0;
     const sorted = [...agentTimings].sort((a, b) => a - b);
-    return sorted[Math.floor(sorted.length * 0.95)];
+    const index = Math.floor(sorted.length * 0.95);
+    return sorted[index] ?? 0;
   },
 
   getP99(agentId: string): number {
     const agentTimings = timings.get(agentId);
     if (!agentTimings || agentTimings.length === 0) return 0;
     const sorted = [...agentTimings].sort((a, b) => a - b);
-    return sorted[Math.floor(sorted.length * 0.99)];
+    const index = Math.floor(sorted.length * 0.99);
+    return sorted[index] ?? 0;
   },
 
   getReport(): Record<string, { avg: number; p95: number; p99: number; count: number }> {
@@ -76,7 +78,8 @@ export const PERFORMANCE_BUDGETS = {
 export type PerformanceBudgetKey = keyof typeof PERFORMANCE_BUDGETS;
 
 export function checkBudget(agentId: string, duration: number): boolean {
-  return duration <= (PERFORMANCE_BUDGETS as Record<string, number>)[agentId];
+  const budget = (PERFORMANCE_BUDGETS as Record<string, number>)[agentId];
+  return budget !== undefined && duration <= budget;
 }
 
 export function getBudgetForAgent(agentId: string): number {

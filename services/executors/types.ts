@@ -1,25 +1,13 @@
-import type { WorldState } from '../../types';
+import type { WorldState, AgentAction, ClinicalAnalysisResult } from '../../types';
 import type { ReasoningBank, LocalLLMService } from '../agentDB';
 import type AgentDB from '../agentDB';
+import type { ExecutionAgentRecord } from '../goap/agent';
 import type { RouterAgent } from '../router';
 import type { VisionSpecialist } from '../vision';
 import type { GoogleGenAI } from '@google/genai';
+import type { Dispatch, SetStateAction } from 'react';
 
-export interface AgentExecutor {
-  agentId: string;
-  cost: number;
-  execute(_context: AgentContext): Promise<ExecutorResult>;
-}
-
-export interface ClinicalAnalysisResult {
-  id: string;
-  timestamp: number;
-  fitzpatrickType: string;
-  lesions: { type: string; confidence: number; risk: string }[];
-  recommendations: string[];
-  signature: string;
-  [key: string]: unknown;
-}
+export type { ClinicalAnalysisResult };
 
 export interface AgentContext {
   ai: GoogleGenAI;
@@ -33,12 +21,15 @@ export interface AgentContext {
   imageHash: string;
   currentState: WorldState;
   actionTrace: string[];
-  setResult: (_res: unknown) => void;
+  setResult: Dispatch<SetStateAction<ClinicalAnalysisResult | null>>;
   setWarning: (_msg: string | null) => void;
   analysisPayload: Record<string, unknown>;
   encryptionKey: CryptoKey | null;
   lastAuditHashRef: { current: string };
   privacyMode: boolean;
+  _action?: AgentAction;
+  onAgentStart?: (_action: AgentAction) => string | void;
+  onAgentEnd?: (_action: AgentAction, _record: ExecutionAgentRecord) => void;
 }
 
 export interface ExecutorResult {

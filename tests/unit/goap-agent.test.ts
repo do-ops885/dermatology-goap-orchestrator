@@ -3,13 +3,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { GOAPPlanner } from '../../services/goap';
 import { GoapAgent } from '../../services/goap/agent';
 import { INITIAL_STATE, type WorldState, type AgentAction } from '../../types';
+import { createMockAgentContext } from '../test-helpers/mock-context';
 
 import type { ExecutorFn } from '../../services/goap/agent';
 
-// Minimal executor that simply returns completed metadata
 const noopExecutor: ExecutorFn = async () => Promise.resolve({ metadata: { ok: true } });
 
-// Build an executor map that returns noop for all agent ids used in the domain
 const buildExecutorMap = (actions: AgentAction[]) => {
   const map: Record<string, ExecutorFn> = {};
   actions.forEach((a) => {
@@ -24,7 +23,7 @@ describe('GoapAgent', () => {
       const planner = new GOAPPlanner();
       const plan = planner.plan(INITIAL_STATE, { audit_logged: true });
       expect(plan.length).toBeGreaterThan(0);
-      expect(plan[0].agentId).toBe('Image-Verification-Agent');
+      expect(plan[0]?.agentId).toBe('Image-Verification-Agent');
     });
 
     it('should handle low confidence by routing through Safety-Calibration-Agent', () => {
@@ -49,7 +48,11 @@ describe('GoapAgent', () => {
 
       const agent = new GoapAgent(planner, executors, { perAgentTimeoutMs: 5000 });
 
-      const trace = await agent.execute(INITIAL_STATE, { audit_logged: true }, {});
+      const trace = await agent.execute(
+        INITIAL_STATE,
+        { audit_logged: true },
+        createMockAgentContext(),
+      );
 
       expect(trace.runId).toBeDefined();
       expect(trace.agents.length).toBeGreaterThan(0);
@@ -69,10 +72,7 @@ describe('GoapAgent', () => {
       await agent.execute(
         INITIAL_STATE,
         { image_verified: true },
-        {
-          onAgentStart,
-          onAgentEnd,
-        },
+        createMockAgentContext({ onAgentStart, onAgentEnd }),
       );
 
       expect(onAgentStart).toHaveBeenCalled();
@@ -91,7 +91,11 @@ describe('GoapAgent', () => {
 
       const agent = new GoapAgent(planner, executors);
 
-      const trace = await agent.execute(INITIAL_STATE, { skin_tone_detected: true }, {});
+      const trace = await agent.execute(
+        INITIAL_STATE,
+        { skin_tone_detected: true },
+        createMockAgentContext(),
+      );
 
       const failedAgent = trace.agents.find((a) => a.status === 'skipped');
       expect(failedAgent).toBeDefined();
@@ -108,9 +112,9 @@ describe('GoapAgent', () => {
 
       const agent = new GoapAgent(planner, executors);
 
-      await expect(agent.execute(INITIAL_STATE, { image_verified: true }, {})).rejects.toThrow(
-        'Critical',
-      );
+      await expect(
+        agent.execute(INITIAL_STATE, { image_verified: true }, createMockAgentContext()),
+      ).rejects.toThrow('Critical');
     });
 
     it('should support replanning when shouldReplan is returned', async () => {
@@ -121,6 +125,7 @@ describe('GoapAgent', () => {
         callCount++;
         if (callCount === 1) {
           return Promise.resolve({
+            metadata: {},
             shouldReplan: true,
             newStateUpdates: { is_low_confidence: true },
           });
@@ -137,7 +142,11 @@ describe('GoapAgent', () => {
 
       const agent = new GoapAgent(planner, executors);
 
-      const trace = await agent.execute(INITIAL_STATE, { calibration_complete: true }, {});
+      const trace = await agent.execute(
+        INITIAL_STATE,
+        { calibration_complete: true },
+        createMockAgentContext(),
+      );
 
       expect(trace.agents.length).toBeGreaterThan(0);
     });
@@ -157,7 +166,11 @@ describe('GoapAgent', () => {
 
       const agent = new GoapAgent(planner, executors);
 
-      const trace = await agent.execute(INITIAL_STATE, { image_verified: true }, {});
+      const trace = await agent.execute(
+        INITIAL_STATE,
+        { image_verified: true },
+        createMockAgentContext(),
+      );
 
       expect(trace.finalWorldState.confidence_score).toBe(0.95);
     });

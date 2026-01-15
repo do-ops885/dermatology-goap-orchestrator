@@ -101,7 +101,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     await fileInput.setInputFiles({
       name: 'skin-sample.jpg',
       mimeType: 'image/jpeg',
-      buffer: buffer,
+      buffer,
     });
 
     // 3. Verify Preview and Run
@@ -162,7 +162,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     await page.locator('input[type="file"]').setInputFiles({
       name: 'low-quality.jpg',
       mimeType: 'image/jpeg',
-      buffer: buffer,
+      buffer,
     });
     await page.locator('button', { hasText: 'Run Clinical Analysis' }).click();
 
@@ -185,7 +185,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     await page.locator('input[type="file"]').setInputFiles({
       name: 'malicious.txt',
       mimeType: 'text/plain',
-      buffer: buffer,
+      buffer,
     });
 
     // Verify Error Message
@@ -218,7 +218,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     await page.locator('input[type="file"]').setInputFiles({
       name: 'test-sample.jpg',
       mimeType: 'image/jpeg',
-      buffer: buffer,
+      buffer,
     });
     await page.locator('button', { hasText: 'Run Clinical Analysis' }).click();
 
@@ -260,7 +260,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
       await page.locator('input[type="file"]').setInputFiles({
         name: `sample-${i}.jpg`,
         mimeType: 'image/jpeg',
-        buffer: buffer,
+        buffer,
       });
 
       const runBtn = page.locator('button', { hasText: 'Run Clinical Analysis' });
@@ -364,7 +364,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     await fileInput.setInputFiles({
       name: 'skin-sample-trace.jpg',
       mimeType: 'image/jpeg',
-      buffer: buffer,
+      buffer,
     });
 
     const runBtn = page.locator('button', { hasText: 'Run Clinical Analysis' });

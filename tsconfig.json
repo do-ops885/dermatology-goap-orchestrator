@@ -26,5 +26,6 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
-  }
+  },
+  "exclude": ["node_modules", "dist", "postcss.config.js", "sw.js", "tailwind.config.js"]
 }

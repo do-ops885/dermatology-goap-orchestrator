@@ -2,7 +2,7 @@
 
 **For AI Coding Agents** — A machine-readable guide to working with this codebase.
 
-**Last Updated:** 2026-01-01
+**Last Updated:** 2026-01-15
 
 ---
 

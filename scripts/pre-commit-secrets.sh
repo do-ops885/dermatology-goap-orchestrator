@@ -11,6 +11,11 @@ FAIL=0
 PATTERNS='(password|passwd|secret|api[_-]?key|aws[_-]?secret|aws[_-]?access|private[_-]?key|BEGIN( RSA| DSA| PRIVATE) KEY|-----BEGINPRIVATEKEY-----|client_secret)'
 
 for file in $STAGED_FILES; do
+  # skip the secrets script, pre-commit hook, and quality-gate.sh (false positives)
+  case "$file" in
+    *pre-commit-secrets.sh|*.husky/pre-commit|*quality-gate.sh) continue ;;
+  esac
+
   # only scan text files
   if [ -f "$file" ] && file --brief --mime "$file" | grep -qi 'text\|json\|xml\|javascript\|typescript\|application/json'; then
     if grep -nE "$PATTERNS" "$file" >/dev/null 2>&1; then

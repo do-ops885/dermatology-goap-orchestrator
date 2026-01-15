@@ -1,35 +1,43 @@
 # Agent Plan: Testing Strategy
 
 **Focus:** Reliability, Regression Prevention, Component Validation
-**Last Updated:** 2026-01-11
+**Last Updated:** 2026-01-15
 
-## 0. Current Analysis (2026-01-11 - UPDATED)
+## 0. Current Analysis (2026-01-15 - UPDATED)
 
 ### 0.1 Test Status
 
-| Test Type         | Status             | Files        | Coverage                                                                                                                |
-| ----------------- | ------------------ | ------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| Unit Tests        | ✅ **Complete**    | 8 test files | `goap.test.ts`, `goap-agent.test.ts`, `agentDB.test.ts`, `vision.test.ts`, `vision-memory.test.ts`, executors (5 files) |
-| E2E Tests         | ✅ **Implemented** | 4 test files | `clinical-flow.spec.ts` (266 lines), `performance.spec.ts` (168 lines), `memory-leaks.spec.ts`                          |
-| A11y Tests        | ✅ **Implemented** | 3 test files | `components.spec.ts`, `forms.spec.ts`, `navigation.spec.ts`                                                             |
-| Performance Tests | ✅ **Implemented** | 1 test file  | `agent-timings.spec.ts` (127 lines)                                                                                     |
-| Component Tests   | ⚠️ **Partial**     | 2 test files | `FairnessDashboard.test.tsx`, `DiagnosticSummary.test.tsx`                                                              |
+| Test Type         | Status          | Files        | Coverage                                                                                                                |
+| ----------------- | --------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Unit Tests        | ✅ **Complete** | 8 test files | `goap.test.ts`, `goap-agent.test.ts`, `agentDB.test.ts`, `vision.test.ts`, `vision-memory.test.ts`, executors (5 files) |
+| E2E Tests         | ⚠️ **Partial**  | 4 test files | `clinical-flow.spec.ts` (266 lines), `performance.spec.ts` (168 lines), `memory-leaks.spec.ts`                          |
+| A11y Tests        | ⚠️ **Partial**  | 3 test files | `components.spec.ts`, `forms.spec.ts`, `navigation.spec.ts`                                                             |
+| Performance Tests | ⚠️ **Partial**  | 1 test file  | `agent-timings.spec.ts` (127 lines)                                                                                     |
+| Component Tests   | ⚠️ **Partial**  | 2 test files | `FairnessDashboard.test.tsx`, `DiagnosticSummary.test.tsx`                                                              |
 
-### 0.2 Dependencies Status
+### 0.2 Test Statistics
 
-```bash
-npm run test  # ✅ Working (Vitest with jsdom)
-npm run lint  # ✅ Working (ESLint with TypeScript strict mode)
-npx playwright test  # ✅ Working (Playwright with mobile support)
-```
+| Metric | Suites     | Tests      |
+| :----- | :--------- | :--------- |
+| Total  | 47         | 78         |
+| Passed | 36 (76.6%) | 71 (91.0%) |
+| Failed | 11 (23.4%) | 7 (9.0%)   |
 
-**Status:** All test commands working correctly after dependency installation.
+#### Failing Tests
 
-**UPDATED STATUS (2026-01-14):** Full test suite implemented and operational. Unit tests for GOAP agents, E2E clinical flow tests, accessibility tests, and performance benchmarks all passing.
+- **E2E Tests (4 failing):** Playwright configuration errors
+- **Accessibility Tests (3 failing):** axe-core import errors
+- **Performance Tests (1 failing):** Playwright configuration
+
+### 0.3 Known Issues
+
+- **Playwright version conflicts** causing `test.describe()` errors
+- **axe-core configureAxe import** not working correctly
+- These issues are blocking E2E and accessibility test execution
 
 ## 1. Objectives
 
-- **Current Coverage:** Core GOAP Logic (Unit), Clinical Flow (E2E), Key Components
+- **Current Coverage:** Unit Test Coverage: ~80% for core services, GOAP Module: Fully covered, Components: Good coverage for rendering logic
 - **Target:** >80% Coverage on all services, >70% on components
 - **2025 Focus:** Vitest coverage thresholds, Playwright component testing, AI testing patterns
 
@@ -311,6 +319,12 @@ type FitzpatrickType = 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI';
 - Keyboard navigation testing in Playwright
 - Screen reader announcement verification
 
+## 9. Recommendations
+
+1. Resolve Playwright dependency conflicts
+2. Update @axe-core packages or configuration
+3. Add integration tests for agent handoffs
+
 ---
 
-_Signed: QA-Specialist Plan (Updated 2026-01-11)_
+_Signed: QA-Specialist Plan (Updated 2026-01-15)_

@@ -13,7 +13,7 @@ export const PatientSafetyState: React.FC<PatientSafetyStateProps> = ({ worldSta
   const flags = Object.entries(worldState).filter(([, v]) => typeof v === 'boolean');
 
   return (
-    <div className="glass-panel p-6 rounded-2xl">
+    <div data-testid="patient-safety" className="glass-panel p-6 rounded-2xl">
       <h2 className="text-sm font-bold font-grotesk mb-4 text-stone-500 uppercase tracking-widest flex items-center justify-between">
         Patient Safety State
         {worldState.is_low_confidence && (

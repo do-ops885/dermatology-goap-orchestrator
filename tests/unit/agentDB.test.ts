@@ -63,13 +63,14 @@ describe('AgentDB', () => {
 
     const logs = await agentDB.getUnifiedAuditLog();
 
+    expect(logs).toBeDefined();
     expect(logs).toHaveLength(2);
     // Sort desc by timestamp
-    expect(logs[0].id).toBe('2');
-    expect(logs[1].id).toBe('1');
+    expect((logs as any)[0].id).toBe('2');
+    expect((logs as any)[1].id).toBe('1');
 
-    expect(logs[1].type).toBe('audit');
-    expect(logs[0].type).toBe('learning');
+    expect((logs as any)[1].type).toBe('audit');
+    expect((logs as any)[0].type).toBe('learning');
   });
 
   it('should reset memory via underlying bank', async () => {

@@ -22,7 +22,11 @@ jobs:
         run: |
           echo "Loading .github/repository-settings.yml"
           cat .github/repository-settings.yml
-          echo "::set-output name=settings::$(cat .github/repository-settings.yml | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}')"
+          echo "settings=$(cat .github/repository-settings.yml | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}')" >> $GITHUB_OUTPUT
+
+      - name: Install js-yaml
+        run: |
+          npm install js-yaml@4
 
       - name: Apply repository settings via GitHub Script
         uses: actions/github-script@v7
@@ -78,9 +82,3 @@ jobs:
             return { ok: true };
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # js-yaml is not available by default in the runtime; install it in a setup step if needed
-
-      - name: Install js-yaml (if needed)
-        if: failure()
-        run: |
-          npm install js-yaml@4

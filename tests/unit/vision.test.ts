@@ -35,8 +35,7 @@ vi.mock('@tensorflow/tfjs', async () => {
     tidy: (fn: () => unknown): unknown => fn(),
     browser: {
       fromPixels: vi.fn().mockImplementation(() => {
-        const tensor = createMockTensor();
-        return tensor;
+        return createMockTensor();
       }),
       toPixels: vi.fn(),
     },

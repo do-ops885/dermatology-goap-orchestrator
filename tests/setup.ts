@@ -93,7 +93,7 @@ if (typeof globalThis.ImageData === 'undefined') {
 if (typeof File !== 'undefined') {
   const OriginalFile = File;
   (globalThis as { File: typeof OriginalFile }).File = class File extends OriginalFile {
-    arrayBuffer(): Promise<ArrayBuffer> {
+    override arrayBuffer(): Promise<ArrayBuffer> {
       // Mock implementation - return empty ArrayBuffer
       return Promise.resolve(new ArrayBuffer(0));
     }
@@ -119,4 +119,20 @@ if (typeof HTMLCanvasElement !== 'undefined') {
 
   // @ts-ignore
   HTMLCanvasElement.prototype.toDataURL = () => 'data:image/png;base64,mockdata';
+}
+
+// Ensure AgentDB CLI has executable permissions if it exists (fix for CI/local environments)
+try {
+  const { existsSync } = await import('fs');
+  const { chmodSync } = await import('fs');
+  const agentDBCliPath = 'node_modules/agentdb/dist/src/cli/agentdb-cli.js';
+  if (existsSync(agentDBCliPath)) {
+    try {
+      chmodSync(agentDBCliPath, 0o755);
+    } catch {
+      // Silently ignore permission errors in test environment
+    }
+  }
+} catch {
+  // Ignore if fs module not available in all environments
 }

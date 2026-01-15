@@ -1,18 +1,18 @@
 # Agent Plan: Clinical Pipeline Details
 
 **Focus:** Complete 16-agent analysis workflow, data flow, and state transitions
-**Last Updated:** 2026-01-14
+**Last Updated:** 2026-01-15
 
-### 0.1 Current Implementation Status (2026-01-14)
+### 0.1 Current Implementation Status (2026-01-15)
 
-| Component           | Status      | Implementation Details                      |
-| ------------------- | ----------- | ------------------------------------------- |
-| 16-agent workflow   | ✅ COMPLETE | Full GOAP implementation with A\* planner   |
-| Execution trace     | ✅ COMPLETE | `services/goap/agent.ts` (144 LOC)          |
-| Executor pattern    | ✅ COMPLETE | 20+ executor files in `services/executors/` |
-| Confidence routing  | ✅ COMPLETE | Standard vs Safety path implementation      |
-| Error handling      | ✅ COMPLETE | Critical/non-critical error handling        |
-| Performance budgets | ✅ COMPLETE | 72s total pipeline timeout                  |
+| Component           | Status      | Implementation Details                     |
+| ------------------- | ----------- | ------------------------------------------ |
+| 16-agent workflow   | ✅ COMPLETE | Full GOAP implementation with A\* planner  |
+| Execution trace     | ✅ COMPLETE | `services/goap/agent.ts` (185 LOC)         |
+| Executor pattern    | ✅ COMPLETE | 16 executor files in `services/executors/` |
+| Confidence routing  | ✅ COMPLETE | Standard vs Safety path implementation     |
+| Error handling      | ✅ COMPLETE | Critical/non-critical error handling       |
+| Performance budgets | ✅ COMPLETE | 72s total pipeline timeout                 |
 
 ## 1. Pipeline Overview
 
@@ -121,13 +121,13 @@ interface WorldState {
 
 #### 3.1 Feature-Extraction-Agent
 
-| Property          | Value                                   |
-| :---------------- | :-------------------------------------- |
-| **Cost**          | 8                                       |
-| **Preconditions** | `segmentation_complete: true`           |
-| **Effects**       | `features_extracted: true`              |
-| **Logic**         | MobileNetV2 + FairDisCo disentanglement |
-| **Outputs**       | Bias score, disentanglement index       |
+| Property          | Value                                                                  |
+| :---------------- | :--------------------------------------------------------------------- |
+| **Cost**          | 8                                                                      |
+| **Preconditions** | `segmentation_complete: true`                                          |
+| **Effects**       | `features_extracted: true`                                             |
+| **Logic**         | Gemini 3 Flash for embeddings, MobileNetV2 + FairDisCo disentanglement |
+| **Outputs**       | Bias score, disentanglement index                                      |
 
 #### 3.2 Lesion-Detection-Agent
 
@@ -138,7 +138,7 @@ interface WorldState {
 | **Effects**       | `lesions_detected: true`                           |
 | **Inputs**        | Preprocessed image, VisionSpecialist               |
 | **Outputs**       | Classification results (HAM10000 classes), heatmap |
-| **Logic**         | TF.js MobileNetV3 inference                        |
+| **Logic**         | MobileNetV3 (TF.js/WebGPU) inference               |
 
 ### Stage 4: Analysis & Risk
 

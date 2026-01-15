@@ -1,5 +1,5 @@
 import type { AgentContext, ExecutorResult, ClinicalAnalysisResult } from './types';
-import type { ReasoningPattern } from '../types';
+import type { ReasoningPattern } from '../../types';
 
 export const similaritySearchExecutor = async ({
   reasoningBank,
@@ -20,8 +20,8 @@ export const similaritySearchExecutor = async ({
   return {
     metadata: {
       matches: matches.length,
-      top_match: matches[0]?.outcome || 'None',
-      similarity: matches[0]?.score?.toFixed(2) || '0.00',
+      top_match: matches[0]?.outcome ?? 'None',
+      similarity: matches[0]?.score?.toFixed(2) ?? '0.00',
     },
   };
 };

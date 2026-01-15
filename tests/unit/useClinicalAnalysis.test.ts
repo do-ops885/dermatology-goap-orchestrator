@@ -4,9 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useClinicalAnalysis } from '../../hooks/useClinicalAnalysis';
 import { INITIAL_STATE, type WorldState } from '../../types';
 
+import type * as AgentDB from '../../services/agentDB';
+
 vi.mock('../../services/agentDB', async () => {
-  const actual =
-    await vi.importActual<typeof import('../../services/agentDB')>('../../services/agentDB');
+  const actual = await vi.importActual<typeof AgentDB>('../../services/agentDB');
   return {
     ...actual,
     createDatabase: vi.fn().mockResolvedValue({
@@ -48,7 +49,7 @@ vi.mock('../../services/crypto', () => ({
 
 vi.mock('../../services/vision', () => ({
   VisionSpecialist: {
-    getInstance: vi.fn().mockReturnValue({
+    getInstance: vi.fn().mockImplementation(() => ({
       initialize: vi.fn().mockResolvedValue(undefined),
       detectSkinTone: vi.fn().mockResolvedValue({
         fitzpatrick: 'III',
@@ -62,36 +63,36 @@ vi.mock('../../services/vision', () => ({
       detectLesions: vi
         .fn()
         .mockResolvedValue([{ type: 'Melanoma', confidence: 0.75, bbox: [0, 0, 100, 100] }]),
-    }),
+    })),
   },
 }));
 
 vi.mock('../../services/router', () => ({
   RouterAgent: {
-    getInstance: vi.fn().mockReturnValue({
+    getInstance: vi.fn().mockImplementation(() => ({
       route: vi.fn().mockReturnValue('VISION_ANALYSIS'),
       getRequiredSpecialist: vi.fn().mockReturnValue('Vision-Specialist-MobileNetV3'),
-    }),
+    })),
   },
 }));
 
 vi.mock('../../services/logger', () => ({
   Logger: {
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    log: vi.fn(),
+    info: vi.fn().mockImplementation(() => {}),
+    warn: vi.fn().mockImplementation(() => {}),
+    error: vi.fn().mockImplementation(() => {}),
+    log: vi.fn().mockImplementation(() => {}),
   },
 }));
 
 vi.mock('@google/genai', () => {
-  const MockGoogleGenAI = vi.fn().mockImplementation(() => ({
-    models: {
+  class MockGoogleGenAI {
+    models = {
       generateContent: vi.fn().mockResolvedValue({
-        response: { text: vi.fn().mockReturnValue('test response') },
+        response: { text: () => 'test response' },
       }),
-    },
-  }));
+    };
+  }
   return { GoogleGenAI: MockGoogleGenAI };
 });
 
@@ -151,7 +152,7 @@ describe('useClinicalAnalysis', () => {
         await result.current.handleFileChange({
           target: { files: [validFile], value: '' },
         } as never);
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       });
 
       expect(result.current.file).not.toBeNull();

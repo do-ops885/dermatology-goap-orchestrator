@@ -33,10 +33,10 @@ export interface ReasoningPattern {
   id: number | undefined;
   taskType: string;
   context?: string; // Optional for generic patterns
-  approach?: string; // Optional
+  approach: string;
   outcome?: string; // Optional
   confidence?: number; // Optional
-  successRate?: number; // Alias for confidence/success metric
+  successRate: number;
   timestamp: number;
   score?: number; // Similarity score for search results
   metadata?: ReasoningPatternMetadata;
@@ -137,6 +137,23 @@ export interface AgentLogEntry {
   message: string;
   timestamp: number;
   metadata?: Record<string, unknown> | undefined;
+}
+
+export interface ClinicalAnalysisResult {
+  skinTone?: string;
+  confidence?: number;
+  lesions?: {
+    type: string;
+    confidence: number;
+    heatmap?: string;
+  }[];
+  riskLevel?: string;
+  recommendation?: string;
+  fairnessMetrics?: unknown;
+  similarCases?: unknown[];
+  webVerification?: unknown;
+  encryptedPayload?: string;
+  auditHash?: string;
 }
 
 // AgentDB Pattern Types

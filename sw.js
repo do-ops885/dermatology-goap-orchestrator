@@ -95,9 +95,17 @@ self.addEventListener('fetch', (event) => {
               }
               return networkResponse;
             })
-            .catch(() => {
-              // Network failure - ignore if we have cached response
-              console.log('[SW] Network fail for static asset, using cache');
+            .catch((error) => {
+              // Network failure - return cached response if available, else error
+              console.log('[SW] Network fail for static asset:', error);
+              if (cachedResponse) {
+                return cachedResponse;
+              }
+              // If no cache and network fails, return a basic error response
+              return new Response('Network error', {
+                status: 503,
+                statusText: 'Service Unavailable',
+              });
             });
 
           return cachedResponse || fetchPromise;

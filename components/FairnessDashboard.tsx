@@ -70,7 +70,10 @@ function FairnessDashboard({ onOpenReport }: FairnessDashboardProps) {
   }, [metrics]);
 
   return (
-    <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-stone-200 h-full flex flex-col relative overflow-hidden">
+    <div
+      data-testid="fairness-dashboard"
+      className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-stone-200 h-full flex flex-col relative overflow-hidden"
+    >
       <div className="flex justify-between items-start mb-6 relative z-10">
         <div>
           <div className="flex items-center gap-2">

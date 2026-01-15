@@ -77,9 +77,7 @@ vi.mock('@tensorflow/tfjs', async () => {
       numBytes: 0,
     }),
     GraphModel: class {
-      dispose(): void {
-        // Mock implementation
-      }
+      dispose(): void {}
     },
   };
 });
@@ -176,8 +174,10 @@ function createMockImageElement(): HTMLImageElement {
   canvas.width = 224;
   canvas.height = 224;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = 'rgb(200, 150, 100)';
-  ctx.fillRect(0, 0, 224, 224);
+  if (ctx) {
+    ctx.fillStyle = 'rgb(200, 150, 100)';
+    ctx.fillRect(0, 0, 224, 224);
+  }
 
   const img = new Image();
   img.src = canvas.toDataURL();
