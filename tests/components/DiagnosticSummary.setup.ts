@@ -32,7 +32,7 @@ export const setupGlobalMocks = () => {
 
     get type(): string {
       return (this.options as { type?: string })?.type ?? 'application/json';,
-    }
+    },
   };
 
   globalThis.Blob = MockBlob as unknown as typeof globalThis.Blob;

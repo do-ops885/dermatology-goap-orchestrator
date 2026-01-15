@@ -17,9 +17,22 @@ export class CICheckCoordinationProtocol {
     action: CICheckAction;
     dependencies: string[];
   } | null {
-    // Sequential dependency chain - SecurityAudit can run first
-    if (!_state.npm_audit_passing) {
-      const action = securityAuditActions.find((a) => a.preconditions(_state));
+    const result =
+      this.findSecurityAuditAction(_state) ||
+      this.findEslintAction(_state) ||
+      this.findCodeComplexityAction(_state) ||
+      this.checkAllChecksPassing(_state);
+
+    return result;
+  }
+
+  private findSecurityAuditAction(state: CICheckWorldState): {
+    agent: string;
+    action: CICheckAction;
+    dependencies: string[];
+  } | null {
+    if (!state.npm_audit_passing) {
+      const action = securityAuditActions.find((a) => a.preconditions(state));
       if (action) {
         return {
           agent: 'SecurityAudit-Agent',
@@ -28,10 +41,16 @@ export class CICheckCoordinationProtocol {
         };
       }
     }
+    return null;
+  }
 
-    // ESLint runs after security audit
-    if (_state.npm_audit_passing && !_state.eslint_passing) {
-      const action = eslintActions.find((a) => a.preconditions(_state));
+  private findEslintAction(state: CICheckWorldState): {
+    agent: string;
+    action: CICheckAction;
+    dependencies: string[];
+  } | null {
+    if (state.npm_audit_passing && !state.eslint_passing) {
+      const action = eslintActions.find((a) => a.preconditions(state));
       if (action) {
         return {
           agent: 'ESLint-Agent',
@@ -40,10 +59,16 @@ export class CICheckCoordinationProtocol {
         };
       }
     }
+    return null;
+  }
 
-    // CodeComplexity runs after ESLint
-    if (_state.eslint_passing && !_state.code_complexity_passing) {
-      const action = codeComplexityActions.find((a) => a.preconditions(_state));
+  private findCodeComplexityAction(state: CICheckWorldState): {
+    agent: string;
+    action: CICheckAction;
+    dependencies: string[];
+  } | null {
+    if (state.eslint_passing && !state.code_complexity_passing) {
+      const action = codeComplexityActions.find((a) => a.preconditions(state));
       if (action) {
         return {
           agent: 'CodeComplexity-Agent',
@@ -52,19 +77,20 @@ export class CICheckCoordinationProtocol {
         };
       }
     }
+    return null;
+  }
 
-    // Final validation - all checks passing
+  private checkAllChecksPassing(state: CICheckWorldState): null {
     if (
-      _state.npm_audit_passing &&
-      _state.eslint_passing &&
-      _state.code_complexity_passing &&
-      !_state.all_ci_checks_passing
+      state.npm_audit_passing &&
+      state.eslint_passing &&
+      state.code_complexity_passing &&
+      !state.all_ci_checks_passing
     ) {
       // This would be a final aggregation action, but for now return null
       return null;
     }
-
-    return null; // No more actions needed
+    return null;
   }
 
   /**
