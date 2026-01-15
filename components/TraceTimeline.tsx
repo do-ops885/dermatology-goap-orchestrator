@@ -121,6 +121,6 @@ export function TraceTimeline({ trace, currentAgent, height = 80 }: TraceTimelin
       </div>
     </div>
   );
-};
+}
 
 export default TraceTimeline;
