@@ -33,10 +33,10 @@ export interface ReasoningPattern {
   id: number | undefined;
   taskType: string;
   context?: string; // Optional for generic patterns
-  approach?: string; // Optional
+  approach: string;
   outcome?: string; // Optional
   confidence?: number; // Optional
-  successRate?: number; // Alias for confidence/success metric
+  successRate: number;
   timestamp: number;
   score?: number; // Similarity score for search results
   metadata?: ReasoningPatternMetadata;

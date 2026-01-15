@@ -6,19 +6,19 @@ import '@testing-library/jest-dom';
 
 // Only set up a11y config for E2E tests (Playwright provides setA11yConfig)
 try {
-  const { setA11yConfig, } = require('@axe-core/playwright',);
+  const { setA11yConfig } = require('@axe-core/playwright');
   setA11yConfig({
     rules: [
-      { id: 'color-contrast', enabled: true, },
-      { id: 'keyboard', enabled: true, },
-      { id: 'label', enabled: true, },
-      { id: 'image-alt', enabled: true, },
-      { id: 'button-name', enabled: true, },
-      { id: 'focus-visible', enabled: true, },
-      { id: 'aria-required-attr', enabled: true, },
-      { id: 'aria-valid-attr-value', enabled: true, },
+      { id: 'color-contrast', enabled: true },
+      { id: 'keyboard', enabled: true },
+      { id: 'label', enabled: true },
+      { id: 'image-alt', enabled: true },
+      { id: 'button-name', enabled: true },
+      { id: 'focus-visible', enabled: true },
+      { id: 'aria-required-attr', enabled: true },
+      { id: 'aria-valid-attr-value', enabled: true },
     ],
-  },);
+  });
 } catch {
   // setA11yConfig not available in this environment
 }
@@ -31,28 +31,28 @@ if (
 ) {
   // Node >= 16.0.0 provides webcrypto
   try {
-    const { webcrypto, } = require('node:crypto',);
+    const { webcrypto } = require('node:crypto');
     (globalThis as unknown as { crypto: typeof webcrypto }).crypto = webcrypto;
   } catch {
     // Last resort: minimal mock for tests relying on digest
     (
       globalThis as unknown as { crypto: { subtle: { digest: () => Promise<ArrayBuffer> } } }
     ).crypto = {
-      subtle: { digest: async() => new ArrayBuffer(0,), },
+      subtle: { digest: async () => new ArrayBuffer(0) },
     };
   }
 }
 
 // TextEncoder/TextDecoder (should exist in Node >= 11)
 if (typeof globalThis.TextEncoder === 'undefined') {
-  const { TextEncoder, } = require('util',);
+  const { TextEncoder } = require('util');
   (globalThis as { TextEncoder: typeof TextEncoder }).TextEncoder = TextEncoder;
 }
 
 // Simple ResizeObserver mock for libraries that expect it
 if (typeof globalThis.ResizeObserver === 'undefined') {
   class ResizeObserver {
-    observe(_element: Element,) {}
+    observe(_element: Element) {}
     disconnect() {}
   }
   (globalThis as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver =
@@ -64,7 +64,7 @@ if (!globalThis.URL?.createObjectURL) {
   globalThis.URL = Object.assign(globalThis.URL || {}, {
     createObjectURL: () => 'blob:mock',
     revokeObjectURL: () => {},
-  },);
+  });
 }
 
 // Mock ImageData for jsdom environment
@@ -74,11 +74,11 @@ if (typeof globalThis.ImageData === 'undefined') {
     height: number;
     data: Uint8ClampedArray;
 
-    constructor(swOrData: number | Uint8ClampedArray, sh?: number,) {
+    constructor(swOrData: number | Uint8ClampedArray, sh?: number) {
       if (typeof swOrData === 'number') {
         this.width = swOrData;
         this.height = sh ?? 0;
-        this.data = new Uint8ClampedArray((sh ?? 0) * swOrData * 4,);
+        this.data = new Uint8ClampedArray((sh ?? 0) * swOrData * 4);
       } else {
         this.width = sh ?? 0;
         this.height = 0;
@@ -95,7 +95,7 @@ if (typeof File !== 'undefined') {
   (globalThis as { File: typeof OriginalFile }).File = class File extends OriginalFile {
     override arrayBuffer(): Promise<ArrayBuffer> {
       // Mock implementation - return empty ArrayBuffer
-      return Promise.resolve(new ArrayBuffer(0,),);
+      return Promise.resolve(new ArrayBuffer(0));
     }
   };
 }
@@ -103,7 +103,7 @@ if (typeof File !== 'undefined') {
 // Mock HTMLCanvasElement for jsdom (canvas API not available by default)
 if (typeof HTMLCanvasElement !== 'undefined') {
   // @ts-ignore
-  HTMLCanvasElement.prototype.getContext = function() {
+  HTMLCanvasElement.prototype.getContext = function () {
     return {
       fillRect: () => {},
       fillStyle: '',
@@ -123,12 +123,12 @@ if (typeof HTMLCanvasElement !== 'undefined') {
 
 // Ensure AgentDB CLI has executable permissions if it exists (fix for CI/local environments)
 try {
-  const { existsSync, } = await import('fs');
-  const { chmodSync, } = await import('fs');
+  const { existsSync } = await import('fs');
+  const { chmodSync } = await import('fs');
   const agentDBCliPath = 'node_modules/agentdb/dist/src/cli/agentdb-cli.js';
-  if (existsSync(agentDBCliPath,)) {
+  if (existsSync(agentDBCliPath)) {
     try {
-      chmodSync(agentDBCliPath, 0o755,);
+      chmodSync(agentDBCliPath, 0o755);
     } catch {
       // Silently ignore permission errors in test environment
     }

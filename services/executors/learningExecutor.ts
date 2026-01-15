@@ -63,6 +63,7 @@ export const learningExecutor = async ({
           metadata,
         };
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await reasoningBank.storePattern(pattern as any);
 
         Logger.info('Learning-Agent', 'Diagnosis pattern stored', {
@@ -102,6 +103,7 @@ export const learningExecutor = async ({
         metadata,
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await reasoningBank.storePattern(pattern as any);
 
       Logger.info('Learning-Agent', 'Clinician feedback integrated', {

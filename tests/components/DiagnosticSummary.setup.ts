@@ -1,4 +1,4 @@
-import { vi, } from 'vitest';
+import { vi } from 'vitest';
 
 import AgentDB from '../../services/agentDB';
 
@@ -36,7 +36,7 @@ export const setupGlobalMocks = () => {
   };
 
   globalThis.Blob = MockBlob as unknown as typeof globalThis.Blob;
-  globalThis.URL.createObjectURL = vi.fn(() => 'blob:test-url',);
+  globalThis.URL.createObjectURL = vi.fn(() => 'blob:test-url');
   globalThis.URL.revokeObjectURL = vi.fn();
 
   return MockBlob;
@@ -44,9 +44,9 @@ export const setupGlobalMocks = () => {
 
 export const mockAgentDBSpy = () => {
   const mockAgentDBInstance: MockAgentDBInstance = {
-    storeClinicianFeedback: vi.fn().mockResolvedValue(undefined,),
+    storeClinicianFeedback: vi.fn().mockResolvedValue(undefined),
   };
   return vi
-    .spyOn(AgentDB, 'getInstance',)
-    .mockReturnValue(mockAgentDBInstance as unknown as AgentDB,);
+    .spyOn(AgentDB, 'getInstance')
+    .mockReturnValue(mockAgentDBInstance as unknown as AgentDB);
 };

@@ -1,15 +1,15 @@
-import { AxeBuilder, } from '@axe-core/playwright';
+import { AxeBuilder } from '@axe-core/playwright';
 
 export const axe = {
-  async evaluate(page: any, options: any = {},) {
-    const builder = new AxeBuilder({ page, },);
+  async evaluate(page: any, options: any = {}) {
+    const builder = new AxeBuilder({ page });
 
     // Apply options
     if (options.include) {
-      builder.include(options.include,);
+      builder.include(options.include);
     }
     if (options.exclude) {
-      builder.exclude(options.exclude,);
+      builder.exclude(options.exclude);
     }
 
     return await builder.analyze();
