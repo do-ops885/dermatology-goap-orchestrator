@@ -19,9 +19,9 @@ describe('imageVerificationExecutor', () => {
   });
 
   it('should return metadata with SHA-256 method', async () => {
-    const context: AgentContext = {
+    const context = {
       imageHash: 'abc123def456ghi789jkl012mno345pqr678stu901vwx234yz',
-    };
+    } as AgentContext;
 
     const resultPromise = imageVerificationExecutor(context);
     vi.advanceTimersByTime(400);
@@ -34,9 +34,9 @@ describe('imageVerificationExecutor', () => {
 
   it('should return truncated hash in metadata', async () => {
     const fullHash = 'abcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678';
-    const context: AgentContext = {
+    const context = {
       imageHash: fullHash,
-    };
+    } as AgentContext;
 
     const resultPromise = imageVerificationExecutor(context);
     vi.advanceTimersByTime(400);
@@ -47,9 +47,9 @@ describe('imageVerificationExecutor', () => {
   });
 
   it('should include first 16 characters of hash', async () => {
-    const context: AgentContext = {
-      imageHash: '0123456789abcdefghijklmnop',
-    };
+    const context = {
+      imageHash: 'abc123def456ghi789jkl012mno345pqr678stu901vwx234yz',
+    } as AgentContext;
 
     const resultPromise = imageVerificationExecutor(context);
     vi.advanceTimersByTime(400);
@@ -59,9 +59,9 @@ describe('imageVerificationExecutor', () => {
   });
 
   it('should handle short hashes gracefully', async () => {
-    const context: AgentContext = {
+    const context = {
       imageHash: '12345',
-    };
+    } as AgentContext;
 
     const resultPromise = imageVerificationExecutor(context);
     vi.advanceTimersByTime(400);
@@ -71,9 +71,9 @@ describe('imageVerificationExecutor', () => {
   });
 
   it('should complete after 400ms delay', async () => {
-    const context: AgentContext = {
+    const context = {
       imageHash: 'test123',
-    };
+    } as AgentContext;
 
     const resultPromise = imageVerificationExecutor(context);
 
@@ -91,9 +91,9 @@ describe('imageVerificationExecutor', () => {
   });
 
   it('should handle empty imageHash', async () => {
-    const context: AgentContext = {
+    const context = {
       imageHash: '',
-    };
+    } as AgentContext;
 
     const resultPromise = imageVerificationExecutor(context);
     vi.advanceTimersByTime(400);
@@ -110,7 +110,7 @@ describe('imageVerificationExecutor', () => {
     ];
 
     for (const hash of hashes) {
-      const context: AgentContext = { imageHash: hash };
+      const context = { imageHash: hash } as AgentContext;
       const resultPromise = imageVerificationExecutor(context);
       vi.advanceTimersByTime(400);
       const result = await resultPromise;
@@ -122,9 +122,9 @@ describe('imageVerificationExecutor', () => {
 
   it('should not modify the input context', async () => {
     const originalHash = 'original_hash_value_1234567890';
-    const context: AgentContext = {
+    const context = {
       imageHash: originalHash,
-    };
+    } as AgentContext;
 
     const resultPromise = imageVerificationExecutor(context);
     vi.advanceTimersByTime(400);

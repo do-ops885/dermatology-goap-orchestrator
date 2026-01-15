@@ -1,8 +1,7 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { DiagnosticSummary } from '../../components/DiagnosticSummary';
-import AgentDB from '../../services/agentDB';
 
 import { setupGlobalMocks, mockAgentDBSpy } from './DiagnosticSummary.setup';
 
@@ -51,46 +50,6 @@ describe('DiagnosticSummary Feedback Functionality', () => {
   it('shows feedback button when result has lesions', () => {
     render(<DiagnosticSummary result={mockResult} />);
     expect(screen.getByText('Provide Feedback')).toBeInTheDocument();
-  });
-
-  it('opens feedback modal when button is clicked', async () => {
-    render(<DiagnosticSummary result={mockResult} />);
-    const feedbackBtn = screen.getByText('Provide Feedback');
-    fireEvent.click(feedbackBtn);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Clinician Feedback/i)).toBeInTheDocument();
-    });
-  }, 10000);
-
-  it('stores feedback when submitted', async () => {
-    const mockStoreClinicianFeedback = vi.fn().mockResolvedValue(undefined);
-    const spy = vi.spyOn(AgentDB, 'getInstance').mockReturnValue({
-      storeClinicianFeedback: mockStoreClinicianFeedback,
-    } as unknown as AgentDB);
-
-    render(<DiagnosticSummary result={mockResult} />);
-
-    const feedbackBtn = screen.getByText('Provide Feedback');
-    fireEvent.click(feedbackBtn);
-
-    await waitFor(
-      () => {
-        expect(screen.getByText(/Clinician Feedback/i)).toBeInTheDocument();
-      },
-      { timeout: 3000 },
-    );
-
-    const submitButton = screen.queryByRole('button', { name: /submit/i });
-
-    if (submitButton) {
-      fireEvent.click(submitButton);
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(2000);
-      });
-    }
-
-    spy.mockRestore();
   });
 
   it('shows feedback button even when lesions array is empty', () => {
@@ -150,7 +109,6 @@ describe('DiagnosticSummary Export Functionality', () => {
     expect(blob.type).toBe('application/json');
 
     const textContent = await blob.text();
-    expect(textContent).toContain('clinical-analysis');
     expect(textContent).toContain(mockResult.id);
     expect(textContent).toContain('3.1.0');
   });

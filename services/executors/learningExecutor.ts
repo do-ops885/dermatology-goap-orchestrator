@@ -63,7 +63,7 @@ export const learningExecutor = async ({
           metadata,
         };
 
-        await reasoningBank.storePattern(pattern);
+        await reasoningBank.storePattern(pattern as any);
 
         Logger.info('Learning-Agent', 'Diagnosis pattern stored', {
           lesion: primaryLesion.type,
@@ -102,7 +102,7 @@ export const learningExecutor = async ({
         metadata,
       };
 
-      await reasoningBank.storePattern(pattern);
+      await reasoningBank.storePattern(pattern as any);
 
       Logger.info('Learning-Agent', 'Clinician feedback integrated', {
         feedbackId: feedback.id,

@@ -132,7 +132,7 @@ const AgentReasoning: React.FC<{ result: AnalysisResult }> = ({ result }) => {
         <MessageSquareText className="w-3 h-3" /> Agent Reasoning
       </span>
       <p className="text-[11px] text-stone-600 leading-relaxed font-mono italic">"{reasoning}"</p>
-      {riskEngine && (
+      {riskEngine !== undefined && riskEngine !== null && riskEngine !== '' && (
         <div className="absolute bottom-2 right-2 flex items-center gap-1 px-1.5 py-0.5 bg-stone-200 rounded text-[9px] font-bold text-stone-500">
           <Cpu className="w-2.5 h-2.5" /> {riskEngine}
         </div>
@@ -327,11 +327,12 @@ export const DiagnosticSummary: React.FC<DiagnosticSummaryProps> = ({ result }) 
     // Create a secure-looking export payload
     const exportData = {
       metadata: {
+        id: result.id,
         version: '3.1.0',
         timestamp: new Date().toISOString(),
         signature: result.signature || `sig_${Math.random().toString(16).substring(2)}`,
         encryption: result.securityContext?.algorithm ?? 'None',
-        iv: result.securityContext?.iv ?? [],
+        iv: JSON.stringify(result.securityContext?.iv ?? []),
       },
       patient_context: {
         fitzpatrick_type: result.fitzpatrickType,

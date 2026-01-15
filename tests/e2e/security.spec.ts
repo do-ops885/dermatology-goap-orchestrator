@@ -15,7 +15,7 @@ test.describe('Scenario C: Security & Error Handling - Advanced', () => {
     await page.locator('input[type="file"]').setInputFiles({
       name: 'valid-jpeg.jpg',
       mimeType: 'image/jpeg',
-      buffer: buffer,
+      buffer,
     });
 
     await expect(page.locator('text=Security Protocol: Invalid file format')).not.toBeVisible();
@@ -29,7 +29,7 @@ test.describe('Scenario C: Security & Error Handling - Advanced', () => {
     await page.locator('input[type="file"]').setInputFiles({
       name: 'fake-jpeg.jpg',
       mimeType: 'image/jpeg',
-      buffer: buffer,
+      buffer,
     });
 
     await expect(page.locator('text=Security Protocol: Invalid file format')).toBeVisible();
@@ -43,7 +43,7 @@ test.describe('Scenario C: Security & Error Handling - Advanced', () => {
     await page.locator('input[type="file"]').setInputFiles({
       name: 'valid-png.png',
       mimeType: 'image/png',
-      buffer: buffer,
+      buffer,
     });
 
     await expect(page.locator('text=Security Protocol: Invalid file format')).not.toBeVisible();
@@ -59,7 +59,7 @@ test.describe('Scenario C: Security & Error Handling - Advanced', () => {
     await page.locator('input[type="file"]').setInputFiles({
       name: 'test-image.jpg',
       mimeType: 'image/jpeg',
-      buffer: buffer,
+      buffer,
     });
 
     const runBtn = page.locator('button', { hasText: 'Run Clinical Analysis' });
@@ -85,7 +85,7 @@ test.describe('Scenario C: Security & Error Handling - Advanced', () => {
       await page.locator('input[type="file"]').setInputFiles({
         name: 'deterministic-test.jpg',
         mimeType: 'image/jpeg',
-        buffer: buffer,
+        buffer,
       });
 
       await page.locator('button', { hasText: 'Run Clinical Analysis' }).click();
@@ -118,7 +118,7 @@ test.describe('Scenario C: Security & Error Handling - Advanced', () => {
       await page.locator('input[type="file"]').setInputFiles({
         name: file.name,
         mimeType: file.type,
-        buffer: buffer,
+        buffer,
       });
 
       await expect(page.locator('text=Security Protocol: Invalid file format')).toBeVisible();
@@ -136,7 +136,7 @@ test.describe('Scenario C: Security & Error Handling - Advanced', () => {
     await page.locator('input[type="file"]').setInputFiles({
       name: 'audit-test.jpg',
       mimeType: 'image/jpeg',
-      buffer: buffer,
+      buffer,
     });
 
     await page.locator('button', { hasText: 'Run Clinical Analysis' }).click();
@@ -161,7 +161,7 @@ test.describe('Scenario C: Security & Error Handling - Advanced', () => {
     await page.locator('input[type="file"]').setInputFiles({
       name: 'signature-test.jpg',
       mimeType: 'image/jpeg',
-      buffer: buffer,
+      buffer,
     });
 
     await page.locator('button', { hasText: 'Run Clinical Analysis' }).click();
@@ -199,12 +199,10 @@ test.describe('Scenario C: Security & Error Handling - Advanced', () => {
     await page.locator('input[type="file"]').setInputFiles({
       name: 'corrupted.jpg',
       mimeType: 'image/jpeg',
-      buffer: buffer,
+      buffer,
     });
 
     await page.locator('button', { hasText: 'Run Clinical Analysis' }).click();
-
-    const hasError = (await page.locator('text=Error|error|Failed|failed').count()) > 0;
 
     await expect(page.locator('img[alt="Preview"]')).toBeVisible();
   });
@@ -218,7 +216,7 @@ test.describe('Scenario C: Security & Error Handling - Advanced', () => {
     await page.locator('input[type="file"]').setInputFiles({
       name: 'encryption-test.jpg',
       mimeType: 'image/jpeg',
-      buffer: buffer,
+      buffer,
     });
 
     await page.locator('button', { hasText: 'Run Clinical Analysis' }).click();

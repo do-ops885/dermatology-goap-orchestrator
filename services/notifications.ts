@@ -49,6 +49,10 @@ export class NotificationService {
     const agentDB = await import('./agentDB');
     await agentDB.default.getInstance().logAuditEvent({
       type: 'CRITICAL_ALERT',
+      hash: notification.id, // Use notification ID as hash for simplicity
+      prev_hash: '',
+      agent_trace: [],
+      safety_level: 'HIGH',
       notificationId: notification.id,
       ...params,
     });

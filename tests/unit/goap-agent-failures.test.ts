@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest';
 
-import { GOAPPlanner } from '../../services/goap';
-import { GoapAgent } from '../../services/goap/agent';
-import { INITIAL_STATE, type WorldState } from '../../types';
+import { GOAPPlanner, AVAILABLE_ACTIONS } from '../../services/goap';
+import { GoapAgent, AgentHandoffCoordinator } from '../../services/goap/agent';
+import { INITIAL_STATE } from '../../types';
 
 import type { ExecutorFn } from '../../services/goap/agent';
+import type { WorldState } from '../../types';
+import type { AgentContext } from '../../services/executors/types';
 
 /**
  * Integration tests for GOAP Agent failure handling
@@ -18,9 +20,30 @@ describe('GoapAgent Failure Handling', () => {
     it('should skip non-critical agents that fail and continue execution', async () => {
       const planner = new GOAPPlanner();
 
-      // Simulate a non-critical agent failure (e.g., Web-Verification-Agent)
+      // Simulate a non-critical agent failure (e.g., Similarity-Search-Agent)
       const failingExecutor: ExecutorFn = async () => {
-        throw new Error('Network timeout - unable to verify guidelines');
+        throw new Error('Similarity search index unavailable');
+      };
+
+      // Start with high confidence state to avoid safety routing
+      const highConfidenceState: WorldState = {
+        ...INITIAL_STATE,
+        confidence_score: 0.8, // High confidence
+        is_low_confidence: false,
+        image_verified: true,
+        skin_tone_detected: true,
+        calibration_complete: true,
+        image_preprocessed: true,
+        segmentation_complete: true,
+        features_extracted: true,
+        lesions_detected: true,
+        // similarity_searched: false (will be set to false by failing executor)
+        risk_assessed: true,
+        fairness_validated: true,
+        web_verified: true,
+        recommendations_generated: true,
+        learning_updated: true,
+        data_encrypted: true,
       };
 
       const executors: Record<string, ExecutorFn> = {
@@ -31,10 +54,10 @@ describe('GoapAgent Failure Handling', () => {
         'Segmentation-Agent': noopExecutor,
         'Feature-Extraction-Agent': noopExecutor,
         'Lesion-Detection-Agent': noopExecutor,
-        'Similarity-Search-Agent': noopExecutor,
+        'Similarity-Search-Agent': failingExecutor, // Non-critical - should skip
         'Risk-Assessment-Agent': noopExecutor,
         'Fairness-Audit-Agent': noopExecutor,
-        'Web-Verification-Agent': failingExecutor, // Non-critical - should skip
+        'Web-Verification-Agent': noopExecutor,
         'Recommendation-Agent': noopExecutor,
         'Learning-Agent': noopExecutor,
         'Privacy-Encryption-Agent': noopExecutor,
@@ -42,7 +65,11 @@ describe('GoapAgent Failure Handling', () => {
       };
 
       const agent = new GoapAgent(planner, executors);
-      const trace = await agent.execute(INITIAL_STATE, { audit_logged: true }, {});
+      const trace = await agent.execute(
+        highConfidenceState,
+        { audit_logged: true },
+        {} as AgentContext,
+      );
 
       // Verify the failing agent was skipped
       const webVerificationAgent = trace.agents.find((a) => a.agentId === 'Web-Verification-Agent');
@@ -59,6 +86,13 @@ describe('GoapAgent Failure Handling', () => {
 
       const failingExecutor: ExecutorFn = async () => {
         throw new Error('Similarity search index unavailable');
+      };
+
+      // Start with high confidence state to avoid safety routing
+      const highConfidenceState: WorldState = {
+        ...INITIAL_STATE,
+        confidence_score: 0.8, // High confidence
+        is_low_confidence: false,
       };
 
       const executors: Record<string, ExecutorFn> = {
@@ -80,7 +114,11 @@ describe('GoapAgent Failure Handling', () => {
       };
 
       const agent = new GoapAgent(planner, executors);
-      const trace = await agent.execute(INITIAL_STATE, { audit_logged: true }, {});
+      const trace = await agent.execute(
+        highConfidenceState,
+        { audit_logged: true },
+        {} as AgentContext,
+      );
 
       const similarityAgent = trace.agents.find((a) => a.agentId === 'Similarity-Search-Agent');
       expect(similarityAgent?.status).toBe('skipped');
@@ -119,7 +157,11 @@ describe('GoapAgent Failure Handling', () => {
       };
 
       const agent = new GoapAgent(planner, executors);
-      const trace = await agent.execute(lowConfidenceState, { audit_logged: true }, {});
+      const trace = await agent.execute(
+        lowConfidenceState,
+        { audit_logged: true },
+        {} as AgentContext,
+      );
 
       // Verify Safety-Calibration-Agent was used (planner should prefer it when is_low_confidence is true)
       const safetyCalibration = trace.agents.find((a) => a.agentId === 'Safety-Calibration-Agent');
@@ -168,7 +210,7 @@ describe('GoapAgent Failure Handling', () => {
       };
 
       const agent = new GoapAgent(planner, executors);
-      await agent.execute(lowConfidenceState, { audit_logged: true }, {});
+      await agent.execute(lowConfidenceState, { audit_logged: true }, {} as AgentContext);
 
       expect(thresholdApplied).toBe(0.5);
     });
@@ -189,9 +231,9 @@ describe('GoapAgent Failure Handling', () => {
 
       const agent = new GoapAgent(planner, executors);
 
-      await expect(agent.execute(INITIAL_STATE, { audit_logged: true }, {})).rejects.toThrow(
-        'Critical',
-      );
+      await expect(
+        agent.execute(INITIAL_STATE, { audit_logged: true }, {} as AgentContext),
+      ).rejects.toThrow('Critical');
     });
 
     it('should abort on encryption failure', async () => {
@@ -221,9 +263,9 @@ describe('GoapAgent Failure Handling', () => {
 
       const agent = new GoapAgent(planner, executors);
 
-      await expect(agent.execute(INITIAL_STATE, { audit_logged: true }, {})).rejects.toThrow(
-        'Critical',
-      );
+      await expect(
+        agent.execute(INITIAL_STATE, { audit_logged: true }, {} as AgentContext),
+      ).rejects.toThrow('Critical');
     });
   });
 
@@ -237,6 +279,7 @@ describe('GoapAgent Failure Handling', () => {
         if (!replanTriggered) {
           replanTriggered = true;
           return Promise.resolve({
+            metadata: {},
             shouldReplan: true,
             newStateUpdates: { is_low_confidence: true },
           });
@@ -264,7 +307,7 @@ describe('GoapAgent Failure Handling', () => {
       };
 
       const agent = new GoapAgent(planner, executors);
-      const trace = await agent.execute(INITIAL_STATE, { audit_logged: true }, {});
+      const trace = await agent.execute(INITIAL_STATE, { audit_logged: true }, {} as AgentContext);
 
       expect(replanTriggered).toBe(true);
       expect(trace.finalWorldState.is_low_confidence).toBe(true);
@@ -277,10 +320,11 @@ describe('GoapAgent Failure Handling', () => {
     it('should maintain state consistency across replanning', async () => {
       const planner = new GOAPPlanner();
 
-      const stateTrackingExecutor: ExecutorFn = async (_state: WorldState) => {
+      const stateTrackingExecutor: ExecutorFn = async (_ctx: AgentContext) => {
         return Promise.resolve({
+          metadata: {},
           shouldReplan: false,
-          newStateUpdates: { verification_timestamp: Date.now() },
+          newStateUpdates: { verification_timestamp: Date.now() } as any,
         });
       };
 
@@ -303,11 +347,152 @@ describe('GoapAgent Failure Handling', () => {
       };
 
       const agent = new GoapAgent(planner, executors);
-      const trace = await agent.execute(INITIAL_STATE, { audit_logged: true }, {});
+      const trace = await agent.execute(INITIAL_STATE, { audit_logged: true }, {} as AgentContext);
 
       // Verify custom state updates are preserved
-      expect(trace.finalWorldState.verification_timestamp).toBeDefined();
-      expect(typeof trace.finalWorldState.verification_timestamp).toBe('number');
+      expect((trace.finalWorldState as any).verification_timestamp).toBeDefined();
+      expect(typeof (trace.finalWorldState as any).verification_timestamp).toBe('number');
+    });
+  });
+
+  describe('Agent Handoff Coordination', () => {
+    it('should validate successful handoff from Skin-Tone-Detection to Safety-Calibration', () => {
+      const coordinator = new AgentHandoffCoordinator();
+      const lowConfidenceState: WorldState = {
+        ...INITIAL_STATE,
+        image_verified: true,
+        skin_tone_detected: true,
+        is_low_confidence: true,
+      };
+
+      const safetyCalibrationAction = AVAILABLE_ACTIONS.find(
+        (a) => a.agentId === 'Safety-Calibration-Agent',
+      )!;
+
+      const validation = coordinator.validateHandoff(
+        'Skin-Tone-Detection-Agent',
+        'Safety-Calibration-Agent',
+        lowConfidenceState,
+        safetyCalibrationAction,
+      );
+
+      expect(validation.valid).toBe(true);
+    });
+
+    it('should reject invalid handoff from Skin-Tone-Detection to Safety-Calibration when not low confidence', () => {
+      const coordinator = new AgentHandoffCoordinator();
+      const highConfidenceState: WorldState = {
+        ...INITIAL_STATE,
+        image_verified: true,
+        skin_tone_detected: true,
+        is_low_confidence: false,
+        confidence_score: 0.8,
+      };
+
+      const safetyCalibrationAction = AVAILABLE_ACTIONS.find(
+        (a) => a.agentId === 'Safety-Calibration-Agent',
+      )!;
+
+      const validation = coordinator.validateHandoff(
+        'Skin-Tone-Detection-Agent',
+        'Safety-Calibration-Agent',
+        highConfidenceState,
+        safetyCalibrationAction,
+      );
+
+      expect(validation.valid).toBe(false);
+      expect(validation.reason).toContain(
+        'Safety-Calibration-Agent can only be executed when is_low_confidence is true',
+      );
+    });
+
+    it('should reject invalid handoff to Standard-Calibration when low confidence', () => {
+      const coordinator = new AgentHandoffCoordinator();
+      const lowConfidenceState: WorldState = {
+        ...INITIAL_STATE,
+        image_verified: true,
+        skin_tone_detected: true,
+        is_low_confidence: true,
+      };
+
+      const standardCalibrationAction = AVAILABLE_ACTIONS.find(
+        (a) => a.agentId === 'Standard-Calibration-Agent',
+      )!;
+
+      const validation = coordinator.validateHandoff(
+        'Skin-Tone-Detection-Agent',
+        'Standard-Calibration-Agent',
+        lowConfidenceState,
+        standardCalibrationAction,
+      );
+
+      expect(validation.valid).toBe(false);
+      expect(validation.reason).toContain(
+        'Standard-Calibration-Agent cannot be executed when is_low_confidence is true',
+      );
+    });
+
+    it('should validate action preconditions', () => {
+      const coordinator = new AgentHandoffCoordinator();
+      const incompleteState: WorldState = {
+        ...INITIAL_STATE,
+        // image_verified: false (missing precondition)
+        skin_tone_detected: true,
+        is_low_confidence: false,
+      };
+
+      const skinToneAction = AVAILABLE_ACTIONS.find(
+        (a) => a.agentId === 'Skin-Tone-Detection-Agent',
+      )!;
+
+      const validation = coordinator.validateHandoff(
+        'Image-Verification-Agent',
+        'Skin-Tone-Detection-Agent',
+        incompleteState,
+        skinToneAction,
+      );
+
+      expect(validation.valid).toBe(false);
+      expect(validation.reason).toContain('Precondition not met');
+    });
+
+    it('should detect state inconsistencies and provide warnings', () => {
+      const coordinator = new AgentHandoffCoordinator();
+      const inconsistentState: WorldState = {
+        ...INITIAL_STATE,
+        image_verified: true,
+        skin_tone_detected: true,
+        is_low_confidence: false, // Should be true for confidence_score < 0.65
+        confidence_score: 0.4,
+      };
+
+      const calibrationAction = AVAILABLE_ACTIONS.find(
+        (a) => a.agentId === 'Standard-Calibration-Agent',
+      )!;
+
+      const validation = coordinator.validateHandoff(
+        'Skin-Tone-Detection-Agent',
+        'Standard-Calibration-Agent',
+        inconsistentState,
+        calibrationAction,
+      );
+
+      expect(validation.valid).toBe(true); // Preconditions are met
+      expect(validation.warnings).toBeDefined();
+      expect(validation.warnings![0]).toContain('State inconsistency');
+    });
+
+    it('should auto-correct state inconsistencies', () => {
+      const coordinator = new AgentHandoffCoordinator();
+      const inconsistentState: WorldState = {
+        ...INITIAL_STATE,
+        confidence_score: 0.4,
+        is_low_confidence: false, // Should be corrected to true
+      };
+
+      const correctedState = coordinator.ensureStateConsistency(inconsistentState);
+
+      expect(correctedState.is_low_confidence).toBe(true);
     });
   });
 });

@@ -1,11 +1,11 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { render, screen, } from '@testing-library/react';
+import { describe, it, expect, beforeEach, afterEach, vi, } from 'vitest';
 
-import { DiagnosticSummary } from '../../components/DiagnosticSummary';
+import { DiagnosticSummary, } from '../../components/DiagnosticSummary';
 
-import { setupGlobalMocks, mockAgentDBSpy } from './DiagnosticSummary.setup';
+import { setupGlobalMocks, mockAgentDBSpy, } from './DiagnosticSummary.setup';
 
-import type { AnalysisResult } from '../../types';
+import type { AnalysisResult, } from '../../types';
 
 interface ExtendedAnalysisResult extends AnalysisResult {
   similarCases?: Array<{
@@ -20,9 +20,9 @@ const mockResult: AnalysisResult = {
   id: 'test-id',
   timestamp: 123456789,
   fitzpatrickType: 'III',
-  lesions: [{ type: 'Melanoma', confidence: 0.85, risk: 'High' }],
-  fairnessMetrics: { tpr: 0.9, fpr: 0.1, calibrationError: 0.05 },
-  recommendations: ['See a doctor immediately.'],
+  lesions: [{ type: 'Melanoma', confidence: 0.85, risk: 'High', },],
+  fairnessMetrics: { tpr: 0.9, fpr: 0.1, calibrationError: 0.05, },
+  recommendations: ['See a doctor immediately.',],
   signature: 'sig-123',
   webVerification: {
     verified: true,
@@ -38,7 +38,7 @@ const mockResult: AnalysisResult = {
     encrypted: true,
     algorithm: 'AES-GCM',
     timestamp: 123,
-    iv: [1, 2, 3],
+    iv: [1, 2, 3,],
     payloadSize: 100,
   },
 };
@@ -49,12 +49,12 @@ describe('DiagnosticSummary Similar Cases', () => {
     vi.useFakeTimers();
     setupGlobalMocks();
     mockAgentDBSpy();
-  });
+  },);
 
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
-  });
+  },);
 
   it('renders similar cases when present', () => {
     const resultWithSimilarCases: ExtendedAnalysisResult = {
@@ -73,18 +73,18 @@ describe('DiagnosticSummary Similar Cases', () => {
         },
       ],
     };
-    render(<DiagnosticSummary result={resultWithSimilarCases} />);
-    expect(screen.getByText('Similar Clinical Patterns')).toBeInTheDocument();
-    expect(screen.getByText('Melanoma Confirmed')).toBeInTheDocument();
-    expect(screen.getByText('Benign Nevi')).toBeInTheDocument();
-    expect(screen.getByText('Sim: 92%')).toBeInTheDocument();
-    expect(screen.getByText('Sim: 75%')).toBeInTheDocument();
-  });
+    render(<DiagnosticSummary result={resultWithSimilarCases} />,);
+    expect(screen.getByText('Similar Clinical Patterns',),).toBeInTheDocument();
+    expect(screen.getByText('Melanoma Confirmed',),).toBeInTheDocument();
+    expect(screen.getByText('Benign Nevi',),).toBeInTheDocument();
+    expect(screen.getByText('Sim: 92%',),).toBeInTheDocument();
+    expect(screen.getByText('Sim: 75%',),).toBeInTheDocument();
+  },);
 
   it('does not render similar cases when absent', () => {
-    render(<DiagnosticSummary result={mockResult} />);
-    expect(screen.queryByText('Similar Clinical Patterns')).not.toBeInTheDocument();
-  });
+    render(<DiagnosticSummary result={mockResult} />,);
+    expect(screen.queryByText('Similar Clinical Patterns',),).not.toBeInTheDocument();
+  },);
 
   it('displays fallback text when outcome is missing', () => {
     const resultWithFallbackCase: ExtendedAnalysisResult = {
@@ -97,9 +97,9 @@ describe('DiagnosticSummary Similar Cases', () => {
         },
       ],
     };
-    render(<DiagnosticSummary result={resultWithFallbackCase} />);
-    expect(screen.getByText('Match Found')).toBeInTheDocument();
-  });
+    render(<DiagnosticSummary result={resultWithFallbackCase} />,);
+    expect(screen.getByText('Match Found',),).toBeInTheDocument();
+  },);
 
   it('displays context when available', () => {
     const resultWithContext: ExtendedAnalysisResult = {
@@ -112,9 +112,9 @@ describe('DiagnosticSummary Similar Cases', () => {
         },
       ],
     };
-    render(<DiagnosticSummary result={resultWithContext} />);
-    expect(screen.getByText('Sun-damaged skin')).toBeInTheDocument();
-  });
+    render(<DiagnosticSummary result={resultWithContext} />,);
+    expect(screen.getByText('Sun-damaged skin',),).toBeInTheDocument();
+  },);
 
   it('displays task type when context is missing', () => {
     const resultWithTaskType: ExtendedAnalysisResult = {
@@ -127,7 +127,7 @@ describe('DiagnosticSummary Similar Cases', () => {
         },
       ],
     };
-    render(<DiagnosticSummary result={resultWithTaskType} />);
-    expect(screen.getByText('Melanoma Detection')).toBeInTheDocument();
-  });
-});
+    render(<DiagnosticSummary result={resultWithTaskType} />,);
+    expect(screen.getByText('Melanoma Detection',),).toBeInTheDocument();
+  },);
+},);

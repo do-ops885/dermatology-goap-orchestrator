@@ -111,7 +111,7 @@ export class VisionSpecialist {
           if (!item) return { label: 'Unknown', score: 0 };
           const mappedIndex = (item.i + Math.floor(item.p * 100)) % CLASSES.length;
           return {
-            label: CLASSES[mappedIndex].name,
+            label: CLASSES[mappedIndex]!.name,
             score: item.p * (1 - index * 0.15), // Decay score for lower ranks
           };
         });
@@ -149,7 +149,7 @@ export class VisionSpecialist {
     return tf.tidy(() => {
       // A. Preprocessing
       const t = tf.browser.fromPixels(img).toFloat().div(255);
-      const [h, w] = t.shape.slice(0, 2);
+      const [h, w] = t.shape.slice(0, 2) as [number, number];
 
       // B. Saliency Heuristic:
       // Lesions are typically darker than skin -> Invert grayscale

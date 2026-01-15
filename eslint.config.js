@@ -197,6 +197,113 @@ export default [
     },
   },
   {
+    files: ['examples/**/*.{ts,js}'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      'no-console': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+      'no-unused-vars': 'off',
+      'max-lines': 'off',
+      complexity: 'off',
+      'sonarjs/cognitive-complexity': 'off',
+    },
+  },
+  {
+    files: ['tests/**/*.{js,ts,tsx}', '**/*.{test,spec}.{js,ts,tsx}', 'vitest.config.ts'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        // Test framework globals
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        vi: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        skip: 'readonly',
+        only: 'readonly',
+        todo: 'readonly',
+        // Jest compatibility
+        jest: 'readonly',
+        // Test utilities
+        global: 'readonly',
+        console: 'readonly',
+        // Node.js globals
+        ...globals.node,
+        // Browser globals for jsdom environment
+        ...globals.browser,
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        location: 'readonly',
+        localStorage: 'readonly',
+        sessionStorage: 'readonly',
+        fetch: 'readonly',
+        crypto: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
+        // Testing Library
+        cleanup: 'readonly',
+        render: 'readonly',
+        screen: 'readonly',
+        fireEvent: 'readonly',
+        userEvent: 'readonly',
+        waitFor: 'readonly',
+        waitForElementToBeRemoved: 'readonly',
+        within: 'readonly',
+      },
+    },
+    rules: {
+      // Disable strict TypeScript rules for tests
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+      'no-unused-vars': 'off',
+
+      // Basic JavaScript rules for test files
+      'prefer-const': 'warn',
+      'no-var': 'error',
+      'object-shorthand': 'warn',
+      'prefer-template': 'warn',
+      'arrow-spacing': 'warn',
+      'comma-dangle': ['error', 'always'],
+      quotes: ['error', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
+      semi: ['error', 'always'],
+      indent: ['error', 2],
+      'space-before-function-paren': ['error', 'never'],
+      'keyword-spacing': ['error', { before: true, after: true }],
+      'space-infix-ops': 'error',
+      'eol-last': ['error', 'always'],
+      'no-trailing-spaces': 'error',
+      'no-multiple-empty-lines': ['error', { max: 1 }],
+      'max-lines': 'off', // Tests can be longer
+      complexity: 'off', // Tests can be complex
+      'sonarjs/cognitive-complexity': 'off', // Tests can be complex
+      'sonarjs/no-duplicate-string': ['warn', { threshold: 5 }], // More lenient for tests
+
+      // Allow console statements in tests for debugging
+      'no-console': 'off',
+    },
+  },
+  {
     files: ['vite.config.ts'],
     languageOptions: {
       ecmaVersion: 2020,

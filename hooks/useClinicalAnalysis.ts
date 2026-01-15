@@ -66,7 +66,7 @@ const optimizeImage = (file: File): Promise<string> => {
           0.85,
         );
         const base64Part = dataUrl.split(',')[1];
-        if (!base64Part) {
+        if (base64Part === undefined || base64Part === null || base64Part === '') {
           reject(new Error('Failed to extract base64 data from data URL'));
           return;
         }
@@ -195,7 +195,8 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     const initCoreServices = async () => {
       try {
         encryptionKeyRef.current = await CryptoService.generateEphemeralKey();
-        const db = await createDatabase('./agent-memory.db');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const db: any = await createDatabase('./agent-memory.db');
         const embedder = new EmbeddingService({
           model: 'Xenova/all-MiniLM-L6-v2',
           dimension: 384,
@@ -331,12 +332,14 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     [initAIServices],
   );
 
-  async function submitAnalysis(_: unknown, __: FormData) {
-    return await executeAnalysis();
+  async function submitAnalysis(_: unknown, __: FormData): Promise<ClinicalAnalysisResult | null> {
+    const result = await executeAnalysis();
+    return result && result.success ? (result.data as ClinicalAnalysisResult) : null;
   }
 
   const [, action, pending] = useActionState(submitAnalysis, null);
 
+  // eslint-disable-next-line complexity
   const executeAnalysis = useCallback(async () => {
     if (!file) return null;
     if (!GEMINI_API_KEY && !privacyMode) {
@@ -394,6 +397,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
         file,
         base64Image,
         imageHash,
+        currentState,
         setResult,
         setWarning,
         analysisPayload,

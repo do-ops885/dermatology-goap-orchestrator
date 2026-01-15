@@ -54,7 +54,7 @@ export type NullableFields<T> = {
 
 export type MaybePromise<T> = T | Promise<T>;
 
-export type AsyncReturnType<T extends (...args: unknown[]) => unknown> = Promise<
+export type AsyncReturnType<T extends (..._args: unknown[]) => unknown> = Promise<
   Awaited<ReturnType<T>>
 >;
 

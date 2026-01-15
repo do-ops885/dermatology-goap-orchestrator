@@ -59,7 +59,7 @@ const AlertMessage: React.FC<{
   message: string | null;
   type: 'error' | 'warning';
 }> = ({ message, type }) => {
-  if (!message) return null;
+  if (message === undefined || message === null || message === '') return null;
 
   const isError = type === 'error';
   const bgColor = isError ? 'bg-red-50' : 'bg-amber-50';
@@ -92,19 +92,22 @@ const ImagePreview: React.FC<{
     />
 
     <AnimatePresence>
-      {heatmapOverlay && showHeatmap && (
-        <motion.img
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.6 }}
-          exit={{ opacity: 0 }}
-          src={heatmapOverlay}
-          className="absolute inset-0 w-full h-full object-cover rounded-2xl pointer-events-none mix-blend-multiply"
-          alt="AI Attention Map"
-        />
-      )}
+      {heatmapOverlay !== undefined &&
+        heatmapOverlay !== null &&
+        heatmapOverlay !== '' &&
+        showHeatmap && (
+          <motion.img
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.6 }}
+            exit={{ opacity: 0 }}
+            src={heatmapOverlay}
+            className="absolute inset-0 w-full h-full object-cover rounded-2xl pointer-events-none mix-blend-multiply"
+            alt="AI Attention Map"
+          />
+        )}
     </AnimatePresence>
 
-    {heatmapOverlay && (
+    {heatmapOverlay !== undefined && heatmapOverlay !== null && heatmapOverlay !== '' && (
       <button
         onClick={(e: React.MouseEvent) => {
           e.stopPropagation();
@@ -178,7 +181,7 @@ export const AnalysisIntake: React.FC<AnalysisIntakeProps> = ({
   const [showHeatmap, setShowHeatmap] = useState(true);
 
   return (
-    <div className="glass-panel p-6 rounded-2xl flex flex-col gap-4">
+    <div data-testid="analysis-intake" className="glass-panel p-6 rounded-2xl flex flex-col gap-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-bold font-grotesk text-stone-800">Analysis Intake</h2>
         <PrivacyToggle privacyMode={privacyMode} setPrivacyMode={setPrivacyMode} />
@@ -188,7 +191,7 @@ export const AnalysisIntake: React.FC<AnalysisIntakeProps> = ({
       <AlertMessage message={warning} type="warning" />
 
       <div className="relative group border-2 border-dashed border-stone-200 rounded-2xl h-64 flex flex-col items-center justify-center transition-all bg-white/40 hover:bg-white/60 hover:border-terracotta-300 overflow-hidden">
-        {preview ? (
+        {preview !== undefined && preview !== null && preview !== '' ? (
           <ImagePreview
             preview={preview}
             heatmapOverlay={heatmapOverlay}

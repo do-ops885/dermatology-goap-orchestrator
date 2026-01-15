@@ -1,10 +1,13 @@
-import type { WorldState, AgentAction } from '../../types';
+import type { WorldState, AgentAction, ClinicalAnalysisResult } from '../../types';
+import type { Dispatch, SetStateAction } from 'react';
 import type { ReasoningBank, LocalLLMService } from '../agentDB';
 import type AgentDB from '../agentDB';
 import type { ExecutionAgentRecord } from '../goap/agent';
 import type { RouterAgent } from '../router';
 import type { VisionSpecialist } from '../vision';
 import type { GoogleGenAI } from '@google/genai';
+
+export type { ClinicalAnalysisResult };
 
 export interface AgentContext {
   ai: GoogleGenAI;
@@ -18,7 +21,7 @@ export interface AgentContext {
   imageHash: string;
   currentState: WorldState;
   actionTrace: string[];
-  setResult: (_res: unknown) => void;
+  setResult: Dispatch<SetStateAction<ClinicalAnalysisResult | null>>;
   setWarning: (_msg: string | null) => void;
   analysisPayload: Record<string, unknown>;
   encryptionKey: CryptoKey | null;

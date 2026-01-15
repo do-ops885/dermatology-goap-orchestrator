@@ -3,6 +3,7 @@ import { Logger } from '../logger';
 import { cleanAndParseJSON } from './types';
 
 import type { AgentContext, ExecutorResult } from './types';
+import type { FitzpatrickType } from '../../types';
 
 export const skinToneDetectionExecutor = async ({
   ai,
@@ -75,7 +76,7 @@ export const skinToneDetectionExecutor = async ({
       status: isLowConfidence ? 'LOW_CONFIDENCE_FALLBACK' : 'HIGH_CONFIDENCE',
     },
     newStateUpdates: {
-      fitzpatrick_type: toneJson.fitzpatrick_type as string,
+      fitzpatrick_type: toneJson.fitzpatrick_type as FitzpatrickType,
       confidence_score: confidence,
       is_low_confidence: isLowConfidence,
       skin_tone_detected: true,
