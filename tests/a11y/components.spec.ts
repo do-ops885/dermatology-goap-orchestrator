@@ -42,6 +42,7 @@ test.describe('Accessibility - Components', () => {
       include: 'main',
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(results.violations.filter((v: any) => v.impact === 'critical')).toEqual([]);
   });
 
@@ -49,12 +50,13 @@ test.describe('Accessibility - Components', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    page.locator('[data-testid="fairness-dashboard"]');
+    void page.locator('[data-testid="fairness-dashboard"]');
 
     const results = await axe.evaluate(page, {
       include: '[data-testid="fairness-dashboard"]',
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(results.violations.filter((v: any) => v.id === 'aria-chart')).toEqual([]);
   });
 
@@ -74,12 +76,13 @@ test.describe('Accessibility - Components', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    page.locator('[data-testid="patient-safety"]');
+    void page.locator('[data-testid="patient-safety"]');
 
     const results = await axe.evaluate(page, {
       include: '[data-testid="patient-safety"]',
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(results.violations.filter((v: any) => v.id === 'aria-live-region')).toEqual([]);
   });
 });

@@ -6,12 +6,13 @@ test.describe('Accessibility - Forms', () => {
   test('File input has proper label', async ({ page }) => {
     await page.goto('/');
 
-    await page.locator('input[type="file"]');
+    void page.locator('input[type="file"]');
 
     const results = await axe.evaluate(page, {
       include: 'input[type="file"]',
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(results.violations.filter((v: any) => v.id === 'label')).toEqual([]);
   });
 
@@ -30,12 +31,13 @@ test.describe('Accessibility - Forms', () => {
   test('Confidence slider has proper labels', async ({ page }) => {
     await page.click('button:has-text("Provide Feedback")');
 
-    await page.locator('input[type="range"]');
+    void page.locator('input[type="range"]');
 
     const results = await axe.evaluate(page, {
       include: 'input[type="range"]',
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(results.violations.filter((v: any) => v.id === 'slider')).toEqual([]);
   });
 });
