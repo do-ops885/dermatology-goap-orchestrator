@@ -288,7 +288,7 @@ export default [
       quotes: ['error', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
       semi: ['error', 'always'],
       indent: ['error', 2],
-      'space-before-function-paren': ['error', 'never'],
+      'space-before-function-paren': 'off',
       'keyword-spacing': ['error', { before: true, after: true }],
       'space-infix-ops': 'error',
       'eol-last': ['error', 'always'],
