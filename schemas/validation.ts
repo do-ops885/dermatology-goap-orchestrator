@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { FitzpatrickType } from '../types';
 
 export const FitzpatrickTypeSchema = z.enum(['I', 'II', 'III', 'IV', 'V', 'VI']);
 

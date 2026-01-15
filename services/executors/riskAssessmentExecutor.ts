@@ -10,7 +10,7 @@ export const riskAssessmentExecutor = async ({
 }: AgentContext): Promise<ExecutorResult> => {
   const lesions = Array.isArray(analysisPayload.lesions) ? analysisPayload.lesions : [];
   const primaryLesion = lesions[0];
-  
+
   const prompt = `Assess clinical risk for Fitzpatrick ${String(currentState.fitzpatrick_type)} with ${String(analysisPayload.risk_label)}. 
   Primary detection: ${String(primaryLesion?.type)}.
   Check for bias in automated assessment. Return 1 concise sentence explaining the risk level.`;
