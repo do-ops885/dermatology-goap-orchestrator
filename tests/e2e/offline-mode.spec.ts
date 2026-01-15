@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer';
+
 import { test, expect } from '@playwright/test';
 
 test.describe('Scenario D: Offline Mode - Local Inference Fallback', () => {

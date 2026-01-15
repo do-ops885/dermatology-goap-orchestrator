@@ -1,7 +1,16 @@
 import { Logger } from '../logger';
 
 import type { AgentAction, WorldState } from '../../types';
+import type { AgentContext } from '../executors/types';
 import type { GOAPPlanner } from '../goap';
+
+export type ExecutorFn = (_ctx: AgentContext) => Promise<ExecutorResult>;
+
+export interface ExecutorResult {
+  metadata: Record<string, unknown>;
+  newStateUpdates?: Partial<WorldState>;
+  shouldReplan?: boolean;
+}
 
 export interface ExecutionAgentRecord {
   id: string;
@@ -21,12 +30,6 @@ export interface ExecutionTrace {
   agents: ExecutionAgentRecord[];
   finalWorldState: WorldState;
 }
-
-export type ExecutorFn = (_ctx: Record<string, unknown>) => Promise<{
-  metadata?: Record<string, unknown>;
-  newStateUpdates?: Partial<WorldState>;
-  shouldReplan?: boolean;
-}>;
 
 export type ExecutorMap = Record<string, ExecutorFn>;
 
@@ -48,7 +51,7 @@ export class GoapAgent {
   public async execute(
     startState: WorldState,
     goalState: Partial<WorldState>,
-    ctx: Record<string, unknown>,
+    ctx: AgentContext,
   ): Promise<ExecutionTrace> {
     const runId = 'run_' + Math.random().toString(36).slice(2, 9);
     const startTime = Date.now();
@@ -107,7 +110,7 @@ export class GoapAgent {
       }
 
       try {
-        const execPromise = executor({ ...ctx, currentState, action });
+        const execPromise = executor(ctx);
         const result = await Promise.race([
           execPromise,
           new Promise<never>((_, reject) =>

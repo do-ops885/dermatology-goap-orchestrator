@@ -14,9 +14,9 @@ export function detectLesions(features: Float32Array): {
 
   for (let i = 0; i < Math.min(features.length, 100); i++) {
     const val = features[i];
-    if (val > 0.8) melanomaScore += val * 0.3;
-    if (val > 0.6 && val <= 0.8) bccScore += val * 0.2;
-    if (val > 0.7) dysplasticScore += val * 0.25;
+    if (val !== undefined && val > 0.8) melanomaScore += val * 0.3;
+    if (val !== undefined && val > 0.6 && val <= 0.8) bccScore += val * 0.2;
+    if (val !== undefined && val > 0.7) dysplasticScore += val * 0.25;
   }
 
   if (melanomaScore > 0.5) {

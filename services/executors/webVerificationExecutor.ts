@@ -57,9 +57,13 @@ export const webVerificationExecutor = async ({
     });
 
     const sources = (response.candidates?.[0]?.groundingMetadata?.groundingChunks || [])
-      .map((c: WebSource) => ({
-        title: c.title,
-        uri: c.uri,
+      .map((chunk: unknown) => ({
+        title:
+          (chunk as { webSearchEntities?: Array<{ name?: string }>; title?: string })
+            ?.webSearchEntities?.[0]?.name || (chunk as { title?: string })?.title,
+        uri:
+          (chunk as { webSearchEntities?: Array<{ uri?: string }>; uri?: string })
+            ?.webSearchEntities?.[0]?.uri || (chunk as { uri?: string })?.uri,
       }))
       .filter(isValidSource)
       .slice(0, 3);

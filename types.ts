@@ -139,6 +139,23 @@ export interface AgentLogEntry {
   metadata?: Record<string, unknown> | undefined;
 }
 
+export interface ClinicalAnalysisResult {
+  skinTone?: string;
+  confidence?: number;
+  lesions?: {
+    type: string;
+    confidence: number;
+    heatmap?: string;
+  }[];
+  riskLevel?: string;
+  recommendation?: string;
+  fairnessMetrics?: unknown;
+  similarCases?: unknown[];
+  webVerification?: unknown;
+  encryptedPayload?: string;
+  auditHash?: string;
+}
+
 // AgentDB Pattern Types
 export interface AgentDBPattern {
   id: string;

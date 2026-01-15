@@ -1,5 +1,5 @@
 import type { AgentContext, ExecutorResult, ClinicalAnalysisResult } from './types';
-import type { ReasoningPattern } from '../types';
+import type { ReasoningPattern } from '../../types';
 
 export const similaritySearchExecutor = async ({
   reasoningBank,

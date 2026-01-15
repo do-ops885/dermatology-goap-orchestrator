@@ -392,7 +392,7 @@ export const DiagnosticSummary: React.FC<DiagnosticSummaryProps> = ({ result }) 
           {showFeedback && result.lesions.length > 0 && (
             <ClinicianFeedback
               analysisId={result.id}
-              currentDiagnosis={result.lesions[0].type}
+              currentDiagnosis={result.lesions[0]?.type ?? 'Unknown'}
               onSubmit={(feedback) => {
                 void handleFeedback(feedback);
               }}

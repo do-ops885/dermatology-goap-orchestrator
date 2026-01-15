@@ -19,7 +19,7 @@ test.describe('Accessibility - Forms', () => {
   test('Feedback form is accessible', async ({ page }) => {
     await page.click('button:has-text("Provide Feedback")');
 
-    await page.locator('form');
+    page.locator('form');
 
     const results = await axe.evaluate(page, {
       include: 'form',

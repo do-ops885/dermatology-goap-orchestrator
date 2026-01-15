@@ -27,6 +27,9 @@ export const CryptoService = {
     const encodedData = encoder.encode(JSON.stringify(data));
     // 12 bytes IV is standard for GCM
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    if (iv === null) {
+      throw new Error('Failed to generate IV');
+    }
 
     const ciphertext = await window.crypto.subtle.encrypt(
       { name: 'AES-GCM', iv },
@@ -57,7 +60,10 @@ export const CryptoService = {
     const bytes = new Uint8Array(buffer);
     const len = bytes.byteLength;
     for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
+      const byte = bytes[i];
+      if (byte !== undefined) {
+        binary += String.fromCharCode(byte);
+      }
     }
     return btoa(binary);
   },

@@ -33,7 +33,7 @@ export const optimizeImage = (file: File): Promise<string> => {
           file.type === 'image/png' ? 'image/png' : 'image/jpeg',
           0.85,
         );
-        resolve(dataUrl.split(',')[1]);
+        resolve(dataUrl.split(',')[1] || '');
       };
       img.onerror = (err) => {
         reject(new Error(err instanceof Error ? err.message : 'Image load failed'));

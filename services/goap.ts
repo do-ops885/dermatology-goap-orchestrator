@@ -208,12 +208,13 @@ export class GOAPPlanner {
         );
 
         if (existingNodeIndex !== -1) {
-          if (g < openList[existingNodeIndex].g) {
+          const existingNode = openList[existingNodeIndex];
+          if (existingNode && g < existingNode.g) {
             // Found a better path to an existing node
-            openList[existingNodeIndex].g = g;
-            openList[existingNodeIndex].f = f;
-            openList[existingNodeIndex].parent = currentNode;
-            openList[existingNodeIndex].action = action;
+            existingNode.g = g;
+            existingNode.f = f;
+            existingNode.parent = currentNode;
+            existingNode.action = action;
           }
         } else {
           // New node discovered
@@ -256,6 +257,7 @@ export class GOAPPlanner {
 
     while (queue.length > 0) {
       const item = queue.shift();
+      if (!item) continue;
       const itemKeyStr = `${item.key}:${item.value}`;
 
       if (visited.has(itemKeyStr)) continue;

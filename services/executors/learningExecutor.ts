@@ -38,37 +38,39 @@ export const learningExecutor = async ({
     const lesions = analysisPayload.lesions as Lesion[] | undefined;
     if (lesions && lesions.length > 0) {
       const primaryLesion = lesions[0];
-      const fitzpatrick = currentState.fitzpatrick_type || 'I';
+      if (primaryLesion) {
+        const fitzpatrick = currentState.fitzpatrick_type || 'I';
 
-      const metadata: ReasoningPatternMetadata = {
-        fitzpatrick,
-        risk: (analysisPayload.risk_label ?? primaryLesion.risk) as string,
-        lesion_type: primaryLesion.type,
-        verified: false, // Will be verified by clinician feedback
-        confidence_score: currentState.confidence_score,
-        fairness_score: currentState.fairness_score,
-        safety_calibrated: currentState.safety_calibrated,
-        context: `Fitzpatrick ${fitzpatrick}, ${primaryLesion.type}, Risk: ${primaryLesion.risk}`,
-        analysis_timestamp: Date.now(),
-      };
+        const metadata: ReasoningPatternMetadata = {
+          fitzpatrick,
+          risk: (analysisPayload.risk_label ?? primaryLesion.risk) as string,
+          lesion_type: primaryLesion.type,
+          verified: false, // Will be verified by clinician feedback
+          confidence_score: currentState.confidence_score,
+          fairness_score: currentState.fairness_score,
+          safety_calibrated: currentState.safety_calibrated,
+          context: `Fitzpatrick ${fitzpatrick}, ${primaryLesion.type}, Risk: ${primaryLesion.risk}`,
+          analysis_timestamp: Date.now(),
+        };
 
-      const pattern: ReasoningPattern = {
-        id: Date.now(),
-        taskType: 'diagnosis',
-        approach: `Fairness Score ${currentState.fairness_score.toFixed(2)}`,
-        outcome: analysisPayload.risk_label ?? primaryLesion.type,
-        successRate: (analysisPayload.confidence as number) || primaryLesion.confidence || 0.9,
-        timestamp: Date.now(),
-        metadata,
-      };
+        const pattern: ReasoningPattern = {
+          id: Date.now(),
+          taskType: 'diagnosis',
+          approach: `Fairness Score ${currentState.fairness_score.toFixed(2)}`,
+          outcome: String(analysisPayload.risk_label ?? primaryLesion.type ?? 'unknown'),
+          successRate: (analysisPayload.confidence as number) || primaryLesion.confidence || 0.9,
+          timestamp: Date.now(),
+          metadata,
+        };
 
-      await reasoningBank.storePattern(pattern as unknown as ReasoningPattern);
+        await reasoningBank.storePattern(pattern);
 
-      Logger.info('Learning-Agent', 'Diagnosis pattern stored', {
-        lesion: primaryLesion.type,
-        fitzpatrick,
-        fairness: currentState.fairness_score,
-      });
+        Logger.info('Learning-Agent', 'Diagnosis pattern stored', {
+          lesion: primaryLesion.type,
+          fitzpatrick,
+          fairness: currentState.fairness_score,
+        });
+      }
     }
 
     // Check for pending clinician feedback and integrate it
@@ -94,13 +96,13 @@ export const learningExecutor = async ({
         id: Date.now(),
         taskType: 'clinician_feedback',
         approach: feedback.isCorrection ? 'correction' : 'confirmation',
-        outcome: feedback.correctedDiagnosis ?? feedback.diagnosis,
+        outcome: String(feedback.correctedDiagnosis ?? feedback.diagnosis),
         successRate: feedback.confidence,
         timestamp: feedback.timestamp,
         metadata,
       };
 
-      await reasoningBank.storePattern(pattern as unknown as ReasoningPattern);
+      await reasoningBank.storePattern(pattern);
 
       Logger.info('Learning-Agent', 'Clinician feedback integrated', {
         feedbackId: feedback.id,

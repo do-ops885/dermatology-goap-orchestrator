@@ -75,7 +75,7 @@ export const skinToneDetectionExecutor = async ({
       status: isLowConfidence ? 'LOW_CONFIDENCE_FALLBACK' : 'HIGH_CONFIDENCE',
     },
     newStateUpdates: {
-      fitzpatrick_type: toneJson.fitzpatrick_type,
+      fitzpatrick_type: toneJson.fitzpatrick_type as string,
       confidence_score: confidence,
       is_low_confidence: isLowConfidence,
       skin_tone_detected: true,

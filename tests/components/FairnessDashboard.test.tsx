@@ -1,15 +1,28 @@
 import { render, screen, waitFor, act } from '@testing-library/react';
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import FairnessDashboard from '../../components/FairnessDashboard';
 import AgentDB from '../../services/agentDB';
+
+import type { FairnessStats, FeedbackStats } from '../../types';
+
+interface MockResponsiveContainerProps {
+  children: React.ReactNode;
+}
+
+interface MockAgentDBInstance {
+  getFairnessMetrics: () => Record<string, FairnessStats>;
+  getLiveStats: () => Promise<Record<string, FairnessStats>>;
+  getFeedbackStats: () => Promise<FeedbackStats>;
+}
 
 // Mock Recharts to avoid ResizeObserver issues in JSDOM
 vi.mock('recharts', async () => {
   const OriginalModule = await vi.importActual('recharts');
   return {
     ...OriginalModule,
-    ResponsiveContainer: ({ children }: any) => (
+    ResponsiveContainer: ({ children }: MockResponsiveContainerProps) => (
       <div style={{ width: 500, height: 300 }}>{children}</div>
     ),
   };
@@ -21,7 +34,7 @@ describe('FairnessDashboard', () => {
   });
 
   it('renders initial state correctly', async () => {
-    const getInstanceSpy = vi.spyOn(AgentDB, 'getInstance').mockReturnValue({
+    const mockInstance: MockAgentDBInstance = {
       getFairnessMetrics: () => ({}),
       getLiveStats: vi.fn().mockResolvedValue({}),
       getFeedbackStats: vi.fn().mockResolvedValue({
@@ -30,7 +43,11 @@ describe('FairnessDashboard', () => {
         confirmations: 0,
         avgConfidence: 0,
       }),
-    } as any);
+    };
+
+    const getInstanceSpy = vi
+      .spyOn(AgentDB, 'getInstance')
+      .mockReturnValue(mockInstance as unknown as AgentDB);
 
     await act(async () => {
       render(<FairnessDashboard />);
@@ -44,7 +61,7 @@ describe('FairnessDashboard', () => {
   });
 
   it('fetches and displays metrics from AgentDB', async () => {
-    const mockMetrics = {
+    const mockMetrics: Record<string, FairnessStats> = {
       I: { tpr: 0.95, fpr: 0.1, count: 10 },
       II: { tpr: 0.9, fpr: 0.1, count: 5 },
       III: { tpr: 0.8, fpr: 0.2, count: 5 },
@@ -53,7 +70,7 @@ describe('FairnessDashboard', () => {
       VI: { tpr: 0.88, fpr: 0.12, count: 15 },
     };
 
-    const getInstanceSpy = vi.spyOn(AgentDB, 'getInstance').mockReturnValue({
+    const mockInstance: MockAgentDBInstance = {
       getFairnessMetrics: () => mockMetrics,
       getLiveStats: vi.fn().mockResolvedValue(mockMetrics),
       getFeedbackStats: vi.fn().mockResolvedValue({
@@ -62,7 +79,11 @@ describe('FairnessDashboard', () => {
         confirmations: 0,
         avgConfidence: 0,
       }),
-    } as any);
+    };
+
+    const getInstanceSpy = vi
+      .spyOn(AgentDB, 'getInstance')
+      .mockReturnValue(mockInstance as unknown as AgentDB);
 
     await act(async () => {
       render(<FairnessDashboard />);
@@ -79,7 +100,7 @@ describe('FairnessDashboard', () => {
   });
 
   it('shows report button when callback provided', async () => {
-    const getInstanceSpy = vi.spyOn(AgentDB, 'getInstance').mockReturnValue({
+    const mockInstance: MockAgentDBInstance = {
       getFairnessMetrics: () => ({}),
       getLiveStats: vi.fn().mockResolvedValue({}),
       getFeedbackStats: vi.fn().mockResolvedValue({
@@ -88,7 +109,11 @@ describe('FairnessDashboard', () => {
         confirmations: 0,
         avgConfidence: 0,
       }),
-    } as any);
+    };
+
+    const getInstanceSpy = vi
+      .spyOn(AgentDB, 'getInstance')
+      .mockReturnValue(mockInstance as unknown as AgentDB);
 
     const onOpen = vi.fn();
 

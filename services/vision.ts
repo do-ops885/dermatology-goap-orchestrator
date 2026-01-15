@@ -108,6 +108,7 @@ export class VisionSpecialist {
 
         // Deterministic mapping to simulated derm classes for the prototype
         const mappedResults = sortedIndices.map((item, index) => {
+          if (!item) return { label: 'Unknown', score: 0 };
           const mappedIndex = (item.i + Math.floor(item.p * 100)) % CLASSES.length;
           return {
             label: CLASSES[mappedIndex].name,
@@ -160,6 +161,9 @@ export class VisionSpecialist {
       const x = tf.linspace(-1, 1, w);
       const y = tf.linspace(-1, 1, h);
       const [xx, yy] = tf.meshgrid(x, y);
+      if (!xx || !yy) {
+        throw new Error('Failed to create meshgrid');
+      }
       const gaussian = tf.exp(xx.square().add(yy.square()).neg().mul(2));
 
       // Combined Activation Map
@@ -178,12 +182,12 @@ export class VisionSpecialist {
       const heatmap = tf.stack([r, g, b], 2);
 
       // D. Resize for output
-      const resized = tf.image.resizeBilinear(heatmap, [h, w]) as tf.Tensor3D;
+      const resized = tf.image.resizeBilinear(heatmap as tf.Tensor3D, [h, w]);
 
       // E. Draw to Canvas to get DataURL
       const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
+      canvas.width = w || 224;
+      canvas.height = h || 224;
       tf.browser.toPixels(resized, canvas);
 
       return canvas.toDataURL();

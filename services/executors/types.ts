@@ -1,25 +1,10 @@
-import type { WorldState } from '../../types';
+import type { WorldState, AgentAction } from '../../types';
 import type { ReasoningBank, LocalLLMService } from '../agentDB';
 import type AgentDB from '../agentDB';
+import type { ExecutionAgentRecord } from '../goap/agent';
 import type { RouterAgent } from '../router';
 import type { VisionSpecialist } from '../vision';
 import type { GoogleGenAI } from '@google/genai';
-
-export interface AgentExecutor {
-  agentId: string;
-  cost: number;
-  execute(_context: AgentContext): Promise<ExecutorResult>;
-}
-
-export interface ClinicalAnalysisResult {
-  id: string;
-  timestamp: number;
-  fitzpatrickType: string;
-  lesions: { type: string; confidence: number; risk: string }[];
-  recommendations: string[];
-  signature: string;
-  [key: string]: unknown;
-}
 
 export interface AgentContext {
   ai: GoogleGenAI;
@@ -39,6 +24,9 @@ export interface AgentContext {
   encryptionKey: CryptoKey | null;
   lastAuditHashRef: { current: string };
   privacyMode: boolean;
+  _action?: AgentAction;
+  onAgentStart?: (_action: AgentAction) => string | void;
+  onAgentEnd?: (_action: AgentAction, _record: ExecutionAgentRecord) => void;
 }
 
 export interface ExecutorResult {

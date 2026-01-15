@@ -18,9 +18,11 @@ export function detectSkinTone(imageData: ImageData): {
       const g = imageData.data[idx + 1];
       const b = imageData.data[idx + 2];
 
-      const l = 0.299 * r + 0.587 * g + 0.114 * b;
-      totalL += l;
-      pixelCount++;
+      if (r !== undefined && g !== undefined && b !== undefined) {
+        const l = 0.299 * r + 0.587 * g + 0.114 * b;
+        totalL += l;
+        pixelCount++;
+      }
     }
   }
 
