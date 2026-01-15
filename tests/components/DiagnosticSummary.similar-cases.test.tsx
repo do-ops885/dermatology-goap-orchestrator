@@ -12,8 +12,8 @@ interface ExtendedAnalysisResult extends AnalysisResult {
     outcome?: string;
     context?: string;
     taskType?: string;
-    score?: number;,
-  }>;,
+    score?: number;
+  }>;
 }
 
 const mockResult: AnalysisResult = {
@@ -48,12 +48,12 @@ describe('DiagnosticSummary Similar Cases', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setupGlobalMocks();
-    mockAgentDBSpy();,
+    mockAgentDBSpy();
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();,
+    vi.restoreAllMocks();
   });
 
   it('renders similar cases when present', () => {
@@ -78,12 +78,12 @@ describe('DiagnosticSummary Similar Cases', () => {
     expect(screen.getByText('Melanoma Confirmed')).toBeInTheDocument();
     expect(screen.getByText('Benign Nevi')).toBeInTheDocument();
     expect(screen.getByText('Sim: 92%')).toBeInTheDocument();
-    expect(screen.getByText('Sim: 75%')).toBeInTheDocument();,
+    expect(screen.getByText('Sim: 75%')).toBeInTheDocument();
   });
 
   it('does not render similar cases when absent', () => {
     render(<DiagnosticSummary result={mockResult} />);
-    expect(screen.queryByText('Similar Clinical Patterns')).not.toBeInTheDocument();,
+    expect(screen.queryByText('Similar Clinical Patterns')).not.toBeInTheDocument();
   });
 
   it('displays fallback text when outcome is missing', () => {
@@ -98,7 +98,7 @@ describe('DiagnosticSummary Similar Cases', () => {
       ],
     };
     render(<DiagnosticSummary result={resultWithFallbackCase} />);
-    expect(screen.getByText('Match Found')).toBeInTheDocument();,
+    expect(screen.getByText('Match Found')).toBeInTheDocument();
   });
 
   it('displays context when available', () => {
@@ -113,7 +113,7 @@ describe('DiagnosticSummary Similar Cases', () => {
       ],
     };
     render(<DiagnosticSummary result={resultWithContext} />);
-    expect(screen.getByText('Sun-damaged skin')).toBeInTheDocument();,
+    expect(screen.getByText('Sun-damaged skin')).toBeInTheDocument();
   });
 
   it('displays task type when context is missing', () => {
@@ -128,6 +128,6 @@ describe('DiagnosticSummary Similar Cases', () => {
       ],
     };
     render(<DiagnosticSummary result={resultWithTaskType} />);
-    expect(screen.getByText('Melanoma Detection')).toBeInTheDocument();,
-  });,
+    expect(screen.getByText('Melanoma Detection')).toBeInTheDocument();
+  });
 });

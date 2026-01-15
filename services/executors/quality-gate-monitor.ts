@@ -87,7 +87,7 @@ export class QualityGateMonitor {
 
     for (let i = 0; i < phases.length; i++) {
       const phase = phases[i]!;
-      if ((this._state as Record<string, boolean>)[phase.key]) {
+      if ((this._state as Record<string, boolean | undefined>)[phase.key] === true) {
         completed++;
       } else {
         currentPhase = phase.name;

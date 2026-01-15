@@ -44,7 +44,8 @@ export const webVerificationExecutor = async ({
 
   const lesions = analysisPayload.lesions as { type?: string }[] | undefined;
   const lesionType = lesions?.[0]?.type ?? 'skin condition';
-  const query = `latest clinical guidelines and risk factors for ${lesionType} in Fitzpatrick skin type ${String(currentState.fitzpatrick_type) || 'unspecified'}`;
+  const fitzpatrickType = String(currentState.fitzpatrick_type ?? 'unspecified');
+  const query = `latest clinical guidelines and risk factors for ${lesionType} in Fitzpatrick skin type ${fitzpatrickType}`;
 
   try {
     const response = await ai.models.generateContent({

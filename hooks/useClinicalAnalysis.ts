@@ -195,8 +195,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     const initCoreServices = async () => {
       try {
         encryptionKeyRef.current = await CryptoService.generateEphemeralKey();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const db: any = await createDatabase('./agent-memory.db');
+        const db = await createDatabase('./agent-memory.db');
         const embedder = new EmbeddingService({
           model: 'Xenova/all-MiniLM-L6-v2',
           dimension: 384,

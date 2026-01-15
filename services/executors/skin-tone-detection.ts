@@ -1,13 +1,4 @@
-export function detectSkinTone(imageData: ImageData): {
-  fitzpatrick: string;
-  monkScale: string;
-  confidence: number;
-  itaEstimate: number;
-} {
-  if (imageData.width === 0 || imageData.height === 0) {
-    throw new Error('Invalid image data provided');
-  }
-
+function calculateLuminance(imageData: ImageData): { avgL: number; pixelCount: number } {
   let totalL = 0;
   let pixelCount = 0;
 
@@ -27,9 +18,19 @@ export function detectSkinTone(imageData: ImageData): {
   }
 
   const avgL = pixelCount > 0 ? totalL / pixelCount : 0;
-  const ita = Math.atan2(avgL - 115, 160) * (180 / Math.PI);
-  const normalizedITA = Math.max(0, Math.min(90, -ita + 90));
+  return { avgL, pixelCount };
+}
 
+function calculateITA(avgL: number): number {
+  const ita = Math.atan2(avgL - 115, 160) * (180 / Math.PI);
+  return Math.max(0, Math.min(90, -ita + 90));
+}
+
+function getSkinToneClassification(normalizedITA: number): {
+  fitzpatrick: string;
+  monkScale: string;
+  confidence: number;
+} {
   let fitzpatrick: string;
   let monkScale: string;
   let confidence: number;
@@ -60,9 +61,34 @@ export function detectSkinTone(imageData: ImageData): {
     confidence = 0.75;
   }
 
+  return { fitzpatrick, monkScale, confidence };
+}
+
+function adjustConfidenceBasedOnLuminance(confidence: number, avgL: number): number {
   if (avgL < 60 || avgL > 200) {
     confidence *= 0.7;
   }
+  return confidence;
+}
+
+export function detectSkinTone(imageData: ImageData): {
+  fitzpatrick: string;
+  monkScale: string;
+  confidence: number;
+  itaEstimate: number;
+} {
+  if (imageData.width === 0 || imageData.height === 0) {
+    throw new Error('Invalid image data provided');
+  }
+
+  const { avgL } = calculateLuminance(imageData);
+  const normalizedITA = calculateITA(avgL);
+  const {
+    fitzpatrick,
+    monkScale,
+    confidence: baseConfidence,
+  } = getSkinToneClassification(normalizedITA);
+  const confidence = adjustConfidenceBasedOnLuminance(baseConfidence, avgL);
 
   return {
     fitzpatrick,

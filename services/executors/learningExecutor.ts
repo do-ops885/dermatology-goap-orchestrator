@@ -28,6 +28,8 @@ interface ClinicianFeedback {
   isCorrection: boolean;
 }
 
+const AGENT_NAME = 'Learning-Agent';
+
 export const learningExecutor = async ({
   reasoningBank,
   currentState,
@@ -51,7 +53,7 @@ export const learningExecutor = async ({
       },
     };
   } catch (error) {
-    Logger.error('Learning-Agent', 'Failed to store patterns', { error });
+    Logger.error(AGENT_NAME, 'Failed to store patterns', { error });
     return {
       metadata: {
         memory_updated: 'failed',
@@ -72,7 +74,7 @@ async function storeDiagnosisPattern(
   const primaryLesion = lesions[0];
   if (!primaryLesion) return;
 
-  const fitzpatrick = currentState.fitzpatrick_type || 'I';
+  const fitzpatrick = currentState.fitzpatrick_type ?? 'I';
 
   const metadata: ReasoningPatternMetadata = {
     fitzpatrick,
@@ -91,14 +93,16 @@ async function storeDiagnosisPattern(
     taskType: 'diagnosis',
     approach: `Fairness Score ${currentState.fairness_score.toFixed(2)}`,
     outcome: String(analysisPayload.risk_label ?? primaryLesion.type ?? 'unknown'),
-    successRate: (analysisPayload.confidence as number) || primaryLesion.confidence || 0.9,
+    successRate: (analysisPayload.confidence as number) ?? primaryLesion.confidence ?? 0.9,
     timestamp: Date.now(),
     metadata,
   };
 
-  await reasoningBank.storePattern(pattern);
+  await (reasoningBank as { storePattern: (p: ReasoningPattern) => Promise<void> }).storePattern(
+    pattern,
+  );
 
-  Logger.info('Learning-Agent', 'Diagnosis pattern stored', {
+  Logger.info(AGENT_NAME, 'Diagnosis pattern stored', {
     lesion: primaryLesion.type,
     fitzpatrick,
     fairness: currentState.fairness_score,
@@ -112,7 +116,7 @@ async function storeClinicianFeedback(
 ): Promise<void> {
   if (!feedback) return;
 
-  const fitzpatrick = feedback.fitzpatrickType || currentState.fitzpatrick_type || 'I';
+  const fitzpatrick = feedback.fitzpatrickType ?? currentState.fitzpatrick_type ?? 'I';
 
   const metadata: ReasoningPatternMetadata = {
     feedbackId: feedback.id,
@@ -138,9 +142,11 @@ async function storeClinicianFeedback(
     metadata,
   };
 
-  await reasoningBank.storePattern(pattern);
+  await (reasoningBank as { storePattern: (p: ReasoningPattern) => Promise<void> }).storePattern(
+    pattern,
+  );
 
-  Logger.info('Learning-Agent', 'Clinician feedback integrated', {
+  Logger.info(AGENT_NAME, 'Clinician feedback integrated', {
     feedbackId: feedback.id,
     isCorrection: feedback.isCorrection,
     fitzpatrick: feedback.fitzpatrickType,

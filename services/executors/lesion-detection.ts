@@ -72,7 +72,7 @@ function detectSpecificLesions(scores: {
 function createLesion(
   type: string,
   confidence: number,
-  riskFn: (c: number) => 'Low' | 'Medium' | 'High',
+  riskFn: (_c: number) => 'Low' | 'Medium' | 'High',
 ): { type: string; confidence: number; risk: 'Low' | 'Medium' | 'High' } {
   const roundedConfidence = Math.round(confidence * 100) / 100;
   return {

@@ -11,7 +11,7 @@ interface ExtendedAnalysisResult extends AnalysisResult {
   differential_diagnosis?: string[];
   riskAssessment?: string;
   reasoning?: string;
-  riskEngine?: string;,
+  riskEngine?: string;
 }
 
 const mockResult: AnalysisResult = {
@@ -46,12 +46,12 @@ describe('DiagnosticSummary Differential Diagnosis', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setupGlobalMocks();
-    mockAgentDBSpy();,
+    mockAgentDBSpy();
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();,
+    vi.restoreAllMocks();
   });
 
   it('renders differential diagnosis when present', () => {
@@ -63,12 +63,12 @@ describe('DiagnosticSummary Differential Diagnosis', () => {
     expect(screen.getByText('Differential Diagnosis')).toBeInTheDocument();
     expect(screen.getByText('Melanoma')).toBeInTheDocument();
     expect(screen.getByText('Basal Cell Carcinoma')).toBeInTheDocument();
-    expect(screen.getByText('Squamous Cell Carcinoma')).toBeInTheDocument();,
+    expect(screen.getByText('Squamous Cell Carcinoma')).toBeInTheDocument();
   });
 
   it('does not render differential diagnosis when absent', () => {
     render(<DiagnosticSummary result={mockResult} />);
-    expect(screen.queryByText('Differential Diagnosis')).not.toBeInTheDocument();,
+    expect(screen.queryByText('Differential Diagnosis')).not.toBeInTheDocument();
   });
 
   it('does not render differential diagnosis when empty array', () => {
@@ -77,8 +77,8 @@ describe('DiagnosticSummary Differential Diagnosis', () => {
       differential_diagnosis: [],
     };
     render(<DiagnosticSummary result={resultWithEmptyDifferential} />);
-    expect(screen.queryByText('Differential Diagnosis')).not.toBeInTheDocument();,
-  });,
+    expect(screen.queryByText('Differential Diagnosis')).not.toBeInTheDocument();
+  });
 });
 
 describe('DiagnosticSummary Agent Reasoning', () => {
@@ -86,12 +86,12 @@ describe('DiagnosticSummary Agent Reasoning', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setupGlobalMocks();
-    mockAgentDBSpy();,
+    mockAgentDBSpy();
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();,
+    vi.restoreAllMocks();
   });
 
   it('displays risk assessment reasoning', () => {
@@ -103,7 +103,7 @@ describe('DiagnosticSummary Agent Reasoning', () => {
     expect(screen.getByText('Agent Reasoning')).toBeInTheDocument();
     expect(
       screen.getByText(/High risk detected due to irregular borders and color variation/i),
-    ).toBeInTheDocument();,
+    ).toBeInTheDocument();
   });
 
   it('displays reasoning field when riskAssessment is absent', () => {
@@ -112,7 +112,7 @@ describe('DiagnosticSummary Agent Reasoning', () => {
       reasoning: 'Pigmented lesion with asymmetrical morphology.',
     };
     render(<DiagnosticSummary result={resultWithReasoningField} />);
-    expect(screen.getByText(/Pigmented lesion with asymmetrical morphology/i)).toBeInTheDocument();,
+    expect(screen.getByText(/Pigmented lesion with asymmetrical morphology/i)).toBeInTheDocument();
   });
 
   it('displays risk engine badge when present', () => {
@@ -121,12 +121,12 @@ describe('DiagnosticSummary Agent Reasoning', () => {
       riskEngine: 'WebLLM SmolLM2',
     };
     render(<DiagnosticSummary result={resultWithEngine} />);
-    expect(screen.getByText('WebLLM SmolLM2')).toBeInTheDocument();,
+    expect(screen.getByText('WebLLM SmolLM2')).toBeInTheDocument();
   });
 
   it('does not display risk engine badge when absent', () => {
     render(<DiagnosticSummary result={mockResult} />);
-    expect(screen.queryByText(/WebLLM/i)).not.toBeInTheDocument();,
+    expect(screen.queryByText(/WebLLM/i)).not.toBeInTheDocument();
   });
 
   it('displays empty string when no reasoning available', () => {
@@ -134,6 +134,6 @@ describe('DiagnosticSummary Agent Reasoning', () => {
     const reasoningElement = screen.getByText('Agent Reasoning').closest('div');
     const quotedText = reasoningElement?.querySelector('p');
     expect(quotedText).toBeInTheDocument();
-    expect(quotedText).toHaveTextContent(/""/);,
-  });,
+    expect(quotedText).toHaveTextContent(/""/);
+  });
 });

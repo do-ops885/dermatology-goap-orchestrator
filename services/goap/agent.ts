@@ -8,6 +8,8 @@ import type { GOAPPlanner } from '../goap';
  * Agent Handoff Coordination Protocol
  * Ensures proper state management and quality gate validation during agent transitions
  */
+const LOG_COMPONENT = 'goap-agent';
+
 export class AgentHandoffCoordinator {
   /**
    * Validates that an agent can safely hand off to the next agent in the pipeline
@@ -250,7 +252,7 @@ export class GoapAgent {
   ): Promise<ExecutionTrace> {
     const runId = 'run_' + Math.random().toString(36).slice(2, 9);
     const startTime = Date.now();
-    Logger.info('goap-agent', 'plan_start', { runId, goalState });
+    Logger.info(LOG_COMPONENT, 'plan_start', { runId, goalState });
 
     let currentState = { ...startState };
     const trace: ExecutionTrace = { runId, startTime, agents: [], finalWorldState: currentState };
@@ -283,7 +285,7 @@ export class GoapAgent {
 
     trace.endTime = Date.now();
     trace.finalWorldState = currentState;
-    Logger.info('goap-agent', 'plan_end', { runId, durationMs: trace.endTime - trace.startTime });
+    Logger.info(LOG_COMPONENT, 'plan_end', { runId, durationMs: trace.endTime - trace.startTime });
     return trace;
   }
 
@@ -337,7 +339,7 @@ export class GoapAgent {
     );
     if (!validation.valid) {
       const error = new Error(`Agent handoff validation failed: ${validation.reason}`);
-      Logger.error('goap-agent', 'handoff_validation_failed', {
+      Logger.error(LOG_COMPONENT, 'handoff_validation_failed', {
         runId,
         fromAgent: previousAgent,
         toAgent: action.agentId,
@@ -348,7 +350,7 @@ export class GoapAgent {
 
     if (validation.warnings) {
       for (const warning of validation.warnings) {
-        Logger.warn('goap-agent', 'handoff_warning', {
+        Logger.warn(LOG_COMPONENT, 'handoff_warning', {
           runId,
           fromAgent: previousAgent,
           toAgent: action.agentId,
@@ -369,7 +371,7 @@ export class GoapAgent {
   }
 
   private logAgentStart(runId: string, action: AgentAction): void {
-    Logger.info('goap-agent', 'agent_start', {
+    Logger.info(LOG_COMPONENT, 'agent_start', {
       runId,
       agent: action.agentId,
       action: action.name,
@@ -395,7 +397,7 @@ export class GoapAgent {
     agentRecord.endTime = Date.now();
     agentRecord.status = 'failed';
     agentRecord.error = 'executor_missing';
-    Logger.error('goap-agent', 'executor_missing', { runId, agent: action.agentId });
+    Logger.error(LOG_COMPONENT, 'executor_missing', { runId, agent: action.agentId });
     if (typeof ctx.onAgentEnd === 'function') ctx.onAgentEnd(action, agentRecord);
   }
 

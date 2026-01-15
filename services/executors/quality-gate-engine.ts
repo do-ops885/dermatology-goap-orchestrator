@@ -111,7 +111,7 @@ export class QualityGateGoapEngine {
       const result = await this.executeStep();
 
       if (!result.success) {
-        if (result.error) {
+        if (result.error !== undefined) {
           errors.push(result.error);
         }
         // If it's the final step and we can't proceed, break
@@ -200,7 +200,7 @@ export class QualityGateGoapEngine {
 
       plan.push(nextAgent);
       totalCost += nextAgent.action.cost;
-      estimatedDuration += nextAgent.action.duration || 1;
+      estimatedDuration += nextAgent.action.duration ?? 1;
 
       // Apply action to get next state
       tempState = executeAction(tempState, nextAgent.action);

@@ -10,7 +10,10 @@ export const recommendationExecutor = async ({
   setResult,
   privacyMode,
 }: AgentContext): Promise<ExecutorResult> => {
-  const recPrompt = `Generate one short clinical recommendation for Fitzpatrick Type ${String(currentState.fitzpatrick_type)} with ${String(analysisPayload.risk_label)} risk. Consider this context: ${String(((analysisPayload as Record<string, unknown>).webVerification as { summary?: string })?.summary || 'Standard analysis')}. Max 25 words.`;
+  const webSummary =
+    ((analysisPayload as Record<string, unknown>).webVerification as { summary?: string })
+      ?.summary ?? 'Standard analysis';
+  const recPrompt = `Generate one short clinical recommendation for Fitzpatrick Type ${String(currentState.fitzpatrick_type)} with ${String(analysisPayload.risk_label)} risk. Consider this context: ${String(webSummary)}. Max 25 words.`;
   let recommendation = '';
   let engine = '';
 

@@ -17,13 +17,12 @@ export class CICheckCoordinationProtocol {
     action: CICheckAction;
     dependencies: string[];
   } | null {
-    const result =
-      this.findSecurityAuditAction(_state) ||
-      this.findEslintAction(_state) ||
-      this.findCodeComplexityAction(_state) ||
-      this.checkAllChecksPassing(_state);
-
-    return result;
+    return (
+      this.findSecurityAuditAction(_state) ??
+      this.findEslintAction(_state) ??
+      this.findCodeComplexityAction(_state) ??
+      this.checkAllChecksPassing(_state)
+    );
   }
 
   private findSecurityAuditAction(state: CICheckWorldState): {
@@ -32,11 +31,11 @@ export class CICheckCoordinationProtocol {
     dependencies: string[];
   } | null {
     if (!state.npm_audit_passing) {
-      const action = securityAuditActions.find((a) => a.preconditions(state));
-      if (action) {
+      const auditAction = securityAuditActions.find((a) => a.preconditions(state));
+      if (auditAction) {
         return {
           agent: 'SecurityAudit-Agent',
-          action,
+          action: auditAction,
           dependencies: ['none - starting agent'],
         };
       }
@@ -50,11 +49,11 @@ export class CICheckCoordinationProtocol {
     dependencies: string[];
   } | null {
     if (state.npm_audit_passing && !state.eslint_passing) {
-      const action = eslintActions.find((a) => a.preconditions(state));
-      if (action) {
+      const eslintAction = eslintActions.find((a) => a.preconditions(state));
+      if (eslintAction) {
         return {
           agent: 'ESLint-Agent',
-          action,
+          action: eslintAction,
           dependencies: ['SecurityAudit-Agent - npm audit must pass first'],
         };
       }
@@ -68,11 +67,11 @@ export class CICheckCoordinationProtocol {
     dependencies: string[];
   } | null {
     if (state.eslint_passing && !state.code_complexity_passing) {
-      const action = codeComplexityActions.find((a) => a.preconditions(state));
-      if (action) {
+      const complexityAction = codeComplexityActions.find((a) => a.preconditions(state));
+      if (complexityAction) {
         return {
           agent: 'CodeComplexity-Agent',
-          action,
+          action: complexityAction,
           dependencies: ['ESLint-Agent - eslint must pass first'],
         };
       }
