@@ -4,9 +4,9 @@ import { GOAPPlanner, AVAILABLE_ACTIONS } from '../../services/goap';
 import { GoapAgent, AgentHandoffCoordinator } from '../../services/goap/agent';
 import { INITIAL_STATE } from '../../types';
 
+import type { AgentContext } from '../../services/executors/types';
 import type { ExecutorFn } from '../../services/goap/agent';
 import type { WorldState } from '../../types';
-import type { AgentContext } from '../../services/executors/types';
 
 /**
  * Integration tests for GOAP Agent failure handling

@@ -1,11 +1,11 @@
 import type { WorldState, AgentAction, ClinicalAnalysisResult } from '../../types';
-import type { Dispatch, SetStateAction } from 'react';
 import type { ReasoningBank, LocalLLMService } from '../agentDB';
 import type AgentDB from '../agentDB';
 import type { ExecutionAgentRecord } from '../goap/agent';
 import type { RouterAgent } from '../router';
 import type { VisionSpecialist } from '../vision';
 import type { GoogleGenAI } from '@google/genai';
+import type { Dispatch, SetStateAction } from 'react';
 
 export type { ClinicalAnalysisResult };
 

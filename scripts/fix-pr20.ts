@@ -8,8 +8,8 @@
  */
 
 import { exec } from 'child_process';
-import { promisify } from 'util';
 import { readFileSync, writeFileSync } from 'fs';
+import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 

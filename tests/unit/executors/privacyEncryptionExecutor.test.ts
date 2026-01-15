@@ -2,13 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { CryptoService } from '../../../services/crypto';
 import { privacyEncryptionExecutor } from '../../../services/executors/privacyEncryptionExecutor';
+import { createMockAgentContext } from '../../test-helpers/mock-context';
 
 import type { AgentContext } from '../../../services/executors/types';
-
-/**
- * Tests for Privacy Encryption Executor
- * Validates encryption workflow and security context generation
- */
 
 describe('privacyEncryptionExecutor', () => {
   let mockKey: CryptoKey;
@@ -23,12 +19,21 @@ describe('privacyEncryptionExecutor', () => {
     } as any;
   });
 
+  const createMockContext = (overrides: Partial<AgentContext> = {}): AgentContext => {
+    const baseContext = createMockAgentContext({
+      reasoningBank: mockReasoningBank as any,
+    });
+    return {
+      ...baseContext,
+      ...overrides,
+    };
+  };
+
   it('should return error when encryption key is missing', async () => {
-    const context = {
+    const context = createMockContext({
       encryptionKey: undefined,
       analysisPayload: { data: 'test' },
-      reasoningBank: mockReasoningBank as any,
-    } as any;
+    });
 
     const result = await privacyEncryptionExecutor(context);
 
@@ -36,11 +41,10 @@ describe('privacyEncryptionExecutor', () => {
   });
 
   it('should return error when encryption key is null', async () => {
-    const context = {
+    const context = createMockContext({
       encryptionKey: null,
       analysisPayload: { data: 'test' },
-      reasoningBank: mockReasoningBank as any,
-    } as any;
+    });
 
     const result = await privacyEncryptionExecutor(context);
 
@@ -54,11 +58,10 @@ describe('privacyEncryptionExecutor', () => {
       confidence: 0.95,
     };
 
-    const context: AgentContext = {
+    const context = createMockContext({
       encryptionKey: mockKey,
       analysisPayload,
-      reasoningBank: mockReasoningBank as any,
-    };
+    });
 
     const result = await privacyEncryptionExecutor(context);
 
@@ -70,11 +73,10 @@ describe('privacyEncryptionExecutor', () => {
   it('should include required security context fields', async () => {
     const analysisPayload = { data: 'sensitive' };
 
-    const context: AgentContext = {
+    const context = createMockContext({
       encryptionKey: mockKey,
       analysisPayload,
-      reasoningBank: mockReasoningBank as any,
-    };
+    });
 
     await privacyEncryptionExecutor(context);
 
@@ -90,43 +92,39 @@ describe('privacyEncryptionExecutor', () => {
   it('should generate valid IV in security context', async () => {
     const analysisPayload = { test: 'data' };
 
-    const context: AgentContext = {
+    const context = createMockContext({
       encryptionKey: mockKey,
       analysisPayload,
-      reasoningBank: mockReasoningBank as any,
-    };
+    });
 
     await privacyEncryptionExecutor(context);
 
     expect((analysisPayload as any).securityContext.iv).toBeInstanceOf(Array);
-    expect((analysisPayload as any).securityContext.iv.length).toBe(12); // GCM standard IV length
+    expect((analysisPayload as any).securityContext.iv.length).toBe(12);
   });
 
   it('should store Base64 ciphertext in security context', async () => {
     const analysisPayload = { secret: 'value' };
 
-    const context: AgentContext = {
+    const context = createMockContext({
       encryptionKey: mockKey,
       analysisPayload,
-      reasoningBank: mockReasoningBank as any,
-    };
+    });
 
     await privacyEncryptionExecutor(context);
 
     expect(typeof (analysisPayload as any).securityContext.ciphertext).toBe('string');
     expect((analysisPayload as any).securityContext.ciphertext.length).toBeGreaterThan(0);
-    // Base64 should only contain valid characters
     expect((analysisPayload as any).securityContext.ciphertext).toMatch(/^[A-Za-z0-9+/=]+$/);
   });
 
   it('should return metadata with payload size', async () => {
     const analysisPayload = { data: 'test' };
 
-    const context: AgentContext = {
+    const context = createMockContext({
       encryptionKey: mockKey,
       analysisPayload,
-      reasoningBank: mockReasoningBank as any,
-    };
+    });
 
     const result = await privacyEncryptionExecutor(context);
 
@@ -137,21 +135,20 @@ describe('privacyEncryptionExecutor', () => {
   it('should store security pattern in reasoning bank', async () => {
     const analysisPayload = { data: 'test' };
 
-    const context: AgentContext = {
+    const context = createMockContext({
       encryptionKey: mockKey,
       analysisPayload,
-      reasoningBank: mockReasoningBank as any,
-    };
+    });
 
     await privacyEncryptionExecutor(context);
 
     expect(mockReasoningBank.storePattern).toHaveBeenCalledTimes(1);
-    const storedPattern = mockReasoningBank.storePattern.mock.calls[0][0];
+    const storedPattern = mockReasoningBank.storePattern.mock.calls[0]?.[0];
 
-    expect(storedPattern.taskType).toBe('security_event');
-    expect(storedPattern.approach).toBe('AES-GCM Encryption');
-    expect(storedPattern.successRate).toBe(1.0);
-    expect(storedPattern.metadata.type).toBe('payload_encryption');
+    expect(storedPattern?.taskType).toBe('security_event');
+    expect(storedPattern?.approach).toBe('AES-GCM Encryption');
+    expect(storedPattern?.successRate).toBe(1.0);
+    expect(storedPattern?.metadata?.type).toBe('payload_encryption');
   });
 
   it('should handle large payloads', async () => {
@@ -160,16 +157,15 @@ describe('privacyEncryptionExecutor', () => {
       metadata: { count: 10000 },
     };
 
-    const context = {
+    const context = createMockContext({
       encryptionKey: mockKey,
       analysisPayload: largePayload,
-      reasoningBank: mockReasoningBank as any,
-    } as any;
+    });
 
     const result = await privacyEncryptionExecutor(context);
 
     expect(result.metadata.cipher).toBe('AES-256-GCM');
-    expect(largePayload.securityContext.payloadSize).toBeGreaterThan(10000);
+    expect((largePayload as any).securityContext?.payloadSize).toBeGreaterThan(10000);
   });
 
   it('should handle payloads with nested objects', async () => {
@@ -185,16 +181,15 @@ describe('privacyEncryptionExecutor', () => {
       },
     };
 
-    const context = {
+    const context = createMockContext({
       encryptionKey: mockKey,
       analysisPayload: nestedPayload,
-      reasoningBank: mockReasoningBank as any,
-    } as any;
+    });
 
     const result = await privacyEncryptionExecutor(context);
 
     expect(result.metadata.cipher).toBe('AES-256-GCM');
-    expect(nestedPayload.securityContext).toBeDefined();
+    expect((nestedPayload as any).securityContext).toBeDefined();
   });
 
   it('should handle payloads with null values', async () => {
@@ -203,11 +198,10 @@ describe('privacyEncryptionExecutor', () => {
       data: 'test',
     };
 
-    const context: AgentContext = {
+    const context = createMockContext({
       encryptionKey: mockKey,
       analysisPayload: payloadWithNulls,
-      reasoningBank: mockReasoningBank as any,
-    };
+    });
 
     const result = await privacyEncryptionExecutor(context);
 
@@ -218,58 +212,58 @@ describe('privacyEncryptionExecutor', () => {
     const payload1 = { data: 'test' };
     const payload2 = { data: 'test' };
 
-    const context1: AgentContext = {
+    const context1 = createMockContext({
       encryptionKey: mockKey,
       analysisPayload: payload1,
-      reasoningBank: mockReasoningBank as any,
-    };
+    });
 
-    const context2: AgentContext = {
+    const context2 = createMockContext({
       encryptionKey: mockKey,
       analysisPayload: payload2,
-      reasoningBank: mockReasoningBank as any,
-    };
+    });
 
     await privacyEncryptionExecutor(context1);
     await privacyEncryptionExecutor(context2);
 
-    expect(payload1.securityContext.iv).not.toEqual(payload2.securityContext.iv);
-    expect(payload1.securityContext.ciphertext).not.toEqual(payload2.securityContext.ciphertext);
+    expect((payload1 as any).securityContext?.iv).not.toEqual(
+      (payload2 as any).securityContext?.iv,
+    );
+    expect((payload1 as any).securityContext?.ciphertext).not.toEqual(
+      (payload2 as any).securityContext?.ciphertext,
+    );
   });
 
   it('should include timestamp in security context', async () => {
     const beforeTimestamp = Date.now();
 
     const analysisPayload = { data: 'test' };
-    const context: AgentContext = {
+    const context = createMockContext({
       encryptionKey: mockKey,
       analysisPayload,
-      reasoningBank: mockReasoningBank as any,
-    };
+    });
 
     await privacyEncryptionExecutor(context);
 
     const afterTimestamp = Date.now();
 
-    expect((analysisPayload as any).securityContext.timestamp).toBeGreaterThanOrEqual(
+    expect((analysisPayload as any).securityContext?.timestamp).toBeGreaterThanOrEqual(
       beforeTimestamp,
     );
-    expect((analysisPayload as any).securityContext.timestamp).toBeLessThanOrEqual(afterTimestamp);
+    expect((analysisPayload as any).securityContext?.timestamp).toBeLessThanOrEqual(afterTimestamp);
   });
 
   it('should handle empty payload objects', async () => {
     const emptyPayload = {};
 
-    const context: AgentContext = {
+    const context = createMockContext({
       encryptionKey: mockKey,
       analysisPayload: emptyPayload,
-      reasoningBank: mockReasoningBank as any,
-    };
+    });
 
     const result = await privacyEncryptionExecutor(context);
 
     expect(result.metadata.cipher).toBe('AES-256-GCM');
-    expect(emptyPayload.securityContext).toBeDefined();
+    expect((emptyPayload as any).securityContext).toBeDefined();
   });
 
   describe('Integration with CryptoService', () => {
@@ -280,18 +274,20 @@ describe('privacyEncryptionExecutor', () => {
         confidence: 0.87,
       };
 
-      const context: AgentContext = {
+      const context = createMockContext({
         encryptionKey: mockKey,
         analysisPayload: originalPayload,
-        reasoningBank: mockReasoningBank as any,
-      };
+      });
 
       await privacyEncryptionExecutor(context);
 
-      // Decrypt the ciphertext to verify
-      const { ciphertext, iv } = originalPayload.securityContext;
+      const securityContext = (originalPayload as any).securityContext;
+      if (!securityContext) {
+        throw new Error('Security context not found');
+      }
 
-      // Convert Base64 back to ArrayBuffer
+      const { ciphertext, iv } = securityContext;
+
       const binaryString = atob(ciphertext);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
@@ -307,7 +303,6 @@ describe('privacyEncryptionExecutor', () => {
       const decryptedText = new TextDecoder().decode(decrypted);
       const decryptedData = JSON.parse(decryptedText);
 
-      // Should match original data (minus securityContext which was added after)
       expect(decryptedData.patientId).toBe('P-001');
       expect(decryptedData.diagnosis).toBe('melanoma');
       expect(decryptedData.confidence).toBe(0.87);

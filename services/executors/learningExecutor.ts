@@ -98,7 +98,7 @@ async function storeDiagnosisPattern(
     metadata,
   };
 
-  await (reasoningBank as { storePattern: (p: ReasoningPattern) => Promise<void> }).storePattern(
+  await (reasoningBank as { storePattern: (_p: ReasoningPattern) => Promise<void> }).storePattern(
     pattern,
   );
 
@@ -142,7 +142,7 @@ async function storeClinicianFeedback(
     metadata,
   };
 
-  await (reasoningBank as { storePattern: (p: ReasoningPattern) => Promise<void> }).storePattern(
+  await (reasoningBank as { storePattern: (_p: ReasoningPattern) => Promise<void> }).storePattern(
     pattern,
   );
 
