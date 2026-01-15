@@ -284,7 +284,7 @@ export default [
       'object-shorthand': 'warn',
       'prefer-template': 'warn',
       'arrow-spacing': 'warn',
-      'comma-dangle': ['error', 'always'],
+      'comma-dangle': 'off',
       quotes: ['error', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
       semi: ['error', 'always'],
       indent: ['error', 2],
