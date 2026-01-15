@@ -431,9 +431,8 @@ export class LocalLLMService {
   // Using a quantized SmolLM2 model optimized for browser edge inference
   private modelId = 'SmolLM2-1.7B-Instruct-q4f16_1-MLC';
 
-  // eslint-disable-next-line no-unused-vars
   async initialize(
-    progressCallback?: (report: { text: string; progress: number }) => void,
+    progressCallback?: (_report: { text: string; progress: number }) => void,
   ): Promise<void> {
     // Prevent double-initialization in React Strict Mode
     if (this.isReady) {
@@ -450,11 +449,11 @@ export class LocalLLMService {
         const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
 
         this.engine = await CreateMLCEngine(this.modelId, {
-          initProgressCallback: (report: InitProgressReport) => {
+          initProgressCallback: (_report: InitProgressReport) => {
             if (progressCallback) {
               progressCallback({
-                text: report.text,
-                progress: report.progress,
+                text: _report.text,
+                progress: _report.progress,
               });
             }
           },

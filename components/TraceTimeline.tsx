@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import type { ExecutionTrace, ExecutionAgentRecord } from '../services/goap/agent';
 
@@ -121,6 +121,6 @@ export function TraceTimeline({ trace, currentAgent, height = 80 }: TraceTimelin
       </div>
     </div>
   );
-};
+}
 
 export default TraceTimeline;

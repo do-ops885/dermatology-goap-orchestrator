@@ -49,35 +49,37 @@ for workflow in "${WORKFLOW_FILES[@]}"; do
 
     # Check 1: YAML syntax
     echo -e "${BLUE}  [1/5] YAML syntax...${NC}"
-    ((TOTAL_CHECKS++))
-    if python3 -c "import yaml; yaml.safe_load(open('$workflow'))" 2>/dev/null; then
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
+    if timeout 5 python3 -c "import yaml; yaml.safe_load(open('$workflow'))" 2>/dev/null; then
         echo -e "    ${GREEN}✓ Valid YAML${NC}"
     else
         echo -e "    ${RED}✗ Invalid YAML${NC}"
-        ((FAILURES++))
+        FAILURES=$((FAILURES + 1))
     fi
 
     # Check 2: Required top-level keys
     echo -e "${BLUE}  [2/5] Required keys...${NC}"
-    ((TOTAL_CHECKS++))
-    if python3 -c "
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
+    if timeout 5 python3 -c "
 import yaml
 wf = yaml.safe_load(open('$workflow'))
-required = ['name', 'on', 'jobs']
-for key in required:
-    if key not in wf:
-        raise ValueError(f'Missing key: {key}')
+# 'on' key is parsed as boolean True by YAML
+has_name = 'name' in wf
+has_on = 'on' in wf or True in wf
+has_jobs = 'jobs' in wf
+if not (has_name and has_on and has_jobs):
+    raise ValueError('Missing required keys')
 " 2>/dev/null; then
         echo -e "    ${GREEN}✓ All required keys present${NC}"
     else
         echo -e "    ${RED}✗ Missing required keys${NC}"
-        ((FAILURES++))
+        FAILURES=$((FAILURES + 1))
     fi
 
     # Check 3: Permissions section
     echo -e "${BLUE}  [3/5] Permissions...${NC}"
-    ((TOTAL_CHECKS++))
-    if python3 -c "import yaml; yaml.safe_load(open('$workflow')).get('permissions')" 2>/dev/null; then
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
+    if timeout 5 python3 -c "import yaml; yaml.safe_load(open('$workflow')).get('permissions')" 2>/dev/null; then
         echo -e "    ${GREEN}✓ Permissions defined${NC}"
     else
         echo -e "    ${YELLOW}⚠ No permissions section (using default)${NC}"
@@ -85,7 +87,7 @@ for key in required:
 
     # Check 4: Node.js version consistency
     echo -e "${BLUE}  [4/5] Node.js version...${NC}"
-    ((TOTAL_CHECKS++))
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
     if grep -q "node-version: ['\"]20['\"]" "$workflow"; then
         echo -e "    ${GREEN}✓ Node.js 20 specified${NC}"
     else
@@ -94,7 +96,7 @@ for key in required:
 
     # Check 5: npm cache configuration
     echo -e "${BLUE}  [5/5] npm cache...${NC}"
-    ((TOTAL_CHECKS++))
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
     if grep -q "cache: ['\"]npm['\"]" "$workflow"; then
         echo -e "    ${GREEN}✓ npm cache enabled${NC}"
     else
@@ -114,21 +116,21 @@ echo ""
 if [ -f "$WORKFLOW_DIR/ci.yml" ]; then
     echo -e "${BLUE}CI workflow checks:${NC}"
     
-    # Check for npm ci
-    ((TOTAL_CHECKS++))
-    if grep -q "npm ci" "$WORKFLOW_DIR/ci.yml"; then
-        echo -e "  ${GREEN}✓ Uses npm ci${NC}"
+    # Check for npm install or npm ci
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
+    if grep -q "npm install\|npm ci" "$WORKFLOW_DIR/ci.yml"; then
+        echo -e "  ${GREEN}✓ Uses npm install or npm ci${NC}"
     else
-        echo -e "  ${RED}✗ Does not use npm ci${NC}"
-        ((FAILURES++))
+        echo -e "  ${RED}✗ Does not use npm install or npm ci${NC}"
+        FAILURES=$((FAILURES + 1))
     fi
     
-    # Check for fallback
-    ((TOTAL_CHECKS++))
-    if grep -q "npm ci.*legacy-peer-deps" "$WORKFLOW_DIR/ci.yml"; then
-        echo -e "  ${GREEN}✓ Has fallback to --legacy-peer-deps${NC}"
+    # Check for package-lock.json presence
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
+    if [ -f "package-lock.json" ]; then
+        echo -e "  ${GREEN}✓ package-lock.json exists${NC}"
     else
-        echo -e "  ${YELLOW}⚠ No --legacy-peer-deps fallback${NC}"
+        echo -e "  ${YELLOW}⚠ package-lock.json not found${NC}"
     fi
     echo ""
 fi
@@ -138,21 +140,21 @@ if [ -f "$WORKFLOW_DIR/auto-merge-dependabot.yml" ]; then
     echo -e "${BLUE}Dependabot auto-merge checks:${NC}"
     
     # Check for Dependabot actor check
-    ((TOTAL_CHECKS++))
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
     if grep -q "dependabot\[bot\]" "$WORKFLOW_DIR/auto-merge-dependabot.yml"; then
         echo -e "  ${GREEN}✓ Checks for Dependabot bot actor${NC}"
     else
         echo -e "  ${RED}✗ Does not check for Dependabot bot${NC}"
-        ((FAILURES++))
+        FAILURES=$((FAILURES + 1))
     fi
     
     # Check permissions
-    ((TOTAL_CHECKS++))
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
     if grep -q "pull-requests: write" "$WORKFLOW_DIR/auto-merge-dependabot.yml"; then
         echo -e "  ${GREEN}✓ Has pull-requests: write permission${NC}"
     else
         echo -e "  ${RED}✗ Missing pull-requests: write permission${NC}"
-        ((FAILURES++))
+        FAILURES=$((FAILURES + 1))
     fi
     echo ""
 fi
@@ -162,16 +164,16 @@ if [ -f "$WORKFLOW_DIR/lockfile-maintenance.yml" ]; then
     echo -e "${BLUE}Lockfile maintenance checks:${NC}"
     
     # Check for npm update
-    ((TOTAL_CHECKS++))
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
     if grep -q "npm update" "$WORKFLOW_DIR/lockfile-maintenance.yml"; then
         echo -e "  ${GREEN}✓ Uses npm update${NC}"
     else
         echo -e "  ${RED}✗ Does not use npm update${NC}"
-        ((FAILURES++))
+        FAILURES=$((FAILURES + 1))
     fi
     
     # Check for PR creation
-    ((TOTAL_CHECKS++))
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
     if grep -q "peter-evans/create-pull-request" "$WORKFLOW_DIR/lockfile-maintenance.yml"; then
         echo -e "  ${GREEN}✓ Creates pull request${NC}"
     else

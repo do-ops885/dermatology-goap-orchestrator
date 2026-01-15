@@ -42,20 +42,22 @@ test.describe('Accessibility - Components', () => {
       include: 'main',
     });
 
-    expect(results.violations.filter((v) => v.impact === 'critical')).toEqual([]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(results.violations.filter((v: any) => v.impact === 'critical')).toEqual([]);
   });
 
   test('FairnessDashboard has proper chart accessibility', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    page.locator('[data-testid="fairness-dashboard"]');
+    void page.locator('[data-testid="fairness-dashboard"]');
 
     const results = await axe.evaluate(page, {
       include: '[data-testid="fairness-dashboard"]',
     });
 
-    expect(results.violations.filter((v) => v.id === 'aria-chart')).toEqual([]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(results.violations.filter((v: any) => v.id === 'aria-chart')).toEqual([]);
   });
 
   test('ErrorBoundary catches and displays errors accessibly', async ({ page }) => {
@@ -74,12 +76,13 @@ test.describe('Accessibility - Components', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    page.locator('[data-testid="patient-safety"]');
+    void page.locator('[data-testid="patient-safety"]');
 
     const results = await axe.evaluate(page, {
       include: '[data-testid="patient-safety"]',
     });
 
-    expect(results.violations.filter((v) => v.id === 'aria-live-region')).toEqual([]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(results.violations.filter((v: any) => v.id === 'aria-live-region')).toEqual([]);
   });
 });

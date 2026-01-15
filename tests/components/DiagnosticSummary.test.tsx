@@ -410,7 +410,9 @@ describe('DiagnosticSummary', () => {
         recommendations: [],
       };
       render(<DiagnosticSummary result={resultWithEmptyRecommendations} />);
-      expect(screen.getByText(/Consult a healthcare professional for follow-up/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Consult a healthcare professional for follow-up/i),
+      ).toBeInTheDocument();
     });
 
     it('displays multiple recommendations (only first one shown)', () => {
@@ -428,29 +430,6 @@ describe('DiagnosticSummary', () => {
       render(<DiagnosticSummary result={mockResult} />);
       const recommendationElement = screen.getByText(/See a doctor immediately/i);
       expect(recommendationElement.textContent).toMatch(/^"See a doctor/);
-    });
-  });
-
-    it('displays fallback message when recommendations array is empty', () => {
-      const resultWithEmptyRecommendations = {
-        ...mockResult,
-        recommendations: [],
-      };
-      render(<DiagnosticSummary result={resultWithEmptyRecommendations} />);
-      expect(
-        screen.getByText(/Consult a healthcare professional for follow-up/i),
-      ).toBeInTheDocument();
-    });
-
-    it('displays multiple recommendations (only first one shown)', () => {
-      const resultWithMultipleRecommendations = {
-        ...mockResult,
-        recommendations: ['First recommendation', 'Second recommendation', 'Third recommendation'],
-      };
-      render(<DiagnosticSummary result={resultWithMultipleRecommendations} />);
-      expect(screen.getByText('First recommendation')).toBeInTheDocument();
-      expect(screen.queryByText('Second recommendation')).not.toBeInTheDocument();
-      expect(screen.queryByText('Third recommendation')).not.toBeInTheDocument();
     });
   });
 
@@ -769,7 +748,5 @@ describe('DiagnosticSummary', () => {
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     });
-  });
-});
   });
 });
