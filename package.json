@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "syntax:check": "bash scripts/validate-syntax.sh",
     "test": "npx vitest run --config vitest.config.ts",
     "test:fast": "npx vitest -c --run --threads 1 --reporter verbose",
     "ci": "npm run prettier:check && npm run lint && npm run typecheck && npm run test",
@@ -63,6 +64,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.2",
     "@vitest/coverage-v8": "^4.0.0",
+    "autoprefixer": "^10.4.23",
     "eslint": "^8.57.0",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
@@ -75,7 +77,9 @@
     "husky": "^8.0.3",
     "jsdom": "^24.1.3",
     "lint-staged": "^16.2.7",
+    "postcss": "^8.5.6",
     "prettier": "^3.0.0",
+    "tailwindcss": "^4.1.18",
     "typescript": "~5.8.2",
     "typescript-eslint": "^8.52.0",
     "vite": "^6.2.0",
@@ -84,7 +88,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
-      "eslint --fix",
+      "eslint --fix --max-warnings=0",
       "prettier --write"
     ],
     "*.{json,md}": "prettier --write"
