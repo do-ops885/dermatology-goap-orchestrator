@@ -160,6 +160,7 @@ describe('DiagnosticSummary', () => {
     });
 
     it('displays fairness score from result when available', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resultWithFairness = {
         ...mockResult,
         fairness: 0.88,
@@ -176,6 +177,7 @@ describe('DiagnosticSummary', () => {
 
   describe('Differential Diagnosis', () => {
     it('renders differential diagnosis when present', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resultWithDifferential = {
         ...mockResult,
         differential_diagnosis: ['Melanoma', 'Basal Cell Carcinoma', 'Squamous Cell Carcinoma'],
@@ -193,6 +195,7 @@ describe('DiagnosticSummary', () => {
     });
 
     it('does not render differential diagnosis when empty array', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resultWithEmptyDifferential = {
         ...mockResult,
         differential_diagnosis: [],
@@ -204,6 +207,7 @@ describe('DiagnosticSummary', () => {
 
   describe('Agent Reasoning', () => {
     it('displays risk assessment reasoning', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resultWithReasoning = {
         ...mockResult,
         riskAssessment: 'High risk detected due to irregular borders and color variation.',
@@ -216,6 +220,7 @@ describe('DiagnosticSummary', () => {
     });
 
     it('displays reasoning field when riskAssessment is absent', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resultWithReasoningField = {
         ...mockResult,
         reasoning: 'Pigmented lesion with asymmetrical morphology.',
@@ -227,6 +232,7 @@ describe('DiagnosticSummary', () => {
     });
 
     it('displays risk engine badge when present', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resultWithEngine = {
         ...mockResult,
         riskEngine: 'WebLLM SmolLM2',
@@ -251,6 +257,7 @@ describe('DiagnosticSummary', () => {
 
   describe('Similar Cases', () => {
     it('renders similar cases when present', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resultWithSimilarCases = {
         ...mockResult,
         similarCases: [
@@ -281,6 +288,7 @@ describe('DiagnosticSummary', () => {
     });
 
     it('displays fallback text when outcome is missing', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resultWithFallbackCase = {
         ...mockResult,
         similarCases: [
