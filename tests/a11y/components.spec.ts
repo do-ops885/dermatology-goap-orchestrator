@@ -42,7 +42,7 @@ test.describe('Accessibility - Components', () => {
       include: 'main',
     });
 
-    expect(results.violations.filter((v) => v.impact === 'critical')).toEqual([]);
+    expect(results.violations.filter((v: any) => v.impact === 'critical')).toEqual([]);
   });
 
   test('FairnessDashboard has proper chart accessibility', async ({ page }) => {
@@ -55,7 +55,7 @@ test.describe('Accessibility - Components', () => {
       include: '[data-testid="fairness-dashboard"]',
     });
 
-    expect(results.violations.filter((v) => v.id === 'aria-chart')).toEqual([]);
+    expect(results.violations.filter((v: any) => v.id === 'aria-chart')).toEqual([]);
   });
 
   test('ErrorBoundary catches and displays errors accessibly', async ({ page }) => {
@@ -80,6 +80,6 @@ test.describe('Accessibility - Components', () => {
       include: '[data-testid="patient-safety"]',
     });
 
-    expect(results.violations.filter((v) => v.id === 'aria-live-region')).toEqual([]);
+    expect(results.violations.filter((v: any) => v.id === 'aria-live-region')).toEqual([]);
   });
 });

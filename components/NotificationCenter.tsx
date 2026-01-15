@@ -1,5 +1,5 @@
 import { Bell, Check, AlertTriangle, AlertCircle } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 import type { NotificationService } from '../services/notifications';
 import type { ClinicianNotification, SafetyLevel } from '../types';

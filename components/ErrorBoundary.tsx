@@ -1,5 +1,5 @@
 import { AlertTriangle, RefreshCw } from 'lucide-react';
-import React, { type Component, type ErrorInfo, type ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 import { Logger } from '../services/logger';
 
@@ -15,16 +15,16 @@ interface State {
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
+  public override state: State = {
     hasError: false,
     error: null,
   };
 
-  public static getDerivedStateFromError(error: Error): State {
+  public static override getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  public override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     Logger.error(this.props.componentName ?? 'ErrorBoundary', 'Component Crashed', {
       error: error.message,
       stack: errorInfo.componentStack ?? '',
@@ -35,7 +35,7 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ hasError: false, error: null });
   };
 
-  public render() {
+  public override render() {
     if (this.state.hasError) {
       if (this.props.fallback !== undefined) return this.props.fallback;
 

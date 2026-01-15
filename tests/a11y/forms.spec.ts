@@ -12,7 +12,7 @@ test.describe('Accessibility - Forms', () => {
       include: 'input[type="file"]',
     });
 
-    expect(results.violations.filter((v) => v.id === 'label')).toEqual([]);
+    expect(results.violations.filter((v: any) => v.id === 'label')).toEqual([]);
   });
 
   test('Feedback form is accessible', async ({ page }) => {
@@ -36,6 +36,6 @@ test.describe('Accessibility - Forms', () => {
       include: 'input[type="range"]',
     });
 
-    expect(results.violations.filter((v) => v.id === 'slider')).toEqual([]);
+    expect(results.violations.filter((v: any) => v.id === 'slider')).toEqual([]);
   });
 });

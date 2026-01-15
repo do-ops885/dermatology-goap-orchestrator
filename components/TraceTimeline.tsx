@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import type { ExecutionTrace, ExecutionAgentRecord } from '../services/goap/agent';
 

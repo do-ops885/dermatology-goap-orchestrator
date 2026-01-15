@@ -15,7 +15,7 @@ test.describe('Accessibility - Navigation', () => {
 
     const focusOrder: string[] = [];
 
-    page.on('focus', (element) => {
+    page.on('focus', (element: any) => {
       focusOrder.push(element.getAttribute('data-testid') || element.tagName);
     });
 

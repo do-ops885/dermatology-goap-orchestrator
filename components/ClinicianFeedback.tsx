@@ -1,5 +1,5 @@
 import { CheckCircle, X } from 'lucide-react';
-import React, { useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 
 interface Feedback {
   diagnosis: string;

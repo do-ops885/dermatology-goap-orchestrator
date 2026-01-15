@@ -1,5 +1,5 @@
 import { ArrowUpRight, Info, RefreshCw, MessageSquareHeart } from 'lucide-react';
-import React, { useMemo, useEffect, useState, useCallback } from 'react';
+import { useMemo, useEffect, useState, useCallback } from 'react';
 import {
   BarChart,
   Bar,
