@@ -96,9 +96,27 @@ vi.mock('@google/genai', () => {
   return { GoogleGenAI: MockGoogleGenAI };
 });
 
+// Mock GoapAgent with basic structure to allow prototype spying
+vi.mock('../../services/goap/agent', () => {
+  return {
+    GoapAgent: class MockGoapAgent {
+      async execute() {
+        return {
+          runId: 'run_test',
+          startTime: Date.now(),
+          endTime: Date.now() + 1000,
+          agents: [],
+          finalWorldState: { ...INITIAL_STATE, audit_logged: true },
+        };
+      }
+    },
+  };
+});
+
 describe('useClinicalAnalysis', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
     vi.stubGlobal('URL', {
       createObjectURL: vi.fn().mockReturnValue('blob:mock-url'),
       revokeObjectURL: vi.fn(),
@@ -144,7 +162,7 @@ describe('useClinicalAnalysis', () => {
       Object.defineProperty(validFile, 'size', { value: 1024 * 1024 });
       Object.defineProperty(validFile, 'slice', {
         value: () => ({
-          arrayBuffer: () => Promise.resolve(new ArrayBuffer(12)),
+          arrayBuffer: () => Promise.resolve(new Uint8Array([0xff, 0xd8, 0xff]).buffer),
         }),
       });
 

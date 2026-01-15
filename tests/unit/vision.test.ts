@@ -70,7 +70,9 @@ describe('VisionSpecialist', () => {
     // Reset vision state
     vision.dispose();
 
-    // Mock Model Loading
+    // Mock backend availability and Model Loading
+    (tf.findBackend as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
+    (tf.setBackend as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
     (tf.loadGraphModel as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       predict: mockPredict,
       dispose: vi.fn(),
@@ -564,10 +566,9 @@ describe('VisionSpecialist', () => {
 
       (tf.loadGraphModel as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
-      (tf.loadGraphModel as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      (tf.findBackend as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
 
       await expect(async () => {
-        (tf.findBackend as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
         await vision.initialize();
       }).rejects.toThrow();
 

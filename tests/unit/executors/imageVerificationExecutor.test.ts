@@ -55,7 +55,7 @@ describe('imageVerificationExecutor', () => {
     vi.advanceTimersByTime(400);
     const result = await resultPromise;
 
-    expect(result.metadata.hash).toBe('0123456789abcdef...');
+    expect(result.metadata.hash).toBe('abc123def456ghi7...');
   });
 
   it('should handle short hashes gracefully', async () => {
