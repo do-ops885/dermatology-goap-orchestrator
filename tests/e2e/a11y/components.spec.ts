@@ -14,7 +14,7 @@ test.describe('Accessibility - Components', () => {
       include: '[data-testid="analysis-intake"]',
     });
 
-    expect(results.violations).toEqual([]);
+    expect(results.violations).toEqual([]);,
   });
 
   test('AgentFlow has proper status announcements', async ({ page }) => {
@@ -27,7 +27,7 @@ test.describe('Accessibility - Components', () => {
       include: '[data-testid="agent-flow"]',
     });
 
-    expect(results.violations).toEqual([]);
+    expect(results.violations).toEqual([]);,
   });
 
   test('DiagnosticSummary is keyboard navigable', async ({ page }) => {
@@ -43,7 +43,7 @@ test.describe('Accessibility - Components', () => {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(results.violations.filter((v: any) => v.impact === 'critical')).toEqual([]);
+    expect(results.violations.filter((v: any) => v.impact === 'critical')).toEqual([]);,
   });
 
   test('FairnessDashboard has proper chart accessibility', async ({ page }) => {
@@ -57,19 +57,19 @@ test.describe('Accessibility - Components', () => {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(results.violations.filter((v: any) => v.id === 'aria-chart')).toEqual([]);
+    expect(results.violations.filter((v: any) => v.id === 'aria-chart')).toEqual([]);,
   });
 
   test('ErrorBoundary catches and displays errors accessibly', async ({ page }) => {
     await page.evaluate(() => {
-      throw new Error('Test error for a11y');
+      throw new Error('Test error for a11y');,
     });
 
     const results = await axe.evaluate(page, {
       include: '[role="alert"]',
     });
 
-    expect(results.violations).toEqual([]);
+    expect(results.violations).toEqual([]);,
   });
 
   test('PatientSafetyState has proper live region', async ({ page }) => {
@@ -83,6 +83,6 @@ test.describe('Accessibility - Components', () => {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(results.violations.filter((v: any) => v.id === 'aria-live-region')).toEqual([]);
-  });
+    expect(results.violations.filter((v: any) => v.id === 'aria-live-region')).toEqual([]);,
+  });,
 });

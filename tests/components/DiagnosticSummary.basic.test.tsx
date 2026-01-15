@@ -39,25 +39,25 @@ describe('DiagnosticSummary Empty State', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setupGlobalMocks();
-    mockAgentDBSpy();
+    mockAgentDBSpy();,
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();
+    vi.restoreAllMocks();,
   });
 
   it('renders idle state when result is null', () => {
     render(<DiagnosticSummary result={null} />);
-    expect(screen.getByText('Orchestrator idle')).toBeInTheDocument();
+    expect(screen.getByText('Orchestrator idle')).toBeInTheDocument();,
   });
 
   it('renders idle state with proper styling', () => {
     const { container } = render(<DiagnosticSummary result={null} />);
     const gaugeIcon = container.querySelector('svg');
     expect(gaugeIcon).toBeInTheDocument();
-    expect(container.querySelector('.text-stone-300')).toBeInTheDocument();
-  });
+    expect(container.querySelector('.text-stone-300')).toBeInTheDocument();,
+  });,
 });
 
 describe('DiagnosticSummary Header and Security Badge', () => {
@@ -65,23 +65,23 @@ describe('DiagnosticSummary Header and Security Badge', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setupGlobalMocks();
-    mockAgentDBSpy();
+    mockAgentDBSpy();,
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();
+    vi.restoreAllMocks();,
   });
 
   it('renders header with title and subtitle', () => {
     render(<DiagnosticSummary result={mockResult} />);
     expect(screen.getByText('Diagnostic Summary')).toBeInTheDocument();
-    expect(screen.getByText('FairDisCo Disentangled')).toBeInTheDocument();
+    expect(screen.getByText('FairDisCo Disentangled')).toBeInTheDocument();,
   });
 
   it('shows SECURED badge when encrypted', () => {
     render(<DiagnosticSummary result={mockResult} />);
-    expect(screen.getByText('SECURED')).toBeInTheDocument();
+    expect(screen.getByText('SECURED')).toBeInTheDocument();,
   });
 
   it('shows lock icon without SECURED text when not encrypted', () => {
@@ -95,13 +95,13 @@ describe('DiagnosticSummary Header and Security Badge', () => {
     const { container } = render(<DiagnosticSummary result={unencryptedResult} />);
     expect(screen.queryByText('SECURED')).not.toBeInTheDocument();
     const lockIcon = container.querySelector('.lucide-lock');
-    expect(lockIcon).toBeInTheDocument();
+    expect(lockIcon).toBeInTheDocument();,
   });
 
   it('shows lock icon when securityContext is undefined', () => {
     const resultNoSecurity = { ...mockResult, securityContext: undefined };
     const { container } = render(<DiagnosticSummary result={resultNoSecurity} />);
     const lockIcon = container.querySelector('.lucide-lock');
-    expect(lockIcon).toBeInTheDocument();
-  });
+    expect(lockIcon).toBeInTheDocument();,
+  });,
 });

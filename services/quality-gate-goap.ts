@@ -36,11 +36,12 @@ import type { CI_CHECK_GOAL } from './executors/quality-gate-goals';
 export interface CICheckWorldState {
   // Core CI check flags
   eslint_passing: boolean;
+  npm_audit_passing: boolean;
+  code_complexity_passing: boolean;
   formatting_passing: boolean;
   unit_tests_passing: boolean;
   e2e_tests_passing: boolean;
   sonarcloud_passing: boolean;
-  code_complexity_passing: boolean;
   all_ci_checks_passing: boolean;
 
   // Detailed state tracking
@@ -49,6 +50,11 @@ export interface CICheckWorldState {
     warning_count: number;
     critical_errors_fixed: boolean;
     rules_configured: boolean;
+  };
+
+  npm_audit_status: {
+    vulnerabilities_count: number;
+    vulnerabilities_fixed: boolean;
   };
 
   formatting_status: {
@@ -105,11 +111,12 @@ export function createInitialCICheckState(): CICheckWorldState {
   return {
     // Core CI check flags - all initially false
     eslint_passing: false,
+    npm_audit_passing: false,
+    code_complexity_passing: false,
     formatting_passing: false,
     unit_tests_passing: false,
     e2e_tests_passing: false,
     sonarcloud_passing: false,
-    code_complexity_passing: false,
     all_ci_checks_passing: false,
 
     // Detailed state tracking
@@ -118,6 +125,11 @@ export function createInitialCICheckState(): CICheckWorldState {
       warning_count: 32,
       critical_errors_fixed: false,
       rules_configured: false,
+    },
+
+    npm_audit_status: {
+      vulnerabilities_count: 2, // Moderate vulnerabilities from micromatch
+      vulnerabilities_fixed: false,
     },
 
     formatting_status: {
@@ -195,11 +207,12 @@ export function estimateRemainingCost(_state: CICheckWorldState): number {
   let remaining = 0;
 
   if (!_state.eslint_passing) remaining += 3;
+  if (!_state.npm_audit_passing) remaining += 2;
+  if (!_state.code_complexity_passing) remaining += 6;
   if (!_state.formatting_passing) remaining += 2;
   if (!_state.unit_tests_passing) remaining += 5;
   if (!_state.e2e_tests_passing) remaining += 7;
   if (!_state.sonarcloud_passing) remaining += 4;
-  if (!_state.code_complexity_passing) remaining += 6;
   if (!_state.all_ci_checks_passing) remaining += 1;
 
   return remaining;

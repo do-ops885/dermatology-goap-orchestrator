@@ -39,12 +39,12 @@ describe('DiagnosticSummary Container Styling and Transitions', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setupGlobalMocks();
-    mockAgentDBSpy();
+    mockAgentDBSpy();,
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();
+    vi.restoreAllMocks();,
   });
 
   it('applies proper CSS classes when result is present', () => {
@@ -52,7 +52,7 @@ describe('DiagnosticSummary Container Styling and Transitions', () => {
     const panel = container.querySelector('.glass-panel');
     expect(panel).toBeInTheDocument();
     expect(panel).toHaveClass('opacity-100');
-    expect(panel).toHaveClass('scale-100');
+    expect(panel).toHaveClass('scale-100');,
   });
 
   it('applies disabled CSS classes when result is null', () => {
@@ -61,8 +61,8 @@ describe('DiagnosticSummary Container Styling and Transitions', () => {
     expect(panel).toBeInTheDocument();
     expect(panel).toHaveClass('opacity-40');
     expect(panel).toHaveClass('scale-95');
-    expect(panel).toHaveClass('pointer-events-none');
-  });
+    expect(panel).toHaveClass('pointer-events-none');,
+  });,
 });
 
 describe('DiagnosticSummary Accessibility', () => {
@@ -70,30 +70,30 @@ describe('DiagnosticSummary Accessibility', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setupGlobalMocks();
-    mockAgentDBSpy();
+    mockAgentDBSpy();,
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();
+    vi.restoreAllMocks();,
   });
 
   it('renders with proper heading structure', () => {
     render(<DiagnosticSummary result={mockResult} />);
     const heading = screen.getByRole('heading', { name: 'Diagnostic Summary' });
-    expect(heading).toBeInTheDocument();
+    expect(heading).toBeInTheDocument();,
   });
 
   it('provides accessible feedback button', () => {
     render(<DiagnosticSummary result={mockResult} />);
     const feedbackBtn = screen.getByRole('button', { name: /provide feedback/i });
-    expect(feedbackBtn).toBeInTheDocument();
+    expect(feedbackBtn).toBeInTheDocument();,
   });
 
   it('provides accessible export button', () => {
     render(<DiagnosticSummary result={mockResult} />);
     const exportBtn = screen.getByRole('button', { name: /export encrypted report/i });
-    expect(exportBtn).toBeInTheDocument();
+    expect(exportBtn).toBeInTheDocument();,
   });
 
   it('provides accessible external links', () => {
@@ -101,6 +101,6 @@ describe('DiagnosticSummary Accessibility', () => {
     const link = screen.getByRole('link', { name: 'Clinical Guideline 1' });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute('target', '_blank');
-    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
-  });
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');,
+  });,
 });

@@ -234,6 +234,27 @@ export const sonarcloudActions: CICheckAction[] = [
   },
 ];
 
+// Security Audit Agent Actions
+export const securityAuditActions: CICheckAction[] = [
+  {
+    name: 'run-npm-audit-fix',
+    agent: 'SecurityAudit-Agent',
+    preconditions: (state) => state.npm_audit_status.vulnerabilities_count > 0,
+    effects: (state) => {
+      const newState = { ...state };
+      newState.npm_audit_status.vulnerabilities_count = 0;
+      newState.npm_audit_status.vulnerabilities_fixed = true;
+      newState.npm_audit_passing = true;
+      newState.current_attempt++;
+      newState.last_agent_executed = 'run-npm-audit-fix';
+      return newState;
+    },
+    cost: 2,
+    target: 'package.json',
+    duration: 30, // seconds
+  },
+];
+
 // Code Complexity Agent Actions
 export const codeComplexityActions: CICheckAction[] = [
   {
@@ -286,4 +307,8 @@ export const eslintActions = eslintConfigActions;
 export const testRefactorActions = [...unitTestsActions, ...e2eTestsActions];
 export const huskyHookActions: CICheckAction[] = []; // Empty for now
 export const ciFixActions: CICheckAction[] = []; // Empty for now
-export const qualityGateActions = [...sonarcloudActions, ...codeComplexityActions];
+export const qualityGateActions = [
+  ...sonarcloudActions,
+  ...codeComplexityActions,
+  ...securityAuditActions,
+];

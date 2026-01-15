@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import AgentDB from '../../services/agentDB';
 
 export interface MockAgentDBInstance {
-  storeClinicianFeedback: () => Promise<void>;
+  storeClinicianFeedback: () => Promise<void>;,
 }
 
 export interface MockBlobType {
@@ -14,8 +14,8 @@ export interface MockBlobType {
     parts: unknown[];
     options: { type?: string } | unknown;
     text: () => Promise<string>;
-    type: string;
-  };
+    type: string;,
+  };,
 }
 
 export const setupGlobalMocks = () => {
@@ -27,11 +27,11 @@ export const setupGlobalMocks = () => {
     ) {}
 
     async text(): Promise<string> {
-      return this.parts[0] as string;
+      return this.parts[0] as string;,
     }
 
     get type(): string {
-      return (this.options as { type?: string })?.type ?? 'application/json';
+      return (this.options as { type?: string })?.type ?? 'application/json';,
     }
   };
 
@@ -39,7 +39,7 @@ export const setupGlobalMocks = () => {
   globalThis.URL.createObjectURL = vi.fn(() => 'blob:test-url');
   globalThis.URL.revokeObjectURL = vi.fn();
 
-  return MockBlob;
+  return MockBlob;,
 };
 
 export const mockAgentDBSpy = () => {
@@ -48,5 +48,5 @@ export const mockAgentDBSpy = () => {
   };
   return vi
     .spyOn(AgentDB, 'getInstance')
-    .mockReturnValue(mockAgentDBInstance as unknown as AgentDB);
+    .mockReturnValue(mockAgentDBInstance as unknown as AgentDB);,
 };

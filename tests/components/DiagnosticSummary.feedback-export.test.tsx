@@ -39,25 +39,25 @@ describe('DiagnosticSummary Feedback Functionality', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setupGlobalMocks();
-    mockAgentDBSpy();
+    mockAgentDBSpy();,
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();
+    vi.restoreAllMocks();,
   });
 
   it('shows feedback button when result has lesions', () => {
     render(<DiagnosticSummary result={mockResult} />);
-    expect(screen.getByText('Provide Feedback')).toBeInTheDocument();
+    expect(screen.getByText('Provide Feedback')).toBeInTheDocument();,
   });
 
   it('shows feedback button even when lesions array is empty', () => {
     const resultNoLesions = { ...mockResult, lesions: [] };
     render(<DiagnosticSummary result={resultNoLesions} />);
     const feedbackBtn = screen.queryByText('Provide Feedback');
-    expect(feedbackBtn).toBeInTheDocument();
-  });
+    expect(feedbackBtn).toBeInTheDocument();,
+  });,
 });
 
 describe('DiagnosticSummary Export Functionality', () => {
@@ -65,17 +65,17 @@ describe('DiagnosticSummary Export Functionality', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setupGlobalMocks();
-    mockAgentDBSpy();
+    mockAgentDBSpy();,
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();
+    vi.restoreAllMocks();,
   });
 
   it('shows export button when result is present', () => {
     render(<DiagnosticSummary result={mockResult} />);
-    expect(screen.getByText('Export Encrypted Report')).toBeInTheDocument();
+    expect(screen.getByText('Export Encrypted Report')).toBeInTheDocument();,
   });
 
   it('creates blob and triggers download on export click', () => {
@@ -84,7 +84,7 @@ describe('DiagnosticSummary Export Functionality', () => {
     fireEvent.click(exportBtn);
 
     expect(globalThis.URL.createObjectURL).toHaveBeenCalled();
-    expect(globalThis.URL.revokeObjectURL).toHaveBeenCalled();
+    expect(globalThis.URL.revokeObjectURL).toHaveBeenCalled();,
   });
 
   it('does nothing on export when result is null', () => {
@@ -95,7 +95,7 @@ describe('DiagnosticSummary Export Functionality', () => {
     const exportBtn = screen.getByText('Export Encrypted Report');
     fireEvent.click(exportBtn);
 
-    expect(globalThis.URL.createObjectURL).toHaveBeenCalled();
+    expect(globalThis.URL.createObjectURL).toHaveBeenCalled();,
   });
 
   it('exports correct data structure', async () => {
@@ -110,7 +110,7 @@ describe('DiagnosticSummary Export Functionality', () => {
 
     const textContent = await blob.text();
     expect(textContent).toContain(mockResult.id);
-    expect(textContent).toContain('3.1.0');
+    expect(textContent).toContain('3.1.0');,
   });
 
   it('includes signature in export when available', async () => {
@@ -122,7 +122,7 @@ describe('DiagnosticSummary Export Functionality', () => {
     const blobCall = createObjectURLCalls[0];
     const blob = blobCall[0] as Blob;
     const textContent = await blob.text();
-    expect(textContent).toContain('sig-123');
+    expect(textContent).toContain('sig-123');,
   });
 
   it('includes encryption info in export when securityContext is present', async () => {
@@ -135,7 +135,7 @@ describe('DiagnosticSummary Export Functionality', () => {
     const blob = blobCall[0] as Blob;
     const textContent = await blob.text();
     expect(textContent).toContain('AES-GCM');
-    expect(textContent).toContain('[1,2,3]');
+    expect(textContent).toContain('[1,2,3]');,
   });
 
   it('generates random signature when not available', async () => {
@@ -148,6 +148,6 @@ describe('DiagnosticSummary Export Functionality', () => {
     const blobCall = createObjectURLCalls[0];
     const blob = blobCall[0] as Blob;
     const textContent = await blob.text();
-    expect(textContent).toContain('sig_');
-  });
+    expect(textContent).toContain('sig_');,
+  });,
 });

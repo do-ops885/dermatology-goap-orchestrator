@@ -8,13 +8,13 @@ import AgentDB from '../../services/agentDB';
 import type { FairnessStats, FeedbackStats } from '../../types';
 
 interface MockResponsiveContainerProps {
-  children: React.ReactNode;
+  children: React.ReactNode;,
 }
 
 interface MockAgentDBInstance {
   getFairnessMetrics: () => Record<string, FairnessStats>;
   getLiveStats: () => Promise<Record<string, FairnessStats>>;
-  getFeedbackStats: () => Promise<FeedbackStats>;
+  getFeedbackStats: () => Promise<FeedbackStats>;,
 }
 
 // Mock Recharts to avoid ResizeObserver issues in JSDOM
@@ -25,12 +25,12 @@ vi.mock('recharts', async () => {
     ResponsiveContainer: ({ children }: MockResponsiveContainerProps) => (
       <div style={{ width: 500, height: 300 }}>{children}</div>
     ),
-  };
+  };,
 });
 
 describe('FairnessDashboard', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.clearAllMocks();,
   });
 
   it('renders initial state correctly', async () => {
@@ -50,14 +50,14 @@ describe('FairnessDashboard', () => {
       .mockReturnValue(mockInstance as unknown as AgentDB);
 
     await act(async () => {
-      render(<FairnessDashboard />);
+      render(<FairnessDashboard />);,
     });
 
     expect(screen.getByText('Equity Assurance')).toBeInTheDocument();
     expect(screen.getByText('TPR')).toBeInTheDocument();
     expect(screen.getByText('FPR')).toBeInTheDocument();
 
-    getInstanceSpy.mockRestore();
+    getInstanceSpy.mockRestore();,
   });
 
   it('fetches and displays metrics from AgentDB', async () => {
@@ -86,17 +86,17 @@ describe('FairnessDashboard', () => {
       .mockReturnValue(mockInstance as unknown as AgentDB);
 
     await act(async () => {
-      render(<FairnessDashboard />);
+      render(<FairnessDashboard />);,
     });
 
     await waitFor(() => {
       // Check for max TPR gap calculation: 0.95 - 0.7 = 0.25
       expect(screen.getByText('0.25')).toBeInTheDocument();
       // Total samples: 10+5+5+8+12+15 = 55
-      expect(screen.getByText('55')).toBeInTheDocument();
+      expect(screen.getByText('55')).toBeInTheDocument();,
     });
 
-    getInstanceSpy.mockRestore();
+    getInstanceSpy.mockRestore();,
   });
 
   it('shows report button when callback provided', async () => {
@@ -118,7 +118,7 @@ describe('FairnessDashboard', () => {
     const onOpen = vi.fn();
 
     await act(async () => {
-      render(<FairnessDashboard onOpenReport={onOpen} />);
+      render(<FairnessDashboard onOpenReport={onOpen} />);,
     });
 
     const btn = screen.getByText('Full Audit');
@@ -126,6 +126,6 @@ describe('FairnessDashboard', () => {
     btn.click();
     expect(onOpen).toHaveBeenCalled();
 
-    getInstanceSpy.mockRestore();
-  });
+    getInstanceSpy.mockRestore();,
+  });,
 });

@@ -8,7 +8,7 @@ import { setupGlobalMocks, mockAgentDBSpy } from './DiagnosticSummary.setup';
 import type { AnalysisResult } from '../../types';
 
 interface ExtendedAnalysisResult extends AnalysisResult {
-  fairness?: number;
+  fairness?: number;,
 }
 
 const mockResult: AnalysisResult = {
@@ -43,17 +43,17 @@ describe('DiagnosticSummary Fairness Card', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setupGlobalMocks();
-    mockAgentDBSpy();
+    mockAgentDBSpy();,
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();
+    vi.restoreAllMocks();,
   });
 
   it('displays fairness score with default fallback', () => {
     render(<DiagnosticSummary result={mockResult} />);
-    expect(screen.getByText('92%')).toBeInTheDocument();
+    expect(screen.getByText('92%')).toBeInTheDocument();,
   });
 
   it('displays fairness score from result when available', () => {
@@ -62,13 +62,13 @@ describe('DiagnosticSummary Fairness Card', () => {
       fairness: 0.88,
     };
     render(<DiagnosticSummary result={resultWithFairness} />);
-    expect(screen.getByText('88%')).toBeInTheDocument();
+    expect(screen.getByText('88%')).toBeInTheDocument();,
   });
 
   it('shows "Bias Invariant" badge', () => {
     render(<DiagnosticSummary result={mockResult} />);
-    expect(screen.getByText(/Bias Invariant/i)).toBeInTheDocument();
-  });
+    expect(screen.getByText(/Bias Invariant/i)).toBeInTheDocument();,
+  });,
 });
 
 describe('DiagnosticSummary Different Skin Tones', () => {
@@ -76,12 +76,12 @@ describe('DiagnosticSummary Different Skin Tones', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setupGlobalMocks();
-    mockAgentDBSpy();
+    mockAgentDBSpy();,
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();
+    vi.restoreAllMocks();,
   });
 
   const fitzpatrickTypes: AnalysisResult['fitzpatrickType'][] = ['I', 'II', 'III', 'IV', 'V', 'VI'];
@@ -90,9 +90,9 @@ describe('DiagnosticSummary Different Skin Tones', () => {
     it(`renders correctly for Fitzpatrick type ${type}`, () => {
       const resultWithType = { ...mockResult, fitzpatrickType: type };
       render(<DiagnosticSummary result={resultWithType} />);
-      expect(screen.getByText(`Type ${type}`)).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByText(`Type ${type}`)).toBeInTheDocument();,
+    });,
+  });,
 });
 
 describe('DiagnosticSummary Edge Cases and Error Handling', () => {
@@ -100,12 +100,12 @@ describe('DiagnosticSummary Edge Cases and Error Handling', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setupGlobalMocks();
-    mockAgentDBSpy();
+    mockAgentDBSpy();,
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();
+    vi.restoreAllMocks();,
   });
 
   it('handles result with all optional fields undefined', () => {
@@ -120,7 +120,7 @@ describe('DiagnosticSummary Edge Cases and Error Handling', () => {
     };
     render(<DiagnosticSummary result={minimalResult} />);
     expect(screen.getByText('Type I')).toBeInTheDocument();
-    expect(screen.getByText('0.0%')).toBeInTheDocument();
+    expect(screen.getByText('0.0%')).toBeInTheDocument();,
   });
 
   it('handles very long recommendation text', () => {
@@ -130,7 +130,7 @@ describe('DiagnosticSummary Edge Cases and Error Handling', () => {
       recommendations: [longRecommendation],
     };
     render(<DiagnosticSummary result={resultWithLongRec} />);
-    expect(screen.getByText(/This is a very long recommendation/)).toBeInTheDocument();
+    expect(screen.getByText(/This is a very long recommendation/)).toBeInTheDocument();,
   });
 
   it('handles special characters in recommendations', () => {
@@ -140,6 +140,6 @@ describe('DiagnosticSummary Edge Cases and Error Handling', () => {
       recommendations: [specialRec],
     };
     render(<DiagnosticSummary result={resultWithSpecialRec} />);
-    expect(screen.getByText(/Take medication/)).toBeInTheDocument();
-  });
+    expect(screen.getByText(/Take medication/)).toBeInTheDocument();,
+  });,
 });

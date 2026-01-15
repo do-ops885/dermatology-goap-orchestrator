@@ -8,14 +8,11 @@
  * Primary goal for the CI check system
  */
 export const CI_CHECK_GOAL = {
-  name: 'fix_all_ci_checks',
-  description: 'Fix all CI check failures to ensure pipeline passes',
+  name: 'fix_pr20_ci_checks',
+  description: 'Fix ESLint, NPM Audit, and Code Complexity failures for PR #20',
   targetState: {
+    npm_audit_passing: true,
     eslint_passing: true,
-    formatting_passing: true,
-    unit_tests_passing: true,
-    e2e_tests_passing: true,
-    sonarcloud_passing: true,
     code_complexity_passing: true,
     all_ci_checks_passing: true,
   },

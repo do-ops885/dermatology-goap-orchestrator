@@ -39,12 +39,12 @@ describe('DiagnosticSummary Web Verification', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setupGlobalMocks();
-    mockAgentDBSpy();
+    mockAgentDBSpy();,
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();
+    vi.restoreAllMocks();,
   });
 
   it('renders web verification with sources', () => {
@@ -53,7 +53,7 @@ describe('DiagnosticSummary Web Verification', () => {
     expect(screen.getByText('Clinical Guideline 1')).toBeInTheDocument();
     expect(
       screen.getByText(/Verified online according to clinical guidelines/i),
-    ).toBeInTheDocument();
+    ).toBeInTheDocument();,
   });
 
   it('renders multiple sources', () => {
@@ -72,7 +72,7 @@ describe('DiagnosticSummary Web Verification', () => {
     render(<DiagnosticSummary result={resultWithMultipleSources} />);
     expect(screen.getByText('Guideline 1')).toBeInTheDocument();
     expect(screen.getByText('Guideline 2')).toBeInTheDocument();
-    expect(screen.getByText('Guideline 3')).toBeInTheDocument();
+    expect(screen.getByText('Guideline 3')).toBeInTheDocument();,
   });
 
   it('shows no sources message when sources array is empty', () => {
@@ -85,7 +85,7 @@ describe('DiagnosticSummary Web Verification', () => {
       },
     };
     render(<DiagnosticSummary result={resultWithNoSources} />);
-    expect(screen.getByText('No direct guidelines found.')).toBeInTheDocument();
+    expect(screen.getByText('No direct guidelines found.')).toBeInTheDocument();,
   });
 
   it('renders source link with correct attributes', () => {
@@ -93,13 +93,13 @@ describe('DiagnosticSummary Web Verification', () => {
     const link = screen.getByRole('link', { name: 'Clinical Guideline 1' });
     expect(link).toHaveAttribute('href', 'https://example.com/guideline1');
     expect(link).toHaveAttribute('target', '_blank');
-    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');,
   });
 
   it('does not render web verification when webVerification is undefined', () => {
     const { webVerification: _, ...resultNoWebVerification } = mockResult;
     render(<DiagnosticSummary result={resultNoWebVerification as AnalysisResult} />);
-    expect(screen.queryByText('Web Verification')).not.toBeInTheDocument();
+    expect(screen.queryByText('Web Verification')).not.toBeInTheDocument();,
   });
 
   it('truncates summary to 150 characters', () => {
@@ -116,8 +116,8 @@ describe('DiagnosticSummary Web Verification', () => {
     render(<DiagnosticSummary result={resultWithLongSummary} />);
     const summaryElement = screen.getByText(/truncated with ellipsis/);
     expect(summaryElement.textContent).toMatch(/...$/);
-    expect(summaryElement.textContent!.length).toBeGreaterThan(150);
-  });
+    expect(summaryElement.textContent!.length).toBeGreaterThan(150);,
+  });,
 });
 
 describe('DiagnosticSummary Recommendations', () => {
@@ -125,17 +125,17 @@ describe('DiagnosticSummary Recommendations', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setupGlobalMocks();
-    mockAgentDBSpy();
+    mockAgentDBSpy();,
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();
+    vi.restoreAllMocks();,
   });
 
   it('displays recommendation from array', () => {
     render(<DiagnosticSummary result={mockResult} />);
-    expect(screen.getByText(/See a doctor immediately/i)).toBeInTheDocument();
+    expect(screen.getByText(/See a doctor immediately/i)).toBeInTheDocument();,
   });
 
   it('displays fallback message when recommendations array is empty', () => {
@@ -146,7 +146,7 @@ describe('DiagnosticSummary Recommendations', () => {
     render(<DiagnosticSummary result={resultWithEmptyRecommendations} />);
     expect(
       screen.getByText(/Consult a healthcare professional for follow-up/i),
-    ).toBeInTheDocument();
+    ).toBeInTheDocument();,
   });
 
   it('displays multiple recommendations (only first one shown)', () => {
@@ -157,14 +157,14 @@ describe('DiagnosticSummary Recommendations', () => {
     render(<DiagnosticSummary result={resultWithMultipleRecommendations} />);
     expect(screen.getByText(/"First recommendation"/)).toBeInTheDocument();
     expect(screen.queryByText('Second recommendation')).not.toBeInTheDocument();
-    expect(screen.queryByText('Third recommendation')).not.toBeInTheDocument();
+    expect(screen.queryByText('Third recommendation')).not.toBeInTheDocument();,
   });
 
   it('displays recommendation text wrapped in quotes', () => {
     render(<DiagnosticSummary result={mockResult} />);
     const recommendationElement = screen.getByText(/See a doctor immediately/i);
-    expect(recommendationElement.textContent).toMatch(/^"See a doctor/);
-  });
+    expect(recommendationElement.textContent).toMatch(/^"See a doctor/);,
+  });,
 });
 
 describe('DiagnosticSummary Security Footer', () => {
@@ -172,18 +172,18 @@ describe('DiagnosticSummary Security Footer', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setupGlobalMocks();
-    mockAgentDBSpy();
+    mockAgentDBSpy();,
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.restoreAllMocks();
+    vi.restoreAllMocks();,
   });
 
   it('displays security footer when securityContext is present', () => {
     render(<DiagnosticSummary result={mockResult} />);
     expect(screen.getByText('Ephem-Key: Active')).toBeInTheDocument();
-    expect(screen.getByText(/IV:/)).toBeInTheDocument();
+    expect(screen.getByText(/IV:/)).toBeInTheDocument();,
   });
 
   it('truncates IV to first 4 elements', () => {
@@ -196,12 +196,12 @@ describe('DiagnosticSummary Security Footer', () => {
     };
     render(<DiagnosticSummary result={resultWithLongIV} />);
     const ivElement = screen.getByText(/IV:/);
-    expect(ivElement.textContent).toMatch(/IV: 123.../);
+    expect(ivElement.textContent).toMatch(/IV: 123.../);,
   });
 
   it('does not render security footer when securityContext is undefined', () => {
     const resultNoSecurity = { ...mockResult, securityContext: undefined };
     render(<DiagnosticSummary result={resultNoSecurity} />);
-    expect(screen.queryByText('Ephem-Key: Active')).not.toBeInTheDocument();
-  });
+    expect(screen.queryByText('Ephem-Key: Active')).not.toBeInTheDocument();,
+  });,
 });
