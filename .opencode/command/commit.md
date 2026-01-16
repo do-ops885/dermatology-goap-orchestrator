@@ -15,22 +15,23 @@ When the user runs this command, execute the following workflow:
 
 2. **Run lint before staging**:
    - Execute `npm run lint:fix` to run ESLint with auto-fix on all files
-   - If ESLint fails, fix the errors before proceeding
-   - **Note:** For large files or documentation files, ESLint may run out of memory. In this case, you can use `--no-verify` with git commit to bypass the husky hook.
+   - If ESLint fails, use GOAP to fix the errors before proceeding
+   - **CRITICAL**: Never bypass pre-commit hooks with `--no-verify`. Always fix the root cause.
 
 3. **Run pre-commit validation**:
-   - Execute `bash scripts/quality-gate.sh --fast --fix` for quick validation (format, lint, typecheck, secrets, LOC)
+   - Execute `bash scripts/quality-gate.sh --fast --fix` for quick validation (format, lint, typecheck, LOC)
    - Or `bash scripts/quality-gate.sh` for full validation including tests and build
    - Options: `--fast` (skip tests/build), `--fix` (auto-fix where possible), `--skip-tests`, `--skip-build`
-   - If validation fails, the script will show auto-fix suggestions and exit with error details
+   - If validation fails, use GOAP to analyze and fix the errors automatically
+   - **CRITICAL**: Never bypass validation. Always fix all issues before committing.
 
-   **Note about Husky:** The repository has `.husky/pre-commit` configured to run:
+   **Husky Pre-commit Hook**: The repository has `.husky/pre-commit` configured to run:
    - Dependency conflict checks
    - lint-staged (runs eslint --fix and prettier --write on staged files)
-   - Secret detection
+   - Sensitive data detection
    - Fast quality gate (typecheck, LOC check)
 
-   However, if ESLint runs out of memory (common with large .md files), use `git commit --no-verify` to bypass the hook.
+   If validation fails, use GOAP to orchestrate the fix process.
 
 4. **Analyze git status**:
    - Run `git status --porcelain` to check for changes
@@ -46,9 +47,10 @@ When the user runs this command, execute the following workflow:
    - Keep description concise, clear, and in imperative mood
    - Show the proposed message to user for confirmation
 7. **Execute the commit**:
-   - Run `git commit -m "<generated message>"` (use `--no-verify` only if ESLint ran out of memory)
+   - Run `git commit -m "<generated message>"` (NEVER use `--no-verify`)
    - Display the commit hash and confirm success
    - Provide brief summary of what was committed
+   - **CRITICAL**: If commit fails due to validation errors, use GOAP to fix the issues before retrying
 
 ## Commit Message Guidelines
 
@@ -151,7 +153,7 @@ Use these as examples when generating commit messages:
 - 🦺 feat: add input validation for user registration form
 - 💚 fix: resolve failing CI pipeline tests
 - 📈 feat: implement analytics tracking for user engagement
-- 🔒️ fix: strengthen authentication password requirements
+- 🔒️ fix: strengthen authentication security
 - ♿️ feat: improve form accessibility for screen readers
 
 Example commit sequence:
@@ -165,9 +167,11 @@ Example commit sequence:
 
 ## Agent Behavior Notes
 
-- **Error handling**: If validation fails, give user option to proceed or fix issues first
+- **Error handling**: If validation fails, use GOAP to automatically fix all issues before committing
+- **NO BYPASSES**: NEVER use `git commit --no-verify`. Always fix validation errors at the root
 - **Auto-staging**: If no files are staged, automatically stage all changes with `git add .`
 - **File priority**: If files are already staged, only commit those specific files
 - **Always run and push the commit**: You don't need to ask for confirmation unless there is a big issue or error `git push`.
 - **Message quality**: Ensure commit messages are clear, concise, and follow conventional format
 - **Success feedback**: After successful commit, show commit hash and brief summary
+- **GOAP Integration**: Use GOAP agent orchestration to systematically resolve validation failures
