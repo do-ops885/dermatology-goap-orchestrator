@@ -8,6 +8,12 @@ import type { AgentContext } from '../../services/executors/types';
 import type { ExecutorFn } from '../../services/goap/agent';
 import type { WorldState } from '../../types';
 
+// Use high confidence state to avoid safety routing issues in tests
+const HIGH_CONFIDENCE_STATE: WorldState = {
+  ...INITIAL_STATE,
+  confidence_score: 0.75,
+};
+
 /**
  * Integration tests for GOAP Agent failure handling
  * Tests that the orchestrator properly handles agent failures and routes to safety mechanisms
@@ -232,7 +238,7 @@ describe('GoapAgent Failure Handling', () => {
       const agent = new GoapAgent(planner, executors);
 
       await expect(
-        agent.execute(INITIAL_STATE, { audit_logged: true }, {} as AgentContext),
+        agent.execute(HIGH_CONFIDENCE_STATE, { audit_logged: true }, {} as AgentContext),
       ).rejects.toThrow('Critical');
     });
 
@@ -264,7 +270,7 @@ describe('GoapAgent Failure Handling', () => {
       const agent = new GoapAgent(planner, executors);
 
       await expect(
-        agent.execute(INITIAL_STATE, { audit_logged: true }, {} as AgentContext),
+        agent.execute(HIGH_CONFIDENCE_STATE, { audit_logged: true }, {} as AgentContext),
       ).rejects.toThrow('Critical');
     });
   });
@@ -307,7 +313,11 @@ describe('GoapAgent Failure Handling', () => {
       };
 
       const agent = new GoapAgent(planner, executors);
-      const trace = await agent.execute(INITIAL_STATE, { audit_logged: true }, {} as AgentContext);
+      const trace = await agent.execute(
+        HIGH_CONFIDENCE_STATE,
+        { audit_logged: true },
+        {} as AgentContext,
+      );
 
       expect(replanTriggered).toBe(true);
       expect(trace.finalWorldState.is_low_confidence).toBe(true);
@@ -347,7 +357,11 @@ describe('GoapAgent Failure Handling', () => {
       };
 
       const agent = new GoapAgent(planner, executors);
-      const trace = await agent.execute(INITIAL_STATE, { audit_logged: true }, {} as AgentContext);
+      const trace = await agent.execute(
+        HIGH_CONFIDENCE_STATE,
+        { audit_logged: true },
+        {} as AgentContext,
+      );
 
       // Verify custom state updates are preserved
       expect((trace.finalWorldState as any).verification_timestamp).toBeDefined();
