@@ -15,7 +15,7 @@ module.exports = {
       // Group 3 (optional): Scope
       // Group 4: Subject
       headerPattern:
-        /^(?:([\u2600-\u27BF\uE000-\uF8FF\U0001F300-\U0001F9FF])\s+)?(\w+)(?:\((.*)\))?:\s(.*)$/u,
+        /^(?:([\u2600-\u27BF\uE000-\uF8FF\u{1F300}-\u{1F9FF}])\s+)?(\w+)(?:\((.*)\))?:\s(.*)$/u,
       headerCorrespondence: ['emoji', 'type', 'scope', 'subject'],
     },
   },

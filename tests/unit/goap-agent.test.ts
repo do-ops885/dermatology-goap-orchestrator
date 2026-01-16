@@ -53,9 +53,10 @@ describe('GoapAgent', () => {
       // Create executors that properly apply effects without triggering safety routing
       const executors: Record<string, ExecutorFn> = {};
       plan.forEach((action) => {
-        executors[action.agentId] = async () => Promise.resolve({
-          metadata: { ok: true },
-        });
+        executors[action.agentId] = async () =>
+          Promise.resolve({
+            metadata: { ok: true },
+          });
       });
 
       const agent = new GoapAgent(planner, executors, { perAgentTimeoutMs: 5000 });

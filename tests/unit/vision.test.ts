@@ -564,7 +564,7 @@ describe('VisionSpecialist', () => {
       vision.dispose();
 
       (tf.loadGraphModel as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error('Failed to load model')
+        new Error('Failed to load model'),
       );
 
       (tf.findBackend as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
@@ -683,7 +683,6 @@ describe('VisionSpecialist', () => {
       expect(mockPredict).toHaveBeenCalledTimes(2);
     });
   });
-
 });
 
 function createMockImageElement(width: number, height: number): HTMLImageElement {
