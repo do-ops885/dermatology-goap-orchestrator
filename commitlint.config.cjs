@@ -9,7 +9,13 @@ module.exports = {
   },
   parserPreset: {
     parserOpts: {
-      headerPattern: /^(?:(\p{Emoji_Presentation}\s))?(?:(\w+)(?:\((.*)\))?:\s(.*)|\b(wip)\b.*)$/u,
+      // Matches optional emoji + conventional commit format
+      // Group 1 (optional): Emoji like 📝, ✅, 🐛
+      // Group 2: Type (feat, fix, docs, etc.)
+      // Group 3 (optional): Scope
+      // Group 4: Subject
+      headerPattern:
+        /^(?:([\u2600-\u27BF\uE000-\uF8FF\U0001F300-\U0001F9FF])\s+)?(\w+)(?:\((.*)\))?:\s(.*)$/u,
       headerCorrespondence: ['emoji', 'type', 'scope', 'subject'],
     },
   },
