@@ -169,8 +169,8 @@ test.describe('Scenario C: Security & Error Handling - Advanced', () => {
 
     const logs = await page.locator('[role="log"]').textContent();
 
-    const hasSignatureLog = logs?.includes('signature') || logs?.includes('Signature') || false;
-    const hasValidationLog = logs?.includes('validation') || logs?.includes('Validation') || false;
+    const hasSignatureLog = logs?.includes('signature') ?? logs?.includes('Signature') ?? false;
+    const hasValidationLog = logs?.includes('validation') ?? logs?.includes('Validation') ?? false;
 
     expect(hasSignatureLog || hasValidationLog).toBe(true);
   });

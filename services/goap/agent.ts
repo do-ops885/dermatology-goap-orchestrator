@@ -1,3 +1,4 @@
+import { LOG_COMPONENT_GOAP_AGENT } from '../../config/constants';
 import { Logger } from '../logger';
 
 import type { AgentAction, WorldState } from '../../types';
@@ -8,7 +9,6 @@ import type { GOAPPlanner } from '../goap';
  * Agent Handoff Coordination Protocol
  * Ensures proper state management and quality gate validation during agent transitions
  */
-const LOG_COMPONENT = 'goap-agent';
 
 export class AgentHandoffCoordinator {
   /**
@@ -252,7 +252,7 @@ export class GoapAgent {
   ): Promise<ExecutionTrace> {
     const runId = 'run_' + Math.random().toString(36).slice(2, 9);
     const startTime = Date.now();
-    Logger.info(LOG_COMPONENT, 'plan_start', { runId, goalState });
+    Logger.info(LOG_COMPONENT_GOAP_AGENT, 'plan_start', { runId, goalState });
 
     let currentState = { ...startState };
     const trace: ExecutionTrace = { runId, startTime, agents: [], finalWorldState: currentState };
@@ -285,7 +285,10 @@ export class GoapAgent {
 
     trace.endTime = Date.now();
     trace.finalWorldState = currentState;
-    Logger.info(LOG_COMPONENT, 'plan_end', { runId, durationMs: trace.endTime - trace.startTime });
+    Logger.info(LOG_COMPONENT_GOAP_AGENT, 'plan_end', {
+      runId,
+      durationMs: trace.endTime - trace.startTime,
+    });
     return trace;
   }
 
@@ -305,8 +308,8 @@ export class GoapAgent {
     this.logAgentStart(runId, action);
 
     const uiLogId = this.handleUIStart(ctx, action);
-    if (uiLogId) {
-      agentRecord.metadata = { ...(agentRecord.metadata || {}), uiLogId };
+    if (uiLogId !== undefined) {
+      agentRecord.metadata = { ...(agentRecord.metadata ?? {}), uiLogId };
     }
 
     const executor = this.executors[action.agentId];
@@ -329,7 +332,7 @@ export class GoapAgent {
     action: AgentAction,
     currentState: WorldState,
   ): void {
-    if (!previousAgent) return;
+    if (previousAgent === undefined || previousAgent === null) return;
 
     const validation = this.handoffCoordinator.validateHandoff(
       previousAgent,
@@ -339,7 +342,7 @@ export class GoapAgent {
     );
     if (!validation.valid) {
       const error = new Error(`Agent handoff validation failed: ${validation.reason}`);
-      Logger.error(LOG_COMPONENT, 'handoff_validation_failed', {
+      Logger.error(LOG_COMPONENT_GOAP_AGENT, 'handoff_validation_failed', {
         runId,
         fromAgent: previousAgent,
         toAgent: action.agentId,
@@ -350,7 +353,7 @@ export class GoapAgent {
 
     if (validation.warnings) {
       for (const warning of validation.warnings) {
-        Logger.warn(LOG_COMPONENT, 'handoff_warning', {
+        Logger.warn(LOG_COMPONENT_GOAP_AGENT, 'handoff_warning', {
           runId,
           fromAgent: previousAgent,
           toAgent: action.agentId,
@@ -371,7 +374,7 @@ export class GoapAgent {
   }
 
   private logAgentStart(runId: string, action: AgentAction): void {
-    Logger.info(LOG_COMPONENT, 'agent_start', {
+    Logger.info(LOG_COMPONENT_GOAP_AGENT, 'agent_start', {
       runId,
       agent: action.agentId,
       action: action.name,
@@ -397,7 +400,7 @@ export class GoapAgent {
     agentRecord.endTime = Date.now();
     agentRecord.status = 'failed';
     agentRecord.error = 'executor_missing';
-    Logger.error(LOG_COMPONENT, 'executor_missing', { runId, agent: action.agentId });
+    Logger.error(LOG_COMPONENT_GOAP_AGENT, 'executor_missing', { runId, agent: action.agentId });
     if (typeof ctx.onAgentEnd === 'function') ctx.onAgentEnd(action, agentRecord);
   }
 
@@ -424,7 +427,7 @@ export class GoapAgent {
   ): { newState: WorldState; previousAgent: string; shouldReplan: boolean } {
     agentRecord.endTime = Date.now();
     agentRecord.status = 'completed';
-    agentRecord.metadata = result.metadata;
+    agentRecord.metadata = result.metadata ?? {};
 
     let newState = currentState;
     if (result.newStateUpdates) {
@@ -434,7 +437,7 @@ export class GoapAgent {
 
     if (typeof ctx.onAgentEnd === 'function') ctx.onAgentEnd(action, agentRecord);
 
-    Logger.info('goap-agent', 'agent_end', {
+    Logger.info(LOG_COMPONENT_GOAP_AGENT, 'agent_end', {
       runId,
       agent: action.agentId,
       status: 'completed',
@@ -456,7 +459,7 @@ export class GoapAgent {
     agentRecord.endTime = Date.now();
     agentRecord.status = 'failed';
     agentRecord.error = e instanceof Error ? e.message : String(e);
-    Logger.error('goap-agent', 'agent_failed', {
+    Logger.error(LOG_COMPONENT_GOAP_AGENT, 'agent_failed', {
       runId,
       agent: action.agentId,
       error: e instanceof Error ? e.message : String(e),
@@ -467,7 +470,7 @@ export class GoapAgent {
     if (e instanceof Error && e.message.includes('Critical')) {
       trace.endTime = Date.now();
       trace.finalWorldState = currentState;
-      Logger.error('goap-agent', 'plan_aborted', { runId, reason: e.message });
+      Logger.error(LOG_COMPONENT_GOAP_AGENT, 'plan_aborted', { runId, reason: e.message });
       throw e;
     } else {
       agentRecord.status = 'skipped';
@@ -482,10 +485,10 @@ export class GoapAgent {
     goalState: Partial<WorldState>,
     agentId: string,
   ): AgentAction[] {
-    Logger.info('goap-agent', 'replan_triggered', { runId, agent: agentId });
+    Logger.info(LOG_COMPONENT_GOAP_AGENT, 'replan_triggered', { runId, agent: agentId });
     const replanStart = Date.now();
     const newPlan = this.planner.plan(currentState, goalState);
-    Logger.info('goap-agent', 'replan_complete', {
+    Logger.info(LOG_COMPONENT_GOAP_AGENT, 'replan_complete', {
       runId,
       durationMs: Date.now() - replanStart,
       newPlan: newPlan.map((a) => a.name),

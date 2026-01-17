@@ -7,6 +7,8 @@ import { setupGlobalMocks, mockAgentDBSpy } from './DiagnosticSummary.setup';
 
 import type { AnalysisResult } from '../../types';
 
+const EXPORT_BUTTON_TEXT = 'Export Encrypted Report';
+
 const mockResult: AnalysisResult = {
   id: 'test-id',
   timestamp: 123456789,
@@ -75,12 +77,12 @@ describe('DiagnosticSummary Export Functionality', () => {
 
   it('shows export button when result is present', () => {
     render(<DiagnosticSummary result={mockResult} />);
-    expect(screen.getByText('Export Encrypted Report')).toBeInTheDocument();
+    expect(screen.getByText(EXPORT_BUTTON_TEXT)).toBeInTheDocument();
   });
 
   it('creates blob and triggers download on export click', () => {
     render(<DiagnosticSummary result={mockResult} />);
-    const exportBtn = screen.getByText('Export Encrypted Report');
+    const exportBtn = screen.getByText(EXPORT_BUTTON_TEXT);
     fireEvent.click(exportBtn);
 
     expect(globalThis.URL.createObjectURL).toHaveBeenCalled();
@@ -89,10 +91,10 @@ describe('DiagnosticSummary Export Functionality', () => {
 
   it('does nothing on export when result is null', () => {
     const { rerender } = render(<DiagnosticSummary result={null} />);
-    expect(screen.queryByText('Export Encrypted Report')).not.toBeInTheDocument();
+    expect(screen.queryByText(EXPORT_BUTTON_TEXT)).not.toBeInTheDocument();
 
     rerender(<DiagnosticSummary result={mockResult} />);
-    const exportBtn = screen.getByText('Export Encrypted Report');
+    const exportBtn = screen.getByText(EXPORT_BUTTON_TEXT);
     fireEvent.click(exportBtn);
 
     expect(globalThis.URL.createObjectURL).toHaveBeenCalled();
@@ -100,7 +102,7 @@ describe('DiagnosticSummary Export Functionality', () => {
 
   it('exports correct data structure', async () => {
     render(<DiagnosticSummary result={mockResult} />);
-    const exportBtn = screen.getByText('Export Encrypted Report');
+    const exportBtn = screen.getByText(EXPORT_BUTTON_TEXT);
     fireEvent.click(exportBtn);
 
     const createObjectURLCalls = (globalThis.URL.createObjectURL as any).mock.calls;
@@ -115,7 +117,7 @@ describe('DiagnosticSummary Export Functionality', () => {
 
   it('includes signature in export when available', async () => {
     render(<DiagnosticSummary result={mockResult} />);
-    const exportBtn = screen.getByText('Export Encrypted Report');
+    const exportBtn = screen.getByText(EXPORT_BUTTON_TEXT);
     fireEvent.click(exportBtn);
 
     const createObjectURLCalls = (globalThis.URL.createObjectURL as any).mock.calls;
@@ -127,7 +129,7 @@ describe('DiagnosticSummary Export Functionality', () => {
 
   it('includes encryption info in export when securityContext is present', async () => {
     render(<DiagnosticSummary result={mockResult} />);
-    const exportBtn = screen.getByText('Export Encrypted Report');
+    const exportBtn = screen.getByText(EXPORT_BUTTON_TEXT);
     fireEvent.click(exportBtn);
 
     const createObjectURLCalls = (globalThis.URL.createObjectURL as any).mock.calls;
@@ -141,7 +143,7 @@ describe('DiagnosticSummary Export Functionality', () => {
   it('generates random signature when not available', async () => {
     const resultNoSignature = { ...mockResult, signature: '' };
     render(<DiagnosticSummary result={resultNoSignature} />);
-    const exportBtn = screen.getByText('Export Encrypted Report');
+    const exportBtn = screen.getByText(EXPORT_BUTTON_TEXT);
     fireEvent.click(exportBtn);
 
     const createObjectURLCalls = (globalThis.URL.createObjectURL as any).mock.calls;

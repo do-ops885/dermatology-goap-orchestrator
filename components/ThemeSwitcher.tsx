@@ -1,7 +1,8 @@
 import { Sun, Moon, Contrast } from 'lucide-react';
 import React from 'react';
 
-import { useTheme, type Theme } from '../context/ThemeContext';
+import { type Theme } from '../context/ThemeContext';
+import { useTheme } from '../hooks/useTheme';
 
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();

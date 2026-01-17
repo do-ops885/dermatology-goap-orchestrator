@@ -156,7 +156,7 @@ export class QualityGateGoapEngine {
         };
       }
 
-      if (result.action && result.agent) {
+      if (result.action !== undefined && result.agent !== undefined) {
         lastAction = { agent: result.agent, action: result.action };
       }
     }

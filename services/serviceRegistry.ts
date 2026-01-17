@@ -7,9 +7,7 @@ export class ServiceRegistry {
   private services = new Map<string, unknown>();
 
   static getInstance(): ServiceRegistry {
-    if (ServiceRegistry.instance === undefined) {
-      ServiceRegistry.instance = new ServiceRegistry();
-    }
+    ServiceRegistry.instance ??= new ServiceRegistry();
     return ServiceRegistry.instance;
   }
 

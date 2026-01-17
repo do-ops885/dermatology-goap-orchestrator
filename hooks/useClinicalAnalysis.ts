@@ -19,13 +19,14 @@ import AgentDB, {
 } from '../services/agentDB';
 import { CryptoService } from '../services/crypto';
 import { GOAPPlanner } from '../services/goap';
+import { GoapAgent } from '../services/goap/agent';
 import { EXECUTOR_REGISTRY } from '../services/goap/registry';
 import { Logger } from '../services/logger';
 import { RouterAgent } from '../services/router';
+import { VisionSpecialist } from '../services/vision';
 import { INITIAL_STATE } from '../types';
 
 import type { ExecutionTrace, ExecutionAgentRecord } from '../services/goap/agent';
-import type { VisionSpecialist } from '../services/vision';
 import type { AgentLogEntry, WorldState, AgentAction } from '../types';
 import type { ChangeEvent } from 'react';
 
@@ -185,7 +186,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
   const reasoningBankRef = useRef<ReasoningBank | null>(null);
   const routerRef = useRef(RouterAgent.getInstance());
   const localLLMRef = useRef<LocalLLMService | null>(null);
-  const visionSpecialistRef = useRef<VisionSpecialist | null>(null);
+  const visionSpecialistRef = useRef<ReturnType<typeof VisionSpecialist.getInstance> | null>(null);
   const encryptionKeyRef = useRef<CryptoKey | null>(null);
   const lastAuditHashRef = useRef<string>(
     '0000000000000000000000000000000000000000000000000000000000000000',
@@ -222,8 +223,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
   const initAIServices = useCallback(async () => {
     if (aiReady || visionSpecialistRef.current) return;
     try {
-      Logger.info('System', 'Lazy loading AI models...');
-      const { VisionSpecialist } = await import('../services/vision');
+      Logger.info('System', 'Initializing AI models...');
       visionSpecialistRef.current = VisionSpecialist.getInstance();
       await visionSpecialistRef.current.initialize();
       localLLMRef.current = new LocalLLMService();
@@ -371,7 +371,6 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
         intent,
       });
 
-      const { GoapAgent } = await import('../services/goap/agent');
       const goapAgent = new GoapAgent(planner.current, EXECUTOR_REGISTRY, {
         perAgentTimeoutMs: 10000,
       });

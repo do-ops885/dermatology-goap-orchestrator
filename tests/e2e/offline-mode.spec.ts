@@ -226,9 +226,9 @@ test.describe('Scenario D: Offline Mode - Local Inference Fallback', () => {
     const logsContent = await logs.textContent();
 
     const hasOfflineIndication =
-      logsContent?.includes('offline') ||
-      logsContent?.includes('Offline') ||
-      logsContent?.includes('OFFLINE') ||
+      logsContent?.includes('offline') ??
+      logsContent?.includes('Offline') ??
+      logsContent?.includes('OFFLINE') ??
       logsContent?.includes('Local Inference');
 
     expect(hasOfflineIndication).toBe(true);

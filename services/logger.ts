@@ -16,9 +16,7 @@ class LoggerService {
   }
 
   public static getInstance(): LoggerService {
-    if (LoggerService.instance === undefined) {
-      LoggerService.instance = new LoggerService();
-    }
+    LoggerService.instance ??= new LoggerService();
     return LoggerService.instance;
   }
 

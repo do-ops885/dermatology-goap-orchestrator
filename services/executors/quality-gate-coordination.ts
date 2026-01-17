@@ -4,6 +4,8 @@
  * Agent coordination logic for the quality gate GOAP system
  */
 
+import { AGENT_CODE_COMPLEXITY, AGENT_ESLINT, AGENT_SECURITY_AUDIT } from '../../config/constants';
+
 import { eslintActions, securityAuditActions, codeComplexityActions } from './quality-gate-actions';
 
 import type { CICheckWorldState, CICheckAction } from '../quality-gate-goap';
@@ -34,7 +36,7 @@ export class CICheckCoordinationProtocol {
       const auditAction = securityAuditActions.find((a) => a.preconditions(state));
       if (auditAction) {
         return {
-          agent: 'SecurityAudit-Agent',
+          agent: AGENT_SECURITY_AUDIT,
           action: auditAction,
           dependencies: ['none - starting agent'],
         };
@@ -52,7 +54,7 @@ export class CICheckCoordinationProtocol {
       const eslintAction = eslintActions.find((a) => a.preconditions(state));
       if (eslintAction) {
         return {
-          agent: 'ESLint-Agent',
+          agent: AGENT_ESLINT,
           action: eslintAction,
           dependencies: ['SecurityAudit-Agent - npm audit must pass first'],
         };
@@ -70,7 +72,7 @@ export class CICheckCoordinationProtocol {
       const complexityAction = codeComplexityActions.find((a) => a.preconditions(state));
       if (complexityAction) {
         return {
-          agent: 'CodeComplexity-Agent',
+          agent: AGENT_CODE_COMPLEXITY,
           action: complexityAction,
           dependencies: ['ESLint-Agent - eslint must pass first'],
         };
@@ -103,7 +105,7 @@ export class CICheckCoordinationProtocol {
     valid: boolean;
     reason?: string;
   } {
-    const agentOrder = ['SecurityAudit-Agent', 'ESLint-Agent', 'CodeComplexity-Agent'];
+    const agentOrder = [AGENT_SECURITY_AUDIT, AGENT_ESLINT, AGENT_CODE_COMPLEXITY];
 
     const currentIndex = agentOrder.indexOf(currentAgent);
     const nextIndex = agentOrder.indexOf(nextAgent);
@@ -122,13 +124,13 @@ export class CICheckCoordinationProtocol {
 
     // Validate prerequisites for next agent
     switch (nextAgent) {
-      case 'ESLint-Agent':
+      case AGENT_ESLINT:
         if (!_state.npm_audit_passing) {
           return { valid: false, reason: 'NPM audit must pass before ESLint' };
         }
         break;
 
-      case 'CodeComplexity-Agent':
+      case AGENT_CODE_COMPLEXITY:
         if (!_state.eslint_passing) {
           return { valid: false, reason: 'ESLint must pass before code complexity analysis' };
         }

@@ -2,8 +2,22 @@ import { Buffer } from 'buffer';
 
 import { test, expect } from '@playwright/test';
 
+interface MockGeminiContent {
+  [key: string]: unknown;
+}
+
+interface WebSource {
+  uri?: string;
+  title?: string;
+}
+
+const API_ROUTE_PATTERN = '**/models/*:generateContent?key=*';
+const RUN_ANALYSIS_BUTTON = 'Run Clinical Analysis';
+const DIAGNOSTIC_SUMMARY = 'Diagnostic Summary';
+const TEST_IMAGE_BASE64 = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
 // Mock Data Generators
-const mockGeminiResponse = (jsonContent: any) => {
+const mockGeminiResponse = (jsonContent: MockGeminiContent) => {
   return {
     candidates: [
       {
@@ -16,7 +30,7 @@ const mockGeminiResponse = (jsonContent: any) => {
   };
 };
 
-const mockGroundingResponse = (text: string, sources: any[]) => {
+const mockGroundingResponse = (text: string, sources: WebSource[]) => {
   return {
     candidates: [
       {
@@ -34,9 +48,10 @@ const mockGroundingResponse = (text: string, sources: any[]) => {
 test.describe('Clinical AI Orchestrator E2E', () => {
   test.beforeEach(async ({ page }) => {
     // Mock Gemini API to prevent real billing/quota usage and ensure deterministic reasoning
-    await page.route('**/models/*:generateContent?key=*', async (route) => {
-      const requestBody = JSON.parse(route.request().postData() || '{}');
-      const promptText = requestBody.contents?.[0]?.parts?.find((p: any) => p.text)?.text || '';
+    await page.route(API_ROUTE_PATTERN, async (route) => {
+      const requestBody = JSON.parse(route.request().postData() ?? '{}');
+      const promptText =
+        requestBody.contents?.[0]?.parts?.find((p: { text?: string }) => p.text)?.text ?? '';
 
       // Conditional Mocking based on Agent Prompt
       if (promptText.includes('clinical classification')) {
@@ -91,10 +106,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
 
   test('Scenario A: Happy Path - High Confidence Analysis', async ({ page }) => {
     // 1. Create a dummy image file in memory
-    const buffer = Buffer.from(
-      'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-      'base64',
-    );
+    const buffer = Buffer.from(TEST_IMAGE_BASE64, 'base64');
 
     // 2. Upload Image
     const fileInput = page.locator('input[type="file"]');
@@ -106,7 +118,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
 
     // 3. Verify Preview and Run
     await expect(page.locator('img[alt="Preview"]')).toBeVisible();
-    const runBtn = page.locator('button', { hasText: 'Run Clinical Analysis' });
+    const runBtn = page.locator('button', { hasText: RUN_ANALYSIS_BUTTON });
     await expect(runBtn).toBeEnabled();
     await runBtn.click();
 
@@ -122,7 +134,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     await expect(logs).toContainText('Standard-Calibration-Agent');
 
     // 6. Verify Results
-    await expect(page.locator('h2', { hasText: 'Diagnostic Summary' })).toBeVisible({
+    await expect(page.locator('h2', { hasText: DIAGNOSTIC_SUMMARY })).toBeVisible({
       timeout: 20000,
     });
     await expect(page.locator('text=Type III')).toBeVisible();
@@ -131,9 +143,10 @@ test.describe('Clinical AI Orchestrator E2E', () => {
 
   test('Scenario B: Safety Interception - Low Confidence Trigger', async ({ page }) => {
     // Override the specific mock for Low Confidence simulation
-    await page.route('**/models/*:generateContent?key=*', async (route) => {
-      const requestBody = JSON.parse(route.request().postData() || '{}');
-      const promptText = requestBody.contents?.[0]?.parts?.find((p: any) => p.text)?.text || '';
+    await page.route(API_ROUTE_PATTERN, async (route) => {
+      const requestBody = JSON.parse(route.request().postData() ?? '{}');
+      const promptText =
+        requestBody.contents?.[0]?.parts?.find((p: { text?: string }) => p.text)?.text ?? '';
 
       if (promptText.includes('clinical classification')) {
         await route.fulfill({
@@ -155,16 +168,13 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     });
 
     // Upload and Run
-    const buffer = Buffer.from(
-      'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-      'base64',
-    );
+    const buffer = Buffer.from(TEST_IMAGE_BASE64, 'base64');
     await page.locator('input[type="file"]').setInputFiles({
       name: 'low-quality.jpg',
       mimeType: 'image/jpeg',
       buffer,
     });
-    await page.locator('button', { hasText: 'Run Clinical Analysis' }).click();
+    await page.locator('button', { hasText: RUN_ANALYSIS_BUTTON }).click();
 
     // Verify Warning UI
     await expect(page.locator('text=Low detection confidence (45%)')).toBeVisible();
@@ -197,7 +207,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
 
   test('Scenario D: Offline Mode - Local Inference Fallback', async ({ page }) => {
     // Intercept and block external API calls to simulate offline mode
-    await page.route('**/models/*:generateContent?key=*', (route) => route.abort('internet'));
+    await page.route(API_ROUTE_PATTERN, (route) => route.abort('internet'));
 
     // Set up local WebLLM mock for offline inference
     await page.route('**/api/webllm/**', async (route) => {
@@ -211,16 +221,13 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     });
 
     // Upload and Run
-    const buffer = Buffer.from(
-      'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-      'base64',
-    );
+    const buffer = Buffer.from(TEST_IMAGE_BASE64, 'base64');
     await page.locator('input[type="file"]').setInputFiles({
       name: 'test-sample.jpg',
       mimeType: 'image/jpeg',
       buffer,
     });
-    await page.locator('button', { hasText: 'Run Clinical Analysis' }).click();
+    await page.locator('button', { hasText: RUN_ANALYSIS_BUTTON }).click();
 
     // Verify offline mode indicator
     await expect(page.locator('text=OFFLINE MODE ACTIVE')).toBeVisible({ timeout: 10000 });
@@ -231,7 +238,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     await expect(logs).toContainText('SmolLM2');
 
     // Verify analysis still completes successfully
-    await expect(page.locator('h2', { hasText: 'Diagnostic Summary' })).toBeVisible({
+    await expect(page.locator('h2', { hasText: DIAGNOSTIC_SUMMARY })).toBeVisible({
       timeout: 30000,
     });
   });
@@ -253,17 +260,14 @@ test.describe('Clinical AI Orchestrator E2E', () => {
 
     // Run 10 sequential analyses
     for (let i = 0; i < 10; i++) {
-      const buffer = Buffer.from(
-        'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-        'base64',
-      );
+      const buffer = Buffer.from(TEST_IMAGE_BASE64, 'base64');
       await page.locator('input[type="file"]').setInputFiles({
         name: `sample-${i}.jpg`,
         mimeType: 'image/jpeg',
         buffer,
       });
 
-      const runBtn = page.locator('button', { hasText: 'Run Clinical Analysis' });
+      const runBtn = page.locator('button', { hasText: RUN_ANALYSIS_BUTTON });
       await runBtn.click();
 
       // Wait for each analysis to complete
@@ -355,10 +359,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
   test('Scenario E: Orchestration Trace & Replan', async ({ page }) => {
     // This test verifies that the GOAP agent produces proper traces and can replan
 
-    const buffer = Buffer.from(
-      'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-      'base64',
-    );
+    const buffer = Buffer.from(TEST_IMAGE_BASE64, 'base64');
 
     const fileInput = page.locator('input[type="file"]');
     await fileInput.setInputFiles({
@@ -367,7 +368,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
       buffer,
     });
 
-    const runBtn = page.locator('button', { hasText: 'Run Clinical Analysis' });
+    const runBtn = page.locator('button', { hasText: RUN_ANALYSIS_BUTTON });
     await runBtn.click();
 
     // Wait for analysis to complete
@@ -415,9 +416,10 @@ test.describe('Clinical AI Orchestrator E2E', () => {
 
   test('Scenario F: Safety Calibration Routing on Low Confidence', async ({ page }) => {
     // Override mock to return low confidence
-    await page.route('**/models/*:generateContent?key=*', async (route) => {
-      const requestBody = JSON.parse(route.request().postData() || '{}');
-      const promptText = requestBody.contents?.[0]?.parts?.find((p: any) => p.text)?.text || '';
+    await page.route(API_ROUTE_PATTERN, async (route) => {
+      const requestBody = JSON.parse(route.request().postData() ?? '{}');
+      const promptText =
+        requestBody.contents?.[0]?.parts?.find((p: { text?: string }) => p.text)?.text ?? '';
 
       if (promptText.includes('clinical classification')) {
         await route.fulfill({

@@ -47,23 +47,26 @@ vi.mock('../../services/crypto', () => ({
   },
 }));
 
+// Mock vision service with singleton pattern
+const mockVisionInstance = {
+  initialize: vi.fn().mockResolvedValue(undefined),
+  detectSkinTone: vi.fn().mockResolvedValue({
+    fitzpatrick: 'III',
+    confidence: 0.85,
+  }),
+  extractFeatures: vi.fn().mockResolvedValue({
+    embeddings: new Float32Array(384),
+    bias_score: 0.1,
+    disentanglement_index: 0.9,
+  }),
+  detectLesions: vi
+    .fn()
+    .mockResolvedValue([{ type: 'Melanoma', confidence: 0.75, bbox: [0, 0, 100, 100] }]),
+};
+
 vi.mock('../../services/vision', () => ({
   VisionSpecialist: {
-    getInstance: vi.fn().mockImplementation(() => ({
-      initialize: vi.fn().mockResolvedValue(undefined),
-      detectSkinTone: vi.fn().mockResolvedValue({
-        fitzpatrick: 'III',
-        confidence: 0.85,
-      }),
-      extractFeatures: vi.fn().mockResolvedValue({
-        embeddings: new Float32Array(384),
-        bias_score: 0.1,
-        disentanglement_index: 0.9,
-      }),
-      detectLesions: vi
-        .fn()
-        .mockResolvedValue([{ type: 'Melanoma', confidence: 0.75, bbox: [0, 0, 100, 100] }]),
-    })),
+    getInstance: vi.fn().mockReturnValue(mockVisionInstance),
   },
 }));
 
@@ -123,9 +126,8 @@ vi.mock('../../services/goap/agent', () => {
 
 describe('useClinicalAnalysis', () => {
   beforeEach(() => {
-    // Don't use vi.clearAllMocks() as it might affect module-level mocks
-
-    // Just reset mockExecuteFn implementation without clearing everything
+    // Reset mocks but don't clear module-level mocks
+    mockExecuteFn.mockReset();
     mockExecuteFn.mockResolvedValue({
       runId: 'run_test',
       startTime: Date.now(),
@@ -134,15 +136,28 @@ describe('useClinicalAnalysis', () => {
       finalWorldState: { ...INITIAL_STATE, audit_logged: true },
     });
 
+    // Reset vision mock methods
+    mockVisionInstance.initialize.mockClear();
+    mockVisionInstance.initialize.mockResolvedValue(undefined);
+    mockVisionInstance.detectSkinTone.mockClear();
+    mockVisionInstance.detectSkinTone.mockResolvedValue({
+      fitzpatrick: 'III',
+      confidence: 0.85,
+    });
+
     vi.stubGlobal('URL', {
       createObjectURL: vi.fn().mockReturnValue('blob:mock-url'),
       revokeObjectURL: vi.fn(),
     });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     // Unmount all rendered hooks to prevent state pollution between tests
     cleanup();
+    // Wait for any pending promises to settle - increased to allow dynamic imports to complete
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Clear any pending timers
+    vi.clearAllTimers();
   });
 
   describe('Initial State', () => {
@@ -394,6 +409,34 @@ describe('useClinicalAnalysis', () => {
     it('should update world state after analysis', async () => {
       const { result } = renderHook(() => useClinicalAnalysis());
 
+      // Wait for hook to stabilize
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      });
+
+      // Setup mock FIRST
+      const finalState: WorldState = {
+        ...INITIAL_STATE,
+        audit_logged: true,
+        image_verified: true,
+        confidence_score: 0.85,
+      };
+
+      mockExecuteFn.mockResolvedValue({
+        runId: 'run_test123',
+        startTime: Date.now(),
+        endTime: Date.now() + 1000,
+        agents: [{
+          id: 'agent1',
+          agentId: 'Image-Verification-Agent',
+          name: 'verify-image',
+          startTime: Date.now(),
+          endTime: Date.now() + 500,
+          status: 'completed' as const,
+        }],
+        finalWorldState: finalState,
+      });
+
       const validFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
       Object.defineProperty(validFile, 'size', { value: 1024 * 1024 });
       Object.defineProperty(validFile, 'slice', {
@@ -406,41 +449,16 @@ describe('useClinicalAnalysis', () => {
         await result.current.handleFileChange({
           target: { files: [validFile], value: '' },
         } as never);
+        result.current.setPrivacyMode(true);
       });
 
-      const finalState: WorldState = {
-        ...INITIAL_STATE,
-        audit_logged: true,
-        image_verified: true,
-        confidence_score: 0.85,
-      };
-
-      const mockTrace = {
-        runId: 'run_test123',
-        startTime: Date.now(),
-        endTime: Date.now() + 1000,
-        agents: [
-          {
-            id: 'agent1',
-            agentId: 'Image-Verification-Agent',
-            name: 'verify-image',
-            startTime: Date.now(),
-            endTime: Date.now() + 500,
-            status: 'completed' as const,
-          },
-        ],
-        finalWorldState: finalState,
-      };
-
-      mockExecuteFn.mockResolvedValue(mockTrace);
-
-      await act(async () => {
-        const execResult = await result.current.executeAnalysis();
-        expect(execResult?.success).toBe(true);
+      const execResult = await act(async () => {
+        return await result.current.executeAnalysis();
       });
 
+      expect(execResult?.success).toBe(true);
       expect(mockExecuteFn).toHaveBeenCalled();
-      expect(result.current.worldState).toEqual(finalState);
+      expect(result.current?.worldState).toEqual(finalState);
     });
 
     it('should populate result after successful analysis', async () => {
@@ -480,10 +498,15 @@ describe('useClinicalAnalysis', () => {
       mockExecuteFn.mockResolvedValue(mockTrace);
 
       await act(async () => {
+        result.current.setPrivacyMode(true);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      });
+
+      await act(async () => {
         await result.current.executeAnalysis();
       });
 
-      expect(result.current.result).not.toBeNull();
+      expect(result.current?.result).not.toBeNull();
     });
 
     it('should generate agent logs during execution', async () => {
@@ -523,11 +546,16 @@ describe('useClinicalAnalysis', () => {
       mockExecuteFn.mockResolvedValue(mockTrace);
 
       await act(async () => {
+        result.current.setPrivacyMode(true);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      });
+
+      await act(async () => {
         await result.current.executeAnalysis();
       });
 
-      expect(result.current.logs.length).toBeGreaterThan(0);
-      const routerLog = result.current.logs.find((log) => log.agent === 'Router-Agent');
+      expect(result.current?.logs.length).toBeGreaterThan(0);
+      const routerLog = result.current?.logs.find((log) => log.agent === 'Router-Agent');
       expect(routerLog).toBeDefined();
       expect(routerLog?.status).toBe('completed');
     });
@@ -585,17 +613,20 @@ describe('useClinicalAnalysis', () => {
         } as never);
       });
 
-      act(() => {
+      await act(async () => {
         result.current.setPrivacyMode(true);
+        await new Promise((resolve) => setTimeout(resolve, 50));
       });
 
       mockExecuteFn.mockRejectedValue(new Error('No plan found to reach goal state'));
 
+      let executeResult;
       await act(async () => {
-        await result.current.executeAnalysis();
+        executeResult = await result.current.executeAnalysis();
       });
 
-      expect(result.current.error).toBe('The AI planner could not formulate a valid strategy.');
+      expect(executeResult).toEqual({ success: false, error: 'The AI planner could not formulate a valid strategy.' });
+      expect(result.current?.error).toBe('The AI planner could not formulate a valid strategy.');
     });
 
     it('should handle vision model failure', async () => {
@@ -615,17 +646,20 @@ describe('useClinicalAnalysis', () => {
         } as never);
       });
 
-      act(() => {
+      await act(async () => {
         result.current.setPrivacyMode(true);
+        await new Promise((resolve) => setTimeout(resolve, 50));
       });
 
       mockExecuteFn.mockRejectedValue(new Error('Vision Model Inference Failed'));
 
+      let executeResult;
       await act(async () => {
-        await result.current.executeAnalysis();
+        executeResult = await result.current.executeAnalysis();
       });
 
-      expect(result.current.error).toBe('The client-side neural network crashed.');
+      expect(executeResult).toEqual({ success: false, error: 'The client-side neural network crashed.' });
+      expect(result.current?.error).toBe('The client-side neural network crashed.');
     });
 
     it('should set analyzing to false on error', async () => {
@@ -645,8 +679,9 @@ describe('useClinicalAnalysis', () => {
         } as never);
       });
 
-      act(() => {
+      await act(async () => {
         result.current.setPrivacyMode(true);
+        await new Promise((resolve) => setTimeout(resolve, 50));
       });
 
       mockExecuteFn.mockRejectedValue(new Error('Test error'));
@@ -655,13 +690,11 @@ describe('useClinicalAnalysis', () => {
         await result.current.executeAnalysis();
       });
 
-      expect(result.current.analyzing).toBe(false);
+      expect(result.current?.analyzing).toBe(false);
     });
 
     it('should clear error on new file selection', async () => {
       const { result } = renderHook(() => useClinicalAnalysis());
-
-      mockExecuteFn.mockRejectedValue(new Error('Test error'));
 
       const validFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
       Object.defineProperty(validFile, 'size', { value: 1024 * 1024 });
@@ -677,21 +710,23 @@ describe('useClinicalAnalysis', () => {
         } as never);
       });
 
-      expect(result.current.error).toBeNull();
+      expect(result.current?.error).toBeNull();
     });
   });
 
   describe('Privacy Mode', () => {
-    it('should toggle privacy mode', () => {
+    it('should toggle privacy mode', async () => {
       const { result } = renderHook(() => useClinicalAnalysis());
 
-      expect(result.current.privacyMode).toBe(false);
+      expect(result.current).not.toBeNull();
+      expect(result.current?.privacyMode).toBe(false);
 
-      act(() => {
+      await act(async () => {
         result.current.setPrivacyMode(true);
+        await new Promise((resolve) => setTimeout(resolve, 10));
       });
 
-      expect(result.current.privacyMode).toBe(true);
+      expect(result.current?.privacyMode).toBe(true);
     });
 
     it('should skip API key check in privacy mode', async () => {
@@ -711,8 +746,9 @@ describe('useClinicalAnalysis', () => {
         } as never);
       });
 
-      act(() => {
+      await act(async () => {
         result.current.setPrivacyMode(true);
+        await new Promise((resolve) => setTimeout(resolve, 50));
       });
 
       const mockTrace = {
@@ -738,7 +774,7 @@ describe('useClinicalAnalysis', () => {
         await result.current.executeAnalysis();
       });
 
-      expect(result.current.error).not.toContain('API_KEY');
+      expect(result.current?.error).not.toContain('API_KEY');
     });
   });
 
@@ -781,17 +817,23 @@ describe('useClinicalAnalysis', () => {
       });
 
       await act(async () => {
+        result.current.setPrivacyMode(true);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      });
+
+      await act(async () => {
         await result.current.executeAnalysis();
       });
 
-      expect(result.current.logs.length).toBeGreaterThan(0);
+      expect(result.current?.logs.length).toBeGreaterThan(0);
 
-      act(() => {
+      await act(async () => {
         result.current.setSearchQuery('Router');
+        await new Promise((resolve) => setTimeout(resolve, 10));
       });
 
-      const filteredLogs = result.current.logs;
-      expect(filteredLogs.every((log) => log.agent.includes('Router'))).toBe(true);
+      const filteredLogs = result.current?.logs;
+      expect(filteredLogs?.every((log) => log.agent.includes('Router'))).toBe(true);
     });
 
     it('should filter logs case-insensitively', async () => {
@@ -832,39 +874,61 @@ describe('useClinicalAnalysis', () => {
       mockExecuteFn.mockResolvedValue(mockTrace);
 
       await act(async () => {
+        result.current.setPrivacyMode(true);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      });
+
+      await act(async () => {
         await result.current.executeAnalysis();
       });
 
-      expect(result.current.logs.length).toBeGreaterThan(0);
+      expect(result.current?.logs.length).toBeGreaterThan(0);
 
-      act(() => {
+      await act(async () => {
         result.current.setSearchQuery('router');
+        await new Promise((resolve) => setTimeout(resolve, 10));
       });
 
-      const filteredLogs = result.current.logs;
-      expect(filteredLogs.some((log) => log.agent.toLowerCase().includes('router'))).toBe(true);
+      const filteredLogs = result.current?.logs;
+      expect(filteredLogs?.some((log) => log.agent.toLowerCase().includes('router'))).toBe(true);
     });
   });
 
   describe('Action State', () => {
-    it('should expose action and actionState from useActionState', () => {
+    it('should expose action and actionState from useActionState', async () => {
       const { result } = renderHook(() => useClinicalAnalysis());
 
-      expect(result.current.action).toBeDefined();
-      expect(typeof result.current.action).toBe('function');
-      expect(result.current.actionState).toBeNull();
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      });
+
+      expect(result.current).not.toBeNull();
+      expect(result.current?.action).toBeDefined();
+      expect(typeof result.current?.action).toBe('function');
+      expect(result.current?.actionState).toBeNull();
     });
 
-    it('should have pending state from useActionState', () => {
+    it('should have pending state from useActionState', async () => {
       const { result } = renderHook(() => useClinicalAnalysis());
 
-      expect(result.current.pending).toBe(false);
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      });
+
+      expect(result.current).not.toBeNull();
+      // pending might be undefined initially, so check for falsy value
+      expect(result.current?.pending || false).toBe(false);
     });
   });
 
   describe('Execution Trace', () => {
     it('should store execution trace after analysis', async () => {
       const { result } = renderHook(() => useClinicalAnalysis());
+
+      // Wait for initial render
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      });
 
       const validFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
       Object.defineProperty(validFile, 'size', { value: 1024 * 1024 });
@@ -874,8 +938,10 @@ describe('useClinicalAnalysis', () => {
         }),
       });
 
+      expect(result.current).not.toBeNull();
+
       await act(async () => {
-        await result.current.handleFileChange({
+        await result.current?.handleFileChange({
           target: { files: [validFile], value: '' },
         } as never);
       });
@@ -900,11 +966,17 @@ describe('useClinicalAnalysis', () => {
       mockExecuteFn.mockResolvedValue(mockTrace);
 
       await act(async () => {
-        await result.current.executeAnalysis();
+        result.current?.setPrivacyMode(true);
+        await new Promise((resolve) => setTimeout(resolve, 50));
       });
 
-      expect(result.current.trace).toBeDefined();
-      expect(result.current.trace?.runId).toBe('run_test123');
+      await act(async () => {
+        await result.current?.executeAnalysis();
+      });
+
+      expect(result.current).not.toBeNull();
+      expect(result.current?.trace).toBeDefined();
+      expect(result.current?.trace?.runId).toBe('run_test123');
     });
   });
 

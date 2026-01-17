@@ -51,12 +51,13 @@ elif [ -n "$FILES_ARG" ]; then
 else
   echo -e "${BLUE}Checking staged TypeScript files...${NC}"
   STAGED_TS_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx)$' || true)
-  
+
   if [ -z "$STAGED_TS_FILES" ]; then
     echo -e "${YELLOW}No TypeScript/JavaScript files staged for commit${NC}"
     exit 0
   fi
-  TS_FILES=$(echo "$STAGED_TS_FILES" | tr '\n' ' ')
+  # Filter out excluded files (public/, sw.js, etc.)
+  TS_FILES=$(echo "$STAGED_TS_FILES" | grep -v -E '^(public/|sw\.js$)' | tr '\n' ' ')
 fi
 
 if [ -z "$TS_FILES" ]; then
@@ -66,7 +67,8 @@ fi
 
 # Run TypeScript compiler to check for syntax errors
 # Using --noEmit to check without generating output files
-if npx tsc --noEmit $TS_FILES 2>&1; then
+# Use --skipLibCheck to avoid errors in node_modules
+if npx tsc --noEmit --skipLibCheck --project tsconfig.json 2>&1; then
   echo -e "${GREEN}✓ Syntax validation passed${NC}"
   exit 0
 else

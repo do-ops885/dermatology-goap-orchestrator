@@ -8,9 +8,7 @@ export class RouterAgent {
   }
 
   public static getInstance(): RouterAgent {
-    if (RouterAgent.instance === undefined) {
-      RouterAgent.instance = new RouterAgent();
-    }
+    RouterAgent.instance ??= new RouterAgent();
     return RouterAgent.instance;
   }
 

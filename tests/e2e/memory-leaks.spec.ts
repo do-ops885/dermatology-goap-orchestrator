@@ -2,6 +2,10 @@ import { Buffer } from 'buffer';
 
 import { test, expect } from '@playwright/test';
 
+const RUN_ANALYSIS_BUTTON = 'Run Clinical Analysis';
+const TEST_IMAGE_BASE64 = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+const DIAGNOSTIC_SUMMARY = 'Diagnostic Summary';
+
 test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
@@ -17,15 +21,12 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
         memory?: { totalJSHeapSize?: number; usedJSHeapSize?: number };
       };
       return {
-        heapUsed: perf.memory?.usedJSHeapSize || 0,
-        heapLimit: perf.memory?.totalJSHeapSize || 0,
+        heapUsed: perf.memory?.usedJSHeapSize ?? 0,
+        heapLimit: perf.memory?.totalJSHeapSize ?? 0,
       };
     });
 
-    const jpegBuffer = Buffer.from(
-      'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-      'base64',
-    );
+    const jpegBuffer = Buffer.from(TEST_IMAGE_BASE64, 'base64');
 
     for (let i = 0; i < 50; i++) {
       await page.locator('input[type="file"]').setInputFiles({
@@ -34,7 +35,7 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
         buffer: jpegBuffer,
       });
 
-      const runBtn = page.locator('button', { hasText: 'Run Clinical Analysis' });
+      const runBtn = page.locator('button', { hasText: RUN_ANALYSIS_BUTTON });
       await runBtn.click();
 
       await page.waitForSelector('text=Diagnostic Summary', { timeout: 60000 });
@@ -50,8 +51,8 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
         memory?: { totalJSHeapSize?: number; usedJSHeapSize?: number };
       };
       return {
-        heapUsed: perf.memory?.usedJSHeapSize || 0,
-        heapLimit: perf.memory?.totalJSHeapSize || 0,
+        heapUsed: perf.memory?.usedJSHeapSize ?? 0,
+        heapLimit: perf.memory?.totalJSHeapSize ?? 0,
       };
     });
 
@@ -66,13 +67,10 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
   });
 
   test('GPU memory does not grow after 50 analyses', async ({ page }) => {
-    const jpegBuffer = Buffer.from(
-      'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-      'base64',
-    );
+    const jpegBuffer = Buffer.from(TEST_IMAGE_BASE64, 'base64');
 
     const initialGpuMemory = await page.evaluate(() => {
-      return (window as any).tf?.memory?.() || { numTensors: 0, numBytes: 0 };
+      return (window as any).tf?.memory?.() ?? { numTensors: 0, numBytes: 0 };
     });
 
     for (let i = 0; i < 50; i++) {
@@ -82,7 +80,7 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
         buffer: jpegBuffer,
       });
 
-      const runBtn = page.locator('button', { hasText: 'Run Clinical Analysis' });
+      const runBtn = page.locator('button', { hasText: RUN_ANALYSIS_BUTTON });
       await runBtn.click();
 
       await page.waitForSelector('text=Diagnostic Summary', { timeout: 60000 });
@@ -91,7 +89,7 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
     }
 
     const finalGpuMemory = await page.evaluate(() => {
-      return (window as any).tf?.memory?.() || { numTensors: 0, numBytes: 0 };
+      return (window as any).tf?.memory?.() ?? { numTensors: 0, numBytes: 0 };
     });
 
     const tensorGrowth = finalGpuMemory.numTensors - initialGpuMemory.numTensors;
@@ -103,10 +101,7 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
   });
 
   test('checks tensor cleanup via tf.memory()', async ({ page }) => {
-    const jpegBuffer = Buffer.from(
-      'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-      'base64',
-    );
+    const jpegBuffer = Buffer.from(TEST_IMAGE_BASE64, 'base64');
 
     await page.locator('input[type="file"]').setInputFiles({
       name: 'tensor-test.jpg',
@@ -114,13 +109,13 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
       buffer: jpegBuffer,
     });
 
-    const runBtn = page.locator('button', { hasText: 'Run Clinical Analysis' });
+    const runBtn = page.locator('button', { hasText: RUN_ANALYSIS_BUTTON });
     await runBtn.click();
 
     await page.waitForSelector('text=Diagnostic Summary', { timeout: 60000 });
 
     const afterMemory = await page.evaluate(() => {
-      return (window as any).tf?.memory?.() || { numTensors: 0, numDataBuffers: 0, numBytes: 0 };
+      return (window as any).tf?.memory?.() ?? { numTensors: 0, numDataBuffers: 0, numBytes: 0 };
     });
 
     expect(afterMemory.numTensors).toBeGreaterThanOrEqual(0);
@@ -133,13 +128,10 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
   });
 
   test('verifies tensor disposal after analysis', async ({ page }) => {
-    const jpegBuffer = Buffer.from(
-      'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-      'base64',
-    );
+    const jpegBuffer = Buffer.from(TEST_IMAGE_BASE64, 'base64');
 
     const beforeMemory = await page.evaluate(() => {
-      return (window as any).tf?.memory?.() || { numTensors: 0, numBytes: 0 };
+      return (window as any).tf?.memory?.() ?? { numTensors: 0, numBytes: 0 };
     });
 
     await page.locator('input[type="file"]').setInputFiles({
@@ -148,13 +140,13 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
       buffer: jpegBuffer,
     });
 
-    const runBtn = page.locator('button', { hasText: 'Run Clinical Analysis' });
+    const runBtn = page.locator('button', { hasText: RUN_ANALYSIS_BUTTON });
     await runBtn.click();
 
     await page.waitForSelector('text=Diagnostic Summary', { timeout: 60000 });
 
     const afterMemory = await page.evaluate(() => {
-      return (window as any).tf?.memory?.() || { numTensors: 0, numBytes: 0 };
+      return (window as any).tf?.memory?.() ?? { numTensors: 0, numBytes: 0 };
     });
 
     const tensorChange = afterMemory.numTensors - beforeMemory.numTensors;
@@ -186,8 +178,8 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
     const logsContent = await logs.textContent();
 
     const hasCleanup =
-      logsContent?.includes('dispose') ||
-      logsContent?.includes('cleanup') ||
+      logsContent?.includes('dispose') ??
+      logsContent?.includes('cleanup') ??
       logsContent?.includes('Tensors');
 
     expect(hasCleanup).toBe(true);
@@ -218,7 +210,7 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
           memory?: { totalJSHeapSize?: number; usedJSHeapSize?: number };
         };
         return {
-          heapUsed: perf.memory?.usedJSHeapSize || 0,
+          heapUsed: perf.memory?.usedJSHeapSize ?? 0,
         };
       });
 
@@ -264,7 +256,7 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
         const perf = performance as unknown as {
           memory?: { totalJSHeapSize?: number; usedJSHeapSize?: number };
         };
-        return perf.memory?.usedJSHeapSize || 0;
+        return perf.memory?.usedJSHeapSize ?? 0;
       });
 
       peakMemory = Math.max(peakMemory, currentMemory);

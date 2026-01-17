@@ -20,6 +20,9 @@ import {
   privacyEncryptionExecutor,
   auditTrailExecutor,
 } from '../executors';
+import { GOAPPlanner } from '../goap';
+
+import { GoapAgent } from './agent';
 
 import type { ExecutorMap } from './agent';
 
@@ -45,10 +48,6 @@ export const EXECUTOR_REGISTRY: ExecutorMap = {
   'Privacy-Encryption-Agent': privacyEncryptionExecutor,
   'Audit-Trail-Agent': auditTrailExecutor,
 };
-
-import { GOAPPlanner } from '../goap';
-
-import { GoapAgent } from './agent';
 
 /**
  * Create a GoapAgent instance with the standard executor registry

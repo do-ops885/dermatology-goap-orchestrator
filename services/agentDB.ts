@@ -168,6 +168,95 @@ export default class ClinicalAgentDB {
     return stats;
   }
 
+  /**
+   * Determines if a pattern is an audit log entry
+   */
+  private isAuditEntry(pattern: AgentDBReasoningPattern): boolean {
+    return pattern.taskType === 'AUDIT_LOG';
+  }
+
+  /**
+   * Extracts the hash from metadata or returns empty string
+   */
+  private extractHashString(pattern: ReasoningPattern): string {
+    const metadataHash = pattern.metadata?.hash;
+    return typeof metadataHash === 'string' ? metadataHash : '';
+  }
+
+  /**
+   * Generates the appropriate message for an audit or learning entry
+   */
+  private generateAuditMessage(
+    originalPattern: ReasoningPattern,
+    pattern: AgentDBReasoningPattern,
+    isAudit: boolean,
+  ): string {
+    if (isAudit) {
+      return String(originalPattern.metadata?.context ?? originalPattern.context ?? 'Audit Event');
+    }
+    return `Decision: ${pattern.outcome ?? 'Analysis'}`;
+  }
+
+  /**
+   * Generates the mitigation text for the audit log entry
+   */
+  private generateMitigation(
+    originalPattern: ReasoningPattern,
+    pattern: AgentDBReasoningPattern,
+    isAudit: boolean,
+    hashString: string,
+  ): string {
+    if (isAudit) {
+      return pattern.outcome ?? hashString.substring(0, 10);
+    }
+    return `Ctx: ${(originalPattern.context ?? 'Generic').substring(0, 30)}...`;
+  }
+
+  /**
+   * Determines the severity level based on confidence and audit status
+   */
+  private determineSeverity(pattern: AgentDBReasoningPattern, isAudit: boolean): string {
+    if (isAudit) {
+      return 'info';
+    }
+    const confidence = pattern.confidence ?? pattern.successRate ?? 0;
+    return confidence > 0.8 ? 'info' : 'medium';
+  }
+
+  /**
+   * Determines the entry type (audit or learning)
+   */
+  private determineEntryType(isAudit: boolean): string {
+    return isAudit ? 'audit' : 'learning';
+  }
+
+  /**
+   * Converts a pattern into a unified audit log entry format
+   */
+  private convertToAuditLogEntry(p: ReasoningPattern): {
+    id: string;
+    timestamp: number;
+    severity: string;
+    message: string;
+    status: string;
+    mitigation: string;
+    type: string;
+  } {
+    const pattern = p as AgentDBReasoningPattern;
+    const isAudit = this.isAuditEntry(pattern);
+    const hashString = this.extractHashString(p);
+
+    return {
+      id: String(p.id ?? `log_${Math.random().toString(36).substring(2)}`),
+      timestamp: pattern.timestamp ?? Date.now(),
+      severity: this.determineSeverity(pattern, isAudit),
+      message: this.generateAuditMessage(p, pattern, isAudit),
+      status: 'verified',
+      mitigation: this.generateMitigation(p, pattern, isAudit, hashString),
+      type: this.determineEntryType(isAudit),
+    };
+  }
+
   public async getUnifiedAuditLog(): Promise<
     {
       id: string;
@@ -195,34 +284,7 @@ export default class ClinicalAgentDB {
     return patterns
       .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
       .slice(0, 50)
-      .map((p) => {
-        const pattern = p as AgentDBReasoningPattern;
-        const isAudit = pattern.taskType === 'AUDIT_LOG';
-
-        const message = isAudit
-          ? String(p.metadata?.context ?? p.context ?? 'Audit Event')
-          : `Decision: ${pattern.outcome ?? 'Analysis'}`;
-
-        const metadataHash = p.metadata?.hash;
-        const hashString = typeof metadataHash === 'string' ? metadataHash : '';
-        const mitigation = isAudit
-          ? (pattern.outcome ?? hashString.substring(0, 10))
-          : `Ctx: ${(p.context ?? 'Generic').substring(0, 30)}...`;
-
-        return {
-          id: String(p.id ?? `log_${Math.random().toString(36).substring(2)}`),
-          timestamp: pattern.timestamp ?? Date.now(),
-          severity: isAudit
-            ? 'info'
-            : (pattern.confidence ?? pattern.successRate) > 0.8
-              ? 'info'
-              : 'medium',
-          message,
-          status: 'verified',
-          mitigation,
-          type: isAudit ? 'audit' : 'learning',
-        };
-      });
+      .map((p) => this.convertToAuditLogEntry(p));
   }
 
   public async resetMemory(): Promise<void> {

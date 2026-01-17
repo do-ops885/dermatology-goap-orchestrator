@@ -8,9 +8,7 @@ export class NotificationService {
   private listeners = new Set<(_notification: ClinicianNotification) => void>();
 
   static getInstance(): NotificationService {
-    if (!NotificationService.instance) {
-      NotificationService.instance = new NotificationService();
-    }
+    NotificationService.instance ??= new NotificationService();
     return NotificationService.instance;
   }
 

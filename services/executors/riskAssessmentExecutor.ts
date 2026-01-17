@@ -2,17 +2,26 @@ import { Logger } from '../logger';
 
 import type { AgentContext, ExecutorResult } from './types';
 
+interface LesionData {
+  type?: string;
+  confidence?: number;
+  risk?: string;
+  heatmap?: string;
+}
+
 export const riskAssessmentExecutor = async ({
   localLLM,
   currentState,
   analysisPayload,
   setResult,
 }: AgentContext): Promise<ExecutorResult> => {
-  const lesions = Array.isArray(analysisPayload.lesions) ? analysisPayload.lesions : [];
+  const lesions = Array.isArray(analysisPayload.lesions)
+    ? (analysisPayload.lesions as LesionData[])
+    : [];
   const primaryLesion = lesions[0];
 
   const prompt = `Assess clinical risk for Fitzpatrick ${String(currentState.fitzpatrick_type)} with ${String(analysisPayload.risk_label)}. 
-  Primary detection: ${String(primaryLesion?.type)}.
+  Primary detection: ${String(primaryLesion?.type ?? 'unknown lesion')}.
   Check for bias in automated assessment. Return 1 concise sentence explaining the risk level.`;
 
   let assessment = '';
@@ -28,7 +37,7 @@ export const riskAssessmentExecutor = async ({
   }
 
   if (!assessment) {
-    assessment = `${String(primaryLesion?.type)} presents ${String(analysisPayload.risk_label)} risk profile based on feature asymmetry.`;
+    assessment = `${String(primaryLesion?.type ?? 'lesion')} presents ${String(analysisPayload.risk_label)} risk profile based on feature asymmetry.`;
     engineUsed = 'Rule-Based Fallback';
   }
 

@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test';
 
 import { axe } from './test-utils';
 
+import type { Result as AxeResult } from 'axe-core';
+
 test.describe('Accessibility - Forms', () => {
   test('File input has proper label', async ({ page }) => {
     await page.goto('/');
@@ -12,8 +14,7 @@ test.describe('Accessibility - Forms', () => {
       include: 'input[type="file"]',
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(results.violations.filter((v: any) => v.id === 'label')).toEqual([]);
+    expect(results.violations.filter((v: AxeResult) => v.id === 'label')).toEqual([]);
   });
 
   test('Feedback form is accessible', async ({ page }) => {
@@ -37,7 +38,6 @@ test.describe('Accessibility - Forms', () => {
       include: 'input[type="range"]',
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(results.violations.filter((v: any) => v.id === 'slider')).toEqual([]);
+    expect(results.violations.filter((v: AxeResult) => v.id === 'slider')).toEqual([]);
   });
 });
