@@ -426,14 +426,16 @@ describe('useClinicalAnalysis', () => {
         runId: 'run_test123',
         startTime: Date.now(),
         endTime: Date.now() + 1000,
-        agents: [{
-          id: 'agent1',
-          agentId: 'Image-Verification-Agent',
-          name: 'verify-image',
-          startTime: Date.now(),
-          endTime: Date.now() + 500,
-          status: 'completed' as const,
-        }],
+        agents: [
+          {
+            id: 'agent1',
+            agentId: 'Image-Verification-Agent',
+            name: 'verify-image',
+            startTime: Date.now(),
+            endTime: Date.now() + 500,
+            status: 'completed' as const,
+          },
+        ],
         finalWorldState: finalState,
       });
 
@@ -625,7 +627,10 @@ describe('useClinicalAnalysis', () => {
         executeResult = await result.current.executeAnalysis();
       });
 
-      expect(executeResult).toEqual({ success: false, error: 'The AI planner could not formulate a valid strategy.' });
+      expect(executeResult).toEqual({
+        success: false,
+        error: 'The AI planner could not formulate a valid strategy.',
+      });
       expect(result.current?.error).toBe('The AI planner could not formulate a valid strategy.');
     });
 
@@ -658,7 +663,10 @@ describe('useClinicalAnalysis', () => {
         executeResult = await result.current.executeAnalysis();
       });
 
-      expect(executeResult).toEqual({ success: false, error: 'The client-side neural network crashed.' });
+      expect(executeResult).toEqual({
+        success: false,
+        error: 'The client-side neural network crashed.',
+      });
       expect(result.current?.error).toBe('The client-side neural network crashed.');
     });
 
