@@ -1,10 +1,10 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import { Buffer } from 'buffer';
 
 import { test, expect } from '@playwright/test';
 
 const RUN_ANALYSIS_BUTTON = 'Run Clinical Analysis';
 const TEST_IMAGE_BASE64 = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-const DIAGNOSTIC_SUMMARY = 'Diagnostic Summary';
 
 test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => {
   test.beforeEach(async ({ page }) => {

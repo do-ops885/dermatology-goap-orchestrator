@@ -9,8 +9,14 @@ export const similaritySearchExecutor = async ({
 }: AgentContext): Promise<ExecutorResult> => {
   const lesions = analysisPayload.lesions as { type?: string }[] | undefined;
   const query = `Fitzpatrick ${String(currentState.fitzpatrick_type)}, ${String(lesions?.[0]?.type) || 'Lesion'}`;
+  // Convert query string to embedding (mock implementation)
+  const embedding = new Float32Array(384); // Standard embedding dimension
+  for (let i = 0; i < Math.min(query.length, embedding.length); i++) {
+    embedding[i] = query.charCodeAt(i) / 255;
+  }
+
   const matches = (await reasoningBank.searchPatterns({
-    task: query,
+    taskEmbedding: embedding,
     k: 10,
   })) as ReasoningPattern[];
 

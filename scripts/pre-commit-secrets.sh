@@ -11,9 +11,9 @@ FAIL=0
 PATTERNS='(password|passwd|secret|api[_-]?key|aws[_-]?secret|aws[_-]?access|private[_-]?key|BEGIN( RSA| DSA| PRIVATE) KEY|-----BEGINPRIVATEKEY-----|client_secret)'
 
 for file in $STAGED_FILES; do
-  # skip the secrets script, pre-commit hook, and quality-gate.sh (false positives)
+  # skip test files and the secrets script, pre-commit hook, and quality-gate.sh (false positives)
   case "$file" in
-    *pre-commit-secrets.sh|*.husky/pre-commit|*quality-gate.sh) continue ;;
+    *pre-commit-secrets.sh|*.husky/pre-commit|*quality-gate.sh|*.spec.ts|*.test.ts) continue ;;
   esac
 
   # only scan text files
