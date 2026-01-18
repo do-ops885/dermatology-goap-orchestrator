@@ -57,7 +57,7 @@ jobs:
         run: npm install
 
       - name: Fix AgentDB executable permissions
-        run: chmod +x node_modules/agentdb/dist/src/cli/agentdb-cli.js
+        run: chmod +x node_modules/agentdb/dist/cli/agentdb-cli.js || true
 
       - name: AgentDB init
         run: npx agentdb init || true

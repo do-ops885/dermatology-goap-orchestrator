@@ -99,9 +99,12 @@ export class SecureKeyManager {
       clearTimeout(this.cleanupTimeout);
     }
 
-    this.cleanupTimeout = setTimeout(() => {
-      void this.clearKey();
-    }, this.options.autoCleanupTimeout ?? 5 * 60 * 1000) as unknown as number;
+    this.cleanupTimeout = setTimeout(
+      () => {
+        void this.clearKey();
+      },
+      this.options.autoCleanupTimeout ?? 5 * 60 * 1000,
+    ) as unknown as number;
   }
 
   private setupAutoCleanup(): void {

@@ -110,7 +110,7 @@ export class AuditTrailService {
       for (let i = 0; i < this.auditEvents.length; i++) {
         const event = this.auditEvents[i];
         if (!event) continue;
-        
+
         const expectedHash = await this.calculateEventHash(event);
 
         if (event.hash !== expectedHash) {
@@ -301,7 +301,8 @@ export class AuditTrailService {
         const left = hashes[i];
         const right = hashes[i + 1] ?? hashes[i]; // Handle odd number
 
-        if (left === undefined || left.length === 0 || right === undefined || right.length === 0) continue;
+        if (left === undefined || left.length === 0 || right === undefined || right.length === 0)
+          continue;
         const combined = await CryptoService.generateHash(left + right);
         newHashes.push(combined);
       }

@@ -169,7 +169,7 @@ export class GPUMemoryPool {
         const oldestItem = array[oldest];
         return oldestItem && current.timestamp < oldestItem.timestamp ? index : oldest;
       }, 0);
-      
+
       const removed = pool.splice(oldestIndex, 1)[0];
       if (removed?.tensor) {
         removed.tensor.dispose();
@@ -194,18 +194,21 @@ export class GPUMemoryPool {
   }
 
   public getPoolStats() {
-    const stats: Record<string, {
-      currentItems: number;
-      maxItems: number;
-      totalSize: number;
-      utilization: number;
-      priority: number;
-    }> = {};
+    const stats: Record<
+      string,
+      {
+        currentItems: number;
+        maxItems: number;
+        totalSize: number;
+        utilization: number;
+        priority: number;
+      }
+    > = {};
 
     for (const tier of this.tiers) {
       const pool = this.pools.get(tier.name);
       if (!pool) continue;
-      
+
       const totalSize = pool.reduce((sum, item) => sum + item.size, 0);
 
       stats[tier.name] = {
@@ -230,7 +233,8 @@ export class GPUMemoryPool {
           if (typeof ctx === 'object' && ctx !== null && 'device' in ctx) {
             const device = (ctx as { device?: unknown }).device;
             if (typeof device === 'object' && device !== null && 'pushErrorScope' in device) {
-              const pushFn = (device as { pushErrorScope: (_scope: string) => Promise<void> }).pushErrorScope;
+              const pushFn = (device as { pushErrorScope: (_scope: string) => Promise<void> })
+                .pushErrorScope;
               await pushFn('out-of-memory');
             }
           }
