@@ -1,4 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
+
 import { Logger } from './logger';
 
 export interface MemoryPoolTier {
@@ -101,8 +102,7 @@ export class GPUMemoryPool {
     // Create new tensor if no reusable one found
     try {
       const tensor = tf.tidy(() => {
-        const newTensor = tf.zeros(shape, dtype || 'float32');
-        return newTensor;
+        return tf.zeros(shape, dtype ?? 'float32');
       });
 
       Logger.debug('GPU Memory Pool', `Allocated new tensor in ${tier.name} pool`, {
@@ -249,7 +249,7 @@ export class GPUMemoryPool {
             if (typeof device === 'object' && device !== null && 'popErrorScope' in device) {
               const popFn = (device as { popErrorScope: () => Promise<unknown> }).popErrorScope;
               const error = await popFn();
-              if (error) {
+              if (error !== null && error !== undefined) {
                 Logger.error('WebGPU Error Scope', 'Memory error detected', { error });
                 // Trigger fallback to CPU backend
                 await this.fallbackToCPU();
@@ -313,7 +313,7 @@ export class GPUMemoryPool {
   }
 
   public dispose() {
-    this.clearAllPools();
+    void this.clearAllPools();
     this.pools.clear();
   }
 }

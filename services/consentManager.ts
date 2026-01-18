@@ -183,14 +183,14 @@ export class ConsentManager {
   private loadConsentFromStorage(): ConsentState | null {
     try {
       const stored = localStorage.getItem(CONSENT_STORAGE_KEY);
-      if (!stored || stored.length === 0) {
+      if (stored === null || stored.length === 0) {
         return null;
       }
 
       const parsed = JSON.parse(stored) as unknown;
 
       // Basic validation of stored consent
-      if (!parsed || typeof parsed !== 'object') {
+      if (parsed === null || typeof parsed !== 'object') {
         return null;
       }
 

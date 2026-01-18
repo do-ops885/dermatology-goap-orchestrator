@@ -222,7 +222,7 @@ export class AuditTrailService {
   private async loadAuditChain(): Promise<void> {
     try {
       const stored = localStorage.getItem(AUDIT_STORAGE_KEY);
-      if (!stored || stored.length === 0) {
+      if (stored === null || stored.length === 0) {
         return; // No existing chain
       }
 
@@ -301,7 +301,7 @@ export class AuditTrailService {
         const left = hashes[i];
         const right = hashes[i + 1] ?? hashes[i]; // Handle odd number
 
-        if (!left || !right) continue;
+        if (left === undefined || left.length === 0 || right === undefined || right.length === 0) continue;
         const combined = await CryptoService.generateHash(left + right);
         newHashes.push(combined);
       }

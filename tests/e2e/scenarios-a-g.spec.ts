@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer';
+
 import { test, expect } from '@playwright/test';
 
 const API_ROUTE_PATTERN = '**/models/*:generateContent?key=*';
