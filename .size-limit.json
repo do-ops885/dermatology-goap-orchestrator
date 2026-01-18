@@ -1,0 +1,20 @@
+[
+  {
+    "path": "dist/assets/index-*.js",
+    "limit": "500 kB",
+    "gzip": true,
+    "name": "Main application bundle"
+  },
+  {
+    "path": "dist/assets/vendor-*.js",
+    "limit": "2 MB",
+    "gzip": true,
+    "name": "Vendor bundles (AI/ML models)"
+  },
+  {
+    "path": "dist/assets/*.css",
+    "limit": "100 kB",
+    "gzip": true,
+    "name": "Styles"
+  }
+]

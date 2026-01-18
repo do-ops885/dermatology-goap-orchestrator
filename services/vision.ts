@@ -42,6 +42,7 @@ export class VisionSpecialist {
 
   private constructor() {
     // Private constructor for singleton pattern
+    // Memory pool is available via GPUMemoryPool.getInstance() when needed
   }
 
   public static getInstance(): VisionSpecialist {

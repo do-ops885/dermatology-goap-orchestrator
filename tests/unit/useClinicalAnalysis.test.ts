@@ -4,31 +4,25 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { useClinicalAnalysis } from '../../hooks/useClinicalAnalysis';
 import { INITIAL_STATE, type WorldState } from '../../types';
 
-import type * as AgentDB from '../../services/agentDB';
-
-vi.mock('../../services/agentDB', async () => {
-  const actual = await vi.importActual<typeof AgentDB>('../../services/agentDB');
-  return {
-    ...actual,
-    createDatabase: vi.fn().mockResolvedValue({
-      patterns: { bulkAdd: vi.fn() },
-      execute: vi.fn().mockResolvedValue([]),
-    }),
-    EmbeddingService: vi.fn().mockImplementation(() => ({
-      initialize: vi.fn().mockResolvedValue(undefined),
-      embed: vi.fn().mockResolvedValue(new Float32Array(384)),
-    })),
-    ReasoningBank: vi.fn().mockImplementation(() => ({
-      addPattern: vi.fn().mockResolvedValue(undefined),
-      searchSimilar: vi.fn().mockResolvedValue([]),
-    })),
-    LocalLLMService: vi.fn().mockImplementation(() => ({
-      initialize: vi.fn().mockResolvedValue(undefined),
-      generate: vi.fn().mockResolvedValue('test response'),
-      unload: vi.fn(),
-    })),
-  };
-});
+vi.mock('../../services/agentDB', () => ({
+  createDatabase: vi.fn().mockResolvedValue({
+    patterns: { bulkAdd: vi.fn() },
+    execute: vi.fn().mockResolvedValue([]),
+  }),
+  EmbeddingService: vi.fn().mockImplementation(() => ({
+    initialize: vi.fn().mockResolvedValue(undefined),
+    embed: vi.fn().mockResolvedValue(new Float32Array(384)),
+  })),
+  ReasoningBank: vi.fn().mockImplementation(() => ({
+    addPattern: vi.fn().mockResolvedValue(undefined),
+    searchSimilar: vi.fn().mockResolvedValue([]),
+  })),
+  LocalLLMService: vi.fn().mockImplementation(() => ({
+    initialize: vi.fn().mockResolvedValue(undefined),
+    generate: vi.fn().mockResolvedValue('test response'),
+    unload: vi.fn(),
+  })),
+}));
 
 vi.mock('../../services/crypto', () => ({
   CryptoService: {

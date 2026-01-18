@@ -145,6 +145,11 @@ describe('VisionSpecialist', () => {
   });
 
   describe('Backend Selection', () => {
+    beforeEach(() => {
+      (tf.findBackend as unknown as ReturnType<typeof vi.fn>).mockClear();
+      (tf.setBackend as unknown as ReturnType<typeof vi.fn>).mockClear();
+    });
+
     it('should fallback to WebGL if WebGPU fails', async () => {
       (tf.findBackend as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
       (tf.setBackend as unknown as ReturnType<typeof vi.fn>)
@@ -160,8 +165,8 @@ describe('VisionSpecialist', () => {
 
     it('should use WebGL if WebGPU is not available', async () => {
       (tf.findBackend as unknown as ReturnType<typeof vi.fn>)
-        .mockReturnValueOnce(false) // webgpu not found
-        .mockReturnValueOnce(true); // webgl found
+        .mockReturnValueOnce(undefined) // webgpu not found
+        .mockReturnValueOnce({}); // webgl found
 
       const testVision = Object.create(VisionSpecialist.prototype) as VisionSpecialist;
       await testVision.initialize();
@@ -170,7 +175,7 @@ describe('VisionSpecialist', () => {
     });
 
     it('should fallback to CPU if neither WebGPU nor WebGL available', async () => {
-      (tf.findBackend as unknown as ReturnType<typeof vi.fn>).mockReturnValue(false);
+      (tf.findBackend as unknown as ReturnType<typeof vi.fn>).mockReturnValue(undefined);
 
       const testVision = Object.create(VisionSpecialist.prototype) as VisionSpecialist;
       await testVision.initialize();

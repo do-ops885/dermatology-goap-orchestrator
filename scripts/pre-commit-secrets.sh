@@ -25,7 +25,7 @@ for file in $STAGED_FILES; do
     fi
 
     # detect long base64-ish strings which often indicate keys (skip documentation files)
-    if [[ "$file" != *.md ]] && grep -nE "[A-Za-z0-9+/]{40,}={0,2}" "$file" >/dev/null 2>&1; then
+    if echo "$file" | grep -qv '\.md' && grep -nE "[A-Za-z0-9+/]{40,}={0,2}" "$file" >/dev/null 2>&1; then
       echo "Potential long base64 string in $file"
       grep -nE "[A-Za-z0-9+/]{40,}={0,2}" "$file" || true
       FAIL=1
