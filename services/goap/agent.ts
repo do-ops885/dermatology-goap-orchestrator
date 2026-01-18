@@ -332,7 +332,7 @@ export class GoapAgent {
     action: AgentAction,
     currentState: WorldState,
   ): void {
-    if (previousAgent === undefined || previousAgent === null) return;
+    if (previousAgent === undefined || previousAgent === null || previousAgent === '') return;
 
     const validation = this.handoffCoordinator.validateHandoff(
       previousAgent,
@@ -476,7 +476,9 @@ export class GoapAgent {
       agentRecord.status = 'skipped';
     }
 
-    return { newState: currentState, previousAgent: action.agentId, shouldReplan: false };
+    // Return null as previousAgent to skip handoff validation for the next agent
+    // since this agent failed and its postconditions are not met
+    return { newState: currentState, previousAgent: '', shouldReplan: false };
   }
 
   private replan(

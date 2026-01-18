@@ -42,21 +42,25 @@ vi.mock('../../services/crypto', () => ({
 }));
 
 // Mock vision service with singleton pattern
-const mockVisionInstance = {
-  initialize: vi.fn().mockResolvedValue(undefined),
-  detectSkinTone: vi.fn().mockResolvedValue({
-    fitzpatrick: 'III',
-    confidence: 0.85,
-  }),
-  extractFeatures: vi.fn().mockResolvedValue({
-    embeddings: new Float32Array(384),
-    bias_score: 0.1,
-    disentanglement_index: 0.9,
-  }),
-  detectLesions: vi
-    .fn()
-    .mockResolvedValue([{ type: 'Melanoma', confidence: 0.75, bbox: [0, 0, 100, 100] }]),
-};
+// Use vi.hoisted to ensure mock instance is available during module initialization
+const { mockVisionInstance } = vi.hoisted(() => {
+  const mockVisionInstance = {
+    initialize: vi.fn().mockResolvedValue(undefined),
+    detectSkinTone: vi.fn().mockResolvedValue({
+      fitzpatrick: 'III',
+      confidence: 0.85,
+    }),
+    extractFeatures: vi.fn().mockResolvedValue({
+      embeddings: new Float32Array(384),
+      bias_score: 0.1,
+      disentanglement_index: 0.9,
+    }),
+    detectLesions: vi
+      .fn()
+      .mockResolvedValue([{ type: 'Melanoma', confidence: 0.75, bbox: [0, 0, 100, 100] }]),
+  };
+  return { mockVisionInstance };
+});
 
 vi.mock('../../services/vision', () => ({
   VisionSpecialist: {

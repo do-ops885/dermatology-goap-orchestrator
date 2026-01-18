@@ -32,6 +32,7 @@ describe('GoapAgent Failure Handling', () => {
       };
 
       // Start with high confidence state to avoid safety routing
+      // Set up state so that Similarity-Search-Agent will be in the plan
       const highConfidenceState: WorldState = {
         ...INITIAL_STATE,
         confidence_score: 0.8, // High confidence
@@ -43,13 +44,8 @@ describe('GoapAgent Failure Handling', () => {
         segmentation_complete: true,
         features_extracted: true,
         lesions_detected: true,
-        // similarity_searched: false (will be set to false by failing executor)
-        risk_assessed: true,
-        fairness_validated: true,
-        web_verified: true,
-        recommendations_generated: true,
-        learning_updated: true,
-        data_encrypted: true,
+        // Leave similarity_searched false so it will be planned
+        // Leave downstream states false so execution continues through the pipeline
       };
 
       const executors: Record<string, ExecutorFn> = {
