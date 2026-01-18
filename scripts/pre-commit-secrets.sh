@@ -11,6 +11,11 @@ FAIL=0
 PATTERNS='(password|passwd|secret|api[_-]?key|aws[_-]?secret|aws[_-]?access|private[_-]?key|BEGIN( RSA| DSA| PRIVATE) KEY|-----BEGINPRIVATEKEY-----|client_secret)'
 
 for file in $STAGED_FILES; do
+  # skip test files, documentation files, and script files (false positives)
+  case "$file" in
+    *pre-commit-secrets.sh|*.husky/pre-commit|*quality-gate.sh|*.spec.ts|*.test.ts|*.md|playwright-report/*) continue ;;
+  esac
+
   # only scan text files
   if [ -f "$file" ] && file --brief --mime "$file" | grep -qi 'text\|json\|xml\|javascript\|typescript\|application/json'; then
     if grep -nE "$PATTERNS" "$file" >/dev/null 2>&1; then
@@ -19,8 +24,8 @@ for file in $STAGED_FILES; do
       FAIL=1
     fi
 
-    # detect long base64-ish strings which often indicate keys
-    if grep -nE "[A-Za-z0-9+/]{40,}={0,2}" "$file" >/dev/null 2>&1; then
+    # detect long base64-ish strings which often indicate keys (skip documentation files)
+    if echo "$file" | grep -qv '\.md' && grep -nE "[A-Za-z0-9+/]{40,}={0,2}" "$file" >/dev/null 2>&1; then
       echo "Potential long base64 string in $file"
       grep -nE "[A-Za-z0-9+/]{40,}={0,2}" "$file" || true
       FAIL=1

@@ -77,6 +77,4 @@ if ('periodicSync' in self.registration) {
   });
 }
 
-async function runScheduledAnalytics() {
-  console.log('Running scheduled fairness analytics...');
-}
+async function runScheduledAnalytics() {}

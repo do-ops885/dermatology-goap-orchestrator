@@ -1,5 +1,11 @@
 import { createDatabase, ReasoningBank, EmbeddingService } from 'agentdb';
 
+import {
+  convertToAuditLogEntry,
+  getEmptyFairnessStats,
+  getEmptyFeedbackStats,
+  normalizeEmptyFairnessStats,
+} from './auditLogHelpers';
 import { Logger } from './logger';
 
 import type {
@@ -10,11 +16,6 @@ import type {
   ClinicianFeedback,
   ReasoningPattern,
 } from '../types';
-import type {
-  MLCEngineInterface,
-  InitProgressReport,
-  ChatCompletionMessageParam,
-} from '@mlc-ai/web-llm';
 
 interface AgentDBReasoningPattern {
   id?: number;
@@ -45,16 +46,8 @@ export default class ClinicalAgentDB {
   private static instance: ClinicalAgentDB | undefined = undefined;
   public reasoningBank: ReasoningBank | null = null;
 
-  // Production: Initialize with zero-state.
-  // Data is strictly derived from the DB, not hardcoded.
-  private fairnessStats: Record<FitzpatrickType, { tpr: number; fpr: number; count: number }> = {
-    I: { tpr: 0, fpr: 0, count: 0 },
-    II: { tpr: 0, fpr: 0, count: 0 },
-    III: { tpr: 0, fpr: 0, count: 0 },
-    IV: { tpr: 0, fpr: 0, count: 0 },
-    V: { tpr: 0, fpr: 0, count: 0 },
-    VI: { tpr: 0, fpr: 0, count: 0 },
-  };
+  private fairnessStats: Record<FitzpatrickType, { tpr: number; fpr: number; count: number }> =
+    getEmptyFairnessStats();
 
   private constructor() {
     // Private constructor for singleton pattern
@@ -119,15 +112,7 @@ export default class ClinicalAgentDB {
       return this.fairnessStats;
     }
 
-    // Reset stats to 0 before aggregation to ensure real-time accuracy
-    const stats = {
-      I: { tpr: 0, fpr: 0, count: 0 },
-      II: { tpr: 0, fpr: 0, count: 0 },
-      III: { tpr: 0, fpr: 0, count: 0 },
-      IV: { tpr: 0, fpr: 0, count: 0 },
-      V: { tpr: 0, fpr: 0, count: 0 },
-      VI: { tpr: 0, fpr: 0, count: 0 },
-    };
+    const stats = getEmptyFairnessStats();
 
     // Aggregate real data
     patterns.forEach((p) => {
@@ -156,16 +141,7 @@ export default class ClinicalAgentDB {
       }
     });
 
-    // Normalize empty states
-    Object.keys(stats).forEach((key) => {
-      const k = key as FitzpatrickType;
-      if (stats[k].count === 0) {
-        stats[k].tpr = 0.9; // Default baseline assumption until data exists
-        stats[k].fpr = 0.05;
-      }
-    });
-
-    return stats;
+    return normalizeEmptyFairnessStats(stats);
   }
 
   public async getUnifiedAuditLog(): Promise<
@@ -191,38 +167,10 @@ export default class ClinicalAgentDB {
       return [];
     }
 
-    // Convert Vector DB records into Audit Log format
     return patterns
       .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
       .slice(0, 50)
-      .map((p) => {
-        const pattern = p as AgentDBReasoningPattern;
-        const isAudit = pattern.taskType === 'AUDIT_LOG';
-
-        const message = isAudit
-          ? String(p.metadata?.context ?? p.context ?? 'Audit Event')
-          : `Decision: ${pattern.outcome ?? 'Analysis'}`;
-
-        const metadataHash = p.metadata?.hash;
-        const hashString = typeof metadataHash === 'string' ? metadataHash : '';
-        const mitigation = isAudit
-          ? (pattern.outcome ?? hashString.substring(0, 10))
-          : `Ctx: ${(p.context ?? 'Generic').substring(0, 30)}...`;
-
-        return {
-          id: String(p.id ?? `log_${Math.random().toString(36).substring(2)}`),
-          timestamp: pattern.timestamp ?? Date.now(),
-          severity: isAudit
-            ? 'info'
-            : (pattern.confidence ?? pattern.successRate) > 0.8
-              ? 'info'
-              : 'medium',
-          message,
-          status: 'verified',
-          mitigation,
-          type: isAudit ? 'audit' : 'learning',
-        };
-      });
+      .map((p) => convertToAuditLogEntry(p));
   }
 
   public async resetMemory(): Promise<void> {
@@ -352,20 +300,7 @@ export default class ClinicalAgentDB {
     byFitzpatrick: Record<FitzpatrickType, { count: number; corrections: number }>;
   }> {
     if (!this.reasoningBank) {
-      return {
-        totalFeedback: 0,
-        corrections: 0,
-        confirmations: 0,
-        avgConfidence: 0,
-        byFitzpatrick: {
-          I: { count: 0, corrections: 0 },
-          II: { count: 0, corrections: 0 },
-          III: { count: 0, corrections: 0 },
-          IV: { count: 0, corrections: 0 },
-          V: { count: 0, corrections: 0 },
-          VI: { count: 0, corrections: 0 },
-        },
-      };
+      return getEmptyFeedbackStats();
     }
 
     try {
@@ -403,122 +338,9 @@ export default class ClinicalAgentDB {
       return stats;
     } catch (err) {
       Logger.error('AgentDB', 'Failed to get feedback stats', { error: err });
-      return {
-        totalFeedback: 0,
-        corrections: 0,
-        confirmations: 0,
-        avgConfidence: 0,
-        byFitzpatrick: {
-          I: { count: 0, corrections: 0 },
-          II: { count: 0, corrections: 0 },
-          III: { count: 0, corrections: 0 },
-          IV: { count: 0, corrections: 0 },
-          V: { count: 0, corrections: 0 },
-          VI: { count: 0, corrections: 0 },
-        },
-      };
+      return getEmptyFeedbackStats();
     }
   }
 }
 
-// --- Local LLM Service ---
-
-export class LocalLLMService {
-  public isReady = false;
-  private engine: MLCEngineInterface | null = null;
-  private initializationPromise: Promise<void> | null = null;
-  private idleTimer: ReturnType<typeof setTimeout> | null = null;
-  // Using a quantized SmolLM2 model optimized for browser edge inference
-  private modelId = 'SmolLM2-1.7B-Instruct-q4f16_1-MLC';
-
-  async initialize(
-    progressCallback?: (_report: { text: string; progress: number }) => void,
-  ): Promise<void> {
-    // Prevent double-initialization in React Strict Mode
-    if (this.isReady) {
-      this.resetIdleTimer();
-      return;
-    }
-    if (this.initializationPromise) return this.initializationPromise;
-
-    this.initializationPromise = (async () => {
-      try {
-        Logger.info('LocalLLMService', 'Initializing WebLLM Engine...');
-
-        // Dynamic Import: Only load web-llm (heavy) when actually needed
-        const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
-
-        this.engine = await CreateMLCEngine(this.modelId, {
-          initProgressCallback: (_report: InitProgressReport) => {
-            if (progressCallback) {
-              progressCallback({
-                text: _report.text,
-                progress: _report.progress,
-              });
-            }
-          },
-          logLevel: 'WARN',
-        });
-        this.isReady = true;
-        this.resetIdleTimer();
-        Logger.info('LocalLLMService', 'WebLLM Engine Ready');
-      } catch (error) {
-        Logger.error('LocalLLMService', 'WebLLM Init Failed', { error });
-        this.isReady = false;
-        this.engine = null;
-        this.initializationPromise = null;
-        throw error; // Propagate error for UI handling
-      }
-    })();
-
-    return this.initializationPromise;
-  }
-
-  async generate(prompt: string, systemPrompt = ''): Promise<string> {
-    this.resetIdleTimer();
-    if (!this.engine || !this.isReady) {
-      Logger.warn('LocalLLMService', 'Generate requested but engine not ready');
-      return '';
-    }
-
-    try {
-      const messages = [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: prompt },
-      ];
-
-      const reply = await this.engine.chat.completions.create({
-        messages: messages as unknown as ChatCompletionMessageParam[],
-        temperature: 0.1, // Low temperature for clinical precision
-        max_tokens: 256,
-      });
-
-      return reply.choices[0]?.message?.content ?? '';
-    } catch (e) {
-      Logger.error('LocalLLMService', 'Generation Failed', { error: e });
-      return '';
-    }
-  }
-
-  private resetIdleTimer() {
-    if (this.idleTimer) clearTimeout(this.idleTimer);
-    // Unload after 5 minutes of inactivity to save memory
-    this.idleTimer = setTimeout(
-      () => {
-        void this.unload();
-      },
-      5 * 60 * 1000,
-    );
-  }
-
-  async unload() {
-    if (this.engine) {
-      Logger.info('LocalLLMService', 'Unloading engine to free memory');
-      await this.engine.unload();
-      this.engine = null;
-      this.isReady = false;
-      this.initializationPromise = null;
-    }
-    if (this.idleTimer) clearTimeout(this.idleTimer);
-  }
-}
+export { LocalLLMService } from './localLLMService';

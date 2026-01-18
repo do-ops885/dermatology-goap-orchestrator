@@ -2,4 +2,4 @@
 . "$(dirname "$0")/_/husky.sh"
 
 # Validate commit message against conventional commit rules
-npx --no-install --no -- commitlint --edit "$1"
+npx commitlint --edit "$1"

@@ -7,9 +7,7 @@ export class ServiceRegistry {
   private services = new Map<string, unknown>();
 
   static getInstance(): ServiceRegistry {
-    if (ServiceRegistry.instance === undefined) {
-      ServiceRegistry.instance = new ServiceRegistry();
-    }
+    ServiceRegistry.instance ??= new ServiceRegistry();
     return ServiceRegistry.instance;
   }
 
@@ -25,7 +23,7 @@ export class ServiceRegistry {
     await embedder.initialize();
     this.register('embedder', embedder);
 
-    const reasoningBank = new ReasoningBank(db as unknown as Record<string, unknown>, embedder);
+    const reasoningBank = new ReasoningBank(db, embedder);
     this.register('reasoningBank', reasoningBank);
 
     const { VisionSpecialist } = await import('./vision');
@@ -44,12 +42,12 @@ export class ServiceRegistry {
     this.services.set(key, service);
   }
 
-  get<T>(key: string): T {
-    return this.services.get(key);
+  get<T>(key: string): T | undefined {
+    return this.services.get(key) as T | undefined;
   }
 
   getOrInitialize<T>(key: string, initializer: () => Promise<T>): Promise<T> {
-    const existing = this.services.get(key);
+    const existing = this.services.get(key) as T | undefined;
     if (existing !== undefined) return Promise.resolve(existing);
     return initializer().then((service) => {
       this.register(key, service);

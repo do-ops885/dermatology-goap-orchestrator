@@ -38,7 +38,6 @@ self.addEventListener('activate', (event) => {
               cacheName.startsWith('clinical-ai-runtime-') && cacheName !== CACHES.runtime;
 
             if (isStatic || isRuntime) {
-              console.log('[SW] Cleaning old cache:', cacheName);
               return caches.delete(cacheName);
             }
           }),
@@ -96,8 +95,13 @@ self.addEventListener('fetch', (event) => {
               return networkResponse;
             })
             .catch(() => {
-              // Network failure - ignore if we have cached response
-              console.log('[SW] Network fail for static asset, using cache');
+              if (cachedResponse) {
+                return cachedResponse;
+              }
+              return new Response('Network error', {
+                status: 503,
+                statusText: 'Service Unavailable',
+              });
             });
 
           return cachedResponse || fetchPromise;

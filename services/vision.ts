@@ -1,6 +1,21 @@
 import * as tf from '@tensorflow/tfjs';
 
 import '@tensorflow/tfjs-backend-webgpu';
+
+import {
+  LOG_COMPONENT_VISION_SPECIALIST,
+  MSG_CRITICAL_INITIALIZATION_FAILURE,
+  MSG_CPU_BACKEND_ACTIVE,
+  MSG_FAILED_TO_CREATE_MESHGRID,
+  MSG_FAILED_TO_LOAD_REMOTE_MODEL,
+  MSG_MODEL_LOADED_SUCCESS,
+  MSG_NEURAL_NETWORK_INFERENCE_FAILED,
+  MSG_VISION_MODEL_NOT_LOADED,
+  MSG_VISION_MODEL_UNAVAILABLE,
+  MSG_WEBGPU_BACKEND_ACTIVE,
+  MSG_WEBGL_BACKEND_ACTIVE,
+} from '../config/constants';
+
 import { Logger } from './logger';
 
 export interface ClassificationResult {
@@ -27,12 +42,11 @@ export class VisionSpecialist {
 
   private constructor() {
     // Private constructor for singleton pattern
+    // Memory pool is available via GPUMemoryPool.getInstance() when needed
   }
 
   public static getInstance(): VisionSpecialist {
-    if (VisionSpecialist.instance === undefined) {
-      VisionSpecialist.instance = new VisionSpecialist();
-    }
+    VisionSpecialist.instance ??= new VisionSpecialist();
     return VisionSpecialist.instance;
   }
 
@@ -44,20 +58,20 @@ export class VisionSpecialist {
 
       // Robust Backend Selection Strategy
 
-      if (tf.findBackend('webgpu')) {
+      if (tf.findBackend('webgpu') !== undefined && tf.findBackend('webgpu') !== null) {
         try {
           await tf.setBackend('webgpu');
-          Logger.info('VisionSpecialist', 'WebGPU Backend Active');
+          Logger.info(LOG_COMPONENT_VISION_SPECIALIST, MSG_WEBGPU_BACKEND_ACTIVE);
         } catch {
-          Logger.warn('VisionSpecialist', 'WebGPU failed, falling back to WebGL');
+          Logger.warn(LOG_COMPONENT_VISION_SPECIALIST, 'WebGPU failed, falling back to WebGL');
           await tf.setBackend('webgl');
         }
-      } else if (tf.findBackend('webgl')) {
+      } else if (tf.findBackend('webgl') !== undefined && tf.findBackend('webgl') !== null) {
         await tf.setBackend('webgl');
-        Logger.info('VisionSpecialist', 'WebGL Backend Active');
+        Logger.info(LOG_COMPONENT_VISION_SPECIALIST, MSG_WEBGL_BACKEND_ACTIVE);
       } else {
         await tf.setBackend('cpu');
-        Logger.warn('VisionSpecialist', 'CPU Backend Active (Performance degraded)');
+        Logger.warn(LOG_COMPONENT_VISION_SPECIALIST, MSG_CPU_BACKEND_ACTIVE);
       }
 
       this.isBackendReady = true;
@@ -68,13 +82,17 @@ export class VisionSpecialist {
         this.model = await tf.loadGraphModel(
           'https://storage.googleapis.com/tfjs-models/savedmodel/mobilenet_v2_1.0_224/model.json',
         );
-        Logger.info('VisionSpecialist', 'Model Loaded Successfully');
+        Logger.info(LOG_COMPONENT_VISION_SPECIALIST, MSG_MODEL_LOADED_SUCCESS);
       } catch (modelError) {
-        Logger.error('VisionSpecialist', 'Failed to load remote model', { error: modelError });
-        throw new Error('Vision Model Unavailable - Check Network Connection');
+        Logger.error(LOG_COMPONENT_VISION_SPECIALIST, MSG_FAILED_TO_LOAD_REMOTE_MODEL, {
+          error: modelError,
+        });
+        throw new Error(MSG_VISION_MODEL_UNAVAILABLE);
       }
     } catch (e) {
-      Logger.error('VisionSpecialist', 'Critical Initialization Failure', { error: e });
+      Logger.error(LOG_COMPONENT_VISION_SPECIALIST, MSG_CRITICAL_INITIALIZATION_FAILURE, {
+        error: e,
+      });
       throw e;
     }
   }
@@ -83,7 +101,7 @@ export class VisionSpecialist {
     await this.initialize();
 
     if (!this.model) {
-      throw new Error('Vision Model not loaded');
+      throw new Error(MSG_VISION_MODEL_NOT_LOADED);
     }
 
     try {
@@ -108,9 +126,10 @@ export class VisionSpecialist {
 
         // Deterministic mapping to simulated derm classes for the prototype
         const mappedResults = sortedIndices.map((item, index) => {
+          if (item === undefined || item === null) return { label: 'Unknown', score: 0 };
           const mappedIndex = (item.i + Math.floor(item.p * 100)) % CLASSES.length;
           return {
-            label: CLASSES[mappedIndex].name,
+            label: CLASSES[mappedIndex]!.name,
             score: item.p * (1 - index * 0.15), // Decay score for lower ranks
           };
         });
@@ -130,8 +149,8 @@ export class VisionSpecialist {
           .slice(0, 3);
       });
     } catch (e) {
-      Logger.error('VisionSpecialist', 'Inference failed', { error: e });
-      throw new Error('Neural Network Inference Failed');
+      Logger.error(LOG_COMPONENT_VISION_SPECIALIST, 'Inference failed', { error: e });
+      throw new Error(MSG_NEURAL_NETWORK_INFERENCE_FAILED);
     }
   }
 
@@ -144,50 +163,70 @@ export class VisionSpecialist {
    * Generates a visual heatmap simulating Grad-CAM using Saliency logic.
    * Highlights high-contrast central regions (lesions) in a JET colormap.
    */
-  private generateSaliencyMap(img: HTMLImageElement): string {
-    return tf.tidy(() => {
-      // A. Preprocessing
-      const t = tf.browser.fromPixels(img).toFloat().div(255);
-      const [h, w] = t.shape.slice(0, 2);
+  private async generateSaliencyMap(img: HTMLImageElement): Promise<string> {
+    const t = tf.browser.fromPixels(img).toFloat().div(255);
+    const [h, w] = t.shape.slice(0, 2) as [number, number];
 
-      // B. Saliency Heuristic:
-      // Lesions are typically darker than skin -> Invert grayscale
-      // Lesions are typically centered -> Gaussian Mask
-      const gray = t.mean(2);
-      const inverted = tf.scalar(1).sub(gray);
+    // B. Saliency Heuristic:
+    // Lesions are typically darker than skin -> Invert grayscale
+    // Lesions are typically centered -> Gaussian Mask
+    const gray = t.mean(2);
+    const inverted = tf.scalar(1).sub(gray);
 
-      // Gaussian Center Bias
-      const x = tf.linspace(-1, 1, w);
-      const y = tf.linspace(-1, 1, h);
-      const [xx, yy] = tf.meshgrid(x, y);
-      const gaussian = tf.exp(xx.square().add(yy.square()).neg().mul(2));
+    // Gaussian Center Bias
+    const x = tf.linspace(-1, 1, w);
+    const y = tf.linspace(-1, 1, h);
+    const [xx, yy] = tf.meshgrid(x, y);
+    if (!xx || !yy) {
+      throw new Error(MSG_FAILED_TO_CREATE_MESHGRID);
+    }
+    const gaussian = tf.exp(xx.square().add(yy.square()).neg().mul(2));
 
-      // Combined Activation Map
-      let activation = inverted.mul(gaussian);
+    // Combined Activation Map
+    let activation = inverted.mul(gaussian);
 
-      // Normalize to 0-1
-      const min = activation.min();
-      const max = activation.max();
-      activation = activation.sub(min).div(max.sub(min));
+    // Normalize to 0-1
+    const min = activation.min();
+    const max = activation.max();
+    activation = activation.sub(min).div(max.sub(min));
 
-      // C. Apply JET Colormap (Simulated via RGB channels)
-      const r = activation.sub(0.5).relu().mul(2);
-      const g = tf.scalar(1).sub(activation.sub(0.5).abs().mul(2));
-      const b = tf.scalar(0.5).sub(activation).relu().mul(2);
+    // C. Apply JET Colormap (Simulated via RGB channels)
+    const r = activation.sub(0.5).relu().mul(2);
+    const g = tf.scalar(1).sub(activation.sub(0.5).abs().mul(2));
+    const b = tf.scalar(0.5).sub(activation).relu().mul(2);
 
-      const heatmap = tf.stack([r, g, b], 2);
+    const heatmap = tf.stack([r, g, b], 2);
 
-      // D. Resize for output
-      const resized = tf.image.resizeBilinear(heatmap, [h, w]) as tf.Tensor3D;
+    // D. Resize for output
+    const resized = tf.image.resizeBilinear(heatmap as tf.Tensor3D, [h, w]);
 
-      // E. Draw to Canvas to get DataURL
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      tf.browser.toPixels(resized, canvas);
+    // E. Draw to Canvas to get DataURL
+    const canvas = document.createElement('canvas');
+    canvas.width = w || 224;
+    canvas.height = h || 224;
+    await tf.browser.toPixels(resized, canvas);
 
-      return canvas.toDataURL();
-    });
+    const dataUrl = canvas.toDataURL();
+
+    // Cleanup tensors
+    t.dispose();
+    gray.dispose();
+    inverted.dispose();
+    x.dispose();
+    y.dispose();
+    xx.dispose();
+    yy.dispose();
+    gaussian.dispose();
+    activation.dispose();
+    min.dispose();
+    max.dispose();
+    r.dispose();
+    g.dispose();
+    b.dispose();
+    heatmap.dispose();
+    resized.dispose();
+
+    return dataUrl;
   }
 
   public getTensorStats() {

@@ -25,7 +25,7 @@ export const featureExtractionExecutor = async ({
     ],
     config: { responseMimeType: 'application/json' },
   });
-  const discoJson = cleanAndParseJSON(discoResponse.text);
+  const discoJson = cleanAndParseJSON(discoResponse.text) as { bias_score: number };
 
   return {
     metadata: { bias_score: discoJson.bias_score, status: 'validated' },

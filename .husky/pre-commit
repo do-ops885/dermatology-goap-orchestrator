@@ -3,32 +3,39 @@
 
 echo "Running pre-commit quality gate..."
 
-# 1. Check for dependency conflicts first
+# 1. Validate syntax on staged files first
+if [ -f "./scripts/validate-syntax.sh" ]; then
+  echo "Checking TypeScript syntax on staged files..."
+  bash ./scripts/validate-syntax.sh || exit $?
+  echo ""
+fi
+
+# 2. Check for dependency conflicts
 if [ -f "./scripts/check-dependencies.sh" ]; then
   echo "Checking dependency resolution..."
   sh ./scripts/check-dependencies.sh || exit $?
   echo ""
 fi
 
-# 2. Run lint-staged for formatting and linting
+# 3. Run lint-staged for formatting and linting
 echo "Running lint-staged..."
 npx lint-staged || exit $?
 echo ""
 
-# 3. Run secret detection
-echo "Checking for secrets in staged files..."
+# 4. Run sensitive data detection
+echo "Checking for sensitive data in staged files..."
 sh ./scripts/pre-commit-secrets.sh || exit $?
 echo ""
 
-# 4. Run fast quality gate (typecheck, LOC check)
+# 5. Run fast quality gate (typecheck, LOC check)
 # Tests are skipped by default for speed, but can be enabled with RUN_UNIT_TESTS=1
 
 if [ "$RUN_UNIT_TESTS" = "1" ]; then
   echo "Running full quality gate with tests..."
-  npx --no-install --no bash scripts/quality-gate.sh --skip-format --skip-lint --fix || exit $?
+  npm run quality-gate -- --skip-format --skip-lint --fix || exit $?
 else
   echo "Running fast quality gate (typecheck, LOC check)..."
-  npx --no-install --no bash scripts/quality-gate.sh --fast --skip-format --skip-lint --fix || exit $?
+  npm run quality-gate:fast -- --skip-format --skip-lint --fix || exit $?
 fi
 
 echo ""

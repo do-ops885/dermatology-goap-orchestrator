@@ -41,7 +41,10 @@ export const AgentFlow = React.forwardRef<HTMLDivElement, AgentFlowProps>(
     const runningCount = trace.agents.filter((a) => a.status === 'running').length;
 
     return (
-      <div className="glass-panel rounded-xl h-full flex flex-col overflow-hidden">
+      <div
+        data-testid="agent-flow"
+        className="glass-panel rounded-xl h-full flex flex-col overflow-hidden"
+      >
         <div className="p-4 border-b border-white/50 bg-white/30">
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-grotesk font-bold text-sm text-stone-700 flex items-center gap-2">

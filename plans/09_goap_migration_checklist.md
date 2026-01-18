@@ -1,5 +1,7 @@
 # Migration Checklist: Adopt `goap-agent` as the Orchestrator
 
+**Last Updated: 2026-01-15**
+
 This checklist lists concrete edits and tests to make `goap-agent` the canonical orchestrator at runtime.
 
 ## 1. Code Changes (Implementation)
@@ -11,6 +13,10 @@ This checklist lists concrete edits and tests to make `goap-agent` the canonical
 - [x] Add `services/goap/agent.ts` to house agent orchestrator (145 LOC).
 - [x] Update `hooks/useClinicalAnalysis.ts` to use executor pattern with `services/executors/`.
 - [x] Add telemetry hooks to `services/logger.ts` used by `GoapAgent`.
+- [ ] Implement event bus for agent communication
+- [ ] Define structured error types and propagation mechanism
+- [ ] Add agent health check endpoints/methods
+- [ ] Implement circuit breaker pattern for external services
 
 ## 2. Tests
 
@@ -30,6 +36,14 @@ This checklist lists concrete edits and tests to make `goap-agent` the canonical
 - [x] Add metrics to logger and execution trace collection.
 - [x] Implement execution trace visualization in `AgentFlow.tsx`.
 - [x] GOAP-Agent is the primary orchestrator (no feature flag needed).
+
+## 5. Future Enhancements
+
+- **Distributed Agent Coordination**: Support for multi-node agent communication
+- **Dynamic Plan Caching**: Runtime plan memoization based on similar world states
+- **Agent Versioning**: Support for hot-swapping agent implementations
+- **Execution Playback**: Debug mode to replay execution traces step-by-step
+- **Priority Scheduling**: Weighted task scheduling based on clinical urgency
 
 ---
 

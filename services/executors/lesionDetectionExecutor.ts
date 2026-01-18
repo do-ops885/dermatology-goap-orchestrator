@@ -21,6 +21,9 @@ export const lesionDetectionExecutor = async ({
 
   const highRiskClasses = ['Melanoma', 'Basal Cell Carcinoma', 'Squamous Cell Carcinoma'];
   const primaryLesion = lesions[0];
+  if (!primaryLesion) {
+    throw new Error('No lesions detected');
+  }
   const riskLabel = highRiskClasses.includes(primaryLesion.type)
     ? 'High'
     : primaryLesion.confidence < 0.5

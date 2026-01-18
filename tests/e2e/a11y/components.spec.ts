@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test';
 
 import { axe } from './test-utils';
 
+import type { Result as AxeResult } from 'axe-core';
+
 test.describe('Accessibility - Components', () => {
   test('AnalysisIntake component is accessible', async ({ page }) => {
     await page.goto('/');
@@ -42,8 +44,7 @@ test.describe('Accessibility - Components', () => {
       include: 'main',
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(results.violations.filter((v: any) => v.impact === 'critical')).toEqual([]);
+    expect(results.violations.filter((v: AxeResult) => v.impact === 'critical')).toEqual([]);
   });
 
   test('FairnessDashboard has proper chart accessibility', async ({ page }) => {
@@ -56,8 +57,7 @@ test.describe('Accessibility - Components', () => {
       include: '[data-testid="fairness-dashboard"]',
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(results.violations.filter((v: any) => v.id === 'aria-chart')).toEqual([]);
+    expect(results.violations.filter((v: AxeResult) => v.id === 'aria-chart')).toEqual([]);
   });
 
   test('ErrorBoundary catches and displays errors accessibly', async ({ page }) => {
@@ -82,7 +82,6 @@ test.describe('Accessibility - Components', () => {
       include: '[data-testid="patient-safety"]',
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(results.violations.filter((v: any) => v.id === 'aria-live-region')).toEqual([]);
+    expect(results.violations.filter((v: AxeResult) => v.id === 'aria-live-region')).toEqual([]);
   });
 });

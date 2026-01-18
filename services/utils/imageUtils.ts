@@ -33,7 +33,12 @@ export const optimizeImage = (file: File): Promise<string> => {
           file.type === 'image/png' ? 'image/png' : 'image/jpeg',
           0.85,
         );
-        resolve(dataUrl.split(',')[1]);
+        const base64Part = dataUrl.split(',')[1];
+        if (base64Part !== undefined && base64Part !== null && base64Part !== '') {
+          resolve(base64Part);
+        } else {
+          resolve('');
+        }
       };
       img.onerror = (err) => {
         reject(new Error(err instanceof Error ? err.message : 'Image load failed'));

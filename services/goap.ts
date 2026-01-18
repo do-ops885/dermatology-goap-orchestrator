@@ -155,19 +155,9 @@ export class GOAPPlanner {
     const openList: PlannerNode[] = [];
     const closedSet = new Set<string>();
 
-    // Initial Heuristic Calculation
     const h = this.calculateRobustHeuristic(startState, goalState);
+    openList.push(this.createInitialNode(startState, h));
 
-    openList.push({
-      state: startState,
-      parent: null,
-      action: null,
-      g: 0,
-      h: h,
-      f: h,
-    });
-
-    // Safety break to prevent infinite loops in pathological cases
     let iterations = 0;
     const MAX_ITERATIONS = 5000;
 
@@ -176,60 +166,91 @@ export class GOAPPlanner {
         throw new Error('GOAP Planner exceeded maximum iterations. No valid path found.');
       }
 
-      // Sort by F-score (lowest first) - Mimics Priority Queue
-      openList.sort((a, b) => a.f - b.f);
-      const currentNode = openList.shift();
-      if (!currentNode) continue;
-
-      // Check if current state satisfies all goal conditions
+      const currentNode = this.selectBestNode(openList);
       if (this.satisfiesGoal(currentNode.state, goalState)) {
         return this.reconstructPath(currentNode);
       }
 
       const stateKey = this.getStateKey(currentNode.state);
+      if (closedSet.has(stateKey)) continue;
       closedSet.add(stateKey);
 
-      // Expand Neighbors (Applicable Actions)
-      const neighbors = this.getApplicableActions(currentNode.state);
-
-      for (const action of neighbors) {
-        const newState = this.applyEffects(currentNode.state, action.effects);
-        const newStateKey = this.getStateKey(newState);
-
-        if (closedSet.has(newStateKey)) continue;
-
-        const g = currentNode.g + action.cost;
-        const h = this.calculateRobustHeuristic(newState, goalState);
-        const f = g + h;
-
-        // Check if this state is already in open list with a better path
-        const existingNodeIndex = openList.findIndex(
-          (n) => this.getStateKey(n.state) === newStateKey,
-        );
-
-        if (existingNodeIndex !== -1) {
-          if (g < openList[existingNodeIndex].g) {
-            // Found a better path to an existing node
-            openList[existingNodeIndex].g = g;
-            openList[existingNodeIndex].f = f;
-            openList[existingNodeIndex].parent = currentNode;
-            openList[existingNodeIndex].action = action;
-          }
-        } else {
-          // New node discovered
-          openList.push({
-            state: newState,
-            parent: currentNode,
-            action,
-            g,
-            h,
-            f,
-          });
-        }
-      }
+      this.expandNode(currentNode, openList, closedSet, goalState);
     }
 
     throw new Error('No plan found to satisfy the goal state.');
+  }
+
+  private createInitialNode(state: WorldState, h: number): PlannerNode {
+    return {
+      state,
+      parent: null,
+      action: null,
+      g: 0,
+      h,
+      f: h,
+    };
+  }
+
+  private selectBestNode(openList: PlannerNode[]): PlannerNode {
+    openList.sort((a, b) => a.f - b.f);
+    const node = openList.shift();
+    if (!node) throw new Error('Open list is empty');
+    return node;
+  }
+
+  private expandNode(
+    currentNode: PlannerNode,
+    openList: PlannerNode[],
+    closedSet: Set<string>,
+    goalState: Partial<WorldState>,
+  ): void {
+    const neighbors = this.getApplicableActions(currentNode.state);
+
+    for (const action of neighbors) {
+      const newState = this.applyEffects(currentNode.state, action.effects);
+      const newStateKey = this.getStateKey(newState);
+
+      if (closedSet.has(newStateKey)) continue;
+
+      const g = currentNode.g + action.cost;
+      const h = this.calculateRobustHeuristic(newState, goalState);
+      const f = g + h;
+
+      this.updateOrAddNode(openList, newState, currentNode, action, g, h, f);
+    }
+  }
+
+  private updateOrAddNode(
+    openList: PlannerNode[],
+    newState: WorldState,
+    parent: PlannerNode,
+    action: AgentAction,
+    g: number,
+    h: number,
+    f: number,
+  ): void {
+    const newStateKey = this.getStateKey(newState);
+    const existingIndex = openList.findIndex((n) => this.getStateKey(n.state) === newStateKey);
+
+    if (existingIndex !== -1) {
+      const existing = openList[existingIndex];
+      if (existing && g < existing.g) {
+        existing.g = g;
+        existing.f = f;
+        existing.parent = parent;
+        existing.action = action;
+      }
+    } else {
+      openList.push({
+        state: newState,
+        parent,
+        action,
+        g,
+        h,
+        f,
+      });
+    }
   }
 
   /**
@@ -244,51 +265,85 @@ export class GOAPPlanner {
   ): number {
     let estimatedCost = 0;
     const visited = new Set<string>();
-    const queue: { key: keyof WorldState; value: unknown }[] = [];
+    const queue = this.initializeQueueWithUnsatisfiedGoals(currentState, goalState);
 
-    // Initialize queue with unsatisfied goals
+    while (queue.length > 0) {
+      const item = queue.shift();
+      if (!item) continue;
+
+      if (this.shouldSkipItem(currentState, visited, item)) continue;
+
+      const bestAction = this.findCheapestAction(item);
+      if (!bestAction) continue; // No action produces this state
+
+      estimatedCost += bestAction.cost;
+      this.addPreconditionsToQueue(currentState, queue, bestAction);
+    }
+
+    return estimatedCost;
+  }
+
+  private initializeQueueWithUnsatisfiedGoals(
+    currentState: WorldState,
+    goalState: Partial<WorldState>,
+  ): { key: keyof WorldState; value: unknown }[] {
+    const queue: { key: keyof WorldState; value: unknown }[] = [];
     for (const key in goalState) {
       const k = key as keyof WorldState;
       if (currentState[k] !== goalState[k]) {
         queue.push({ key: k, value: goalState[k] });
       }
     }
+    return queue;
+  }
 
-    while (queue.length > 0) {
-      const item = queue.shift();
-      const itemKeyStr = `${item.key}:${item.value}`;
+  private shouldSkipItem(
+    currentState: WorldState,
+    visited: Set<string>,
+    item: { key: keyof WorldState; value: unknown },
+  ): boolean {
+    const itemKeyStr = `${item.key}:${item.value}`;
 
-      if (visited.has(itemKeyStr)) continue;
-      visited.add(itemKeyStr);
+    if (visited.has(itemKeyStr)) {
+      return true;
+    }
+    visited.add(itemKeyStr);
 
-      // Check if already satisfied in current state
-      if (currentState[item.key] === item.value) continue;
-
-      // Find best action to satisfy this requirement
-      // We filter for actions that produce the specific effect value we need
-      const relevantActions = this.actions.filter(
-        (action) => action.effects[item.key] === item.value,
-      );
-
-      if (relevantActions.length === 0) continue; // No action produces this state (should be error in well-formed domain)
-
-      // Optimistic: Pick the cheapest action
-      const bestAction = relevantActions.reduce((min, cur) => (cur.cost < min.cost ? cur : min));
-
-      estimatedCost += bestAction.cost;
-
-      // Add preconditions of this action to the queue
-      for (const preKey in bestAction.preconditions) {
-        const pk = preKey as keyof WorldState;
-        const requiredVal = bestAction.preconditions[pk];
-
-        if (currentState[pk] !== requiredVal) {
-          queue.push({ key: pk, value: requiredVal });
-        }
-      }
+    // Check if already satisfied in current state
+    if (currentState[item.key] === item.value) {
+      return true;
     }
 
-    return estimatedCost;
+    return false;
+  }
+
+  private findCheapestAction(item: { key: keyof WorldState; value: unknown }): AgentAction | null {
+    // We filter for actions that produce the specific effect value we need
+    const relevantActions = this.actions.filter(
+      (action) => action.effects[item.key] === item.value,
+    );
+
+    if (relevantActions.length === 0) {
+      return null; // No action produces this state (should be error in well-formed domain)
+    }
+
+    // Optimistic: Pick the cheapest action
+    return relevantActions.reduce((min, cur) => (cur.cost < min.cost ? cur : min));
+  }
+
+  private addPreconditionsToQueue(
+    currentState: WorldState,
+    queue: { key: keyof WorldState; value: unknown }[],
+    action: AgentAction,
+  ): void {
+    for (const preKey in action.preconditions) {
+      const pk = preKey as keyof WorldState;
+      const requiredVal = action.preconditions[pk];
+
+      if (currentState[pk] !== requiredVal) {
+        queue.push({ key: pk, value: requiredVal });
+      }
+    }
   }
 
   private satisfiesGoal(state: WorldState, goal: Partial<WorldState>): boolean {

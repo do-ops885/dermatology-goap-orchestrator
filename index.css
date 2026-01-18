@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --stone-50: #fafaf9;
+  --stone-100: #f5f5f4;
+  --stone-200: #e7e5e4;
+  --stone-300: #d6d3d1;
+  --stone-400: #a8a29e;
+  --stone-500: #78716c;
+  --stone-600: #57534e;
+  --stone-700: #44403c;
+  --stone-800: #292524;
+  --stone-900: #1c1917;
+  --stone-950: #0c0a09;
+
+  --color-bone: #fdfcf8;
+  --color-warm-grey: #f4f1ea;
+  --color-terracotta: #d96c5b;
+  --color-slate-green: #4a5d5e;
+  --color-soft-black: #1a1918;
+
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme='dark'] {
+  --color-white: #1c1917;
+  --color-black: #f5f5f4;
+
+  --stone-50: #1c1917;
+  --stone-100: #292524;
+  --stone-200: #44403c;
+  --stone-300: #57534e;
+  --stone-400: #a8a29e;
+  --stone-500: #78716c;
+  --stone-600: #d6d3d1;
+  --stone-700: #e7e5e4;
+  --stone-800: #f5f5f4;
+  --stone-900: #fafaf9;
+  --stone-950: #ffffff;
+
+  --color-bone: #121212;
+  --color-soft-black: #e7e5e4;
+
+  --glass-bg: rgba(30, 30, 30, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='contrast'] {
+  --color-white: #000000;
+  --color-black: #ffffff;
+
+  --stone-50: #000000;
+  --stone-100: #000000;
+  --stone-200: #ffffff;
+  --stone-300: #ffffff;
+  --stone-400: #ffff00;
+  --stone-500: #ffff00;
+  --stone-600: #ffffff;
+  --stone-700: #ffffff;
+  --stone-800: #ffffff;
+  --stone-900: #ffffff;
+  --stone-950: #ffffff;
+
+  --color-bone: #000000;
+  --color-soft-black: #ffffff;
+
+  --glass-bg: #000000;
+  --glass-border: #ffffff;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--stone-50);
+  color: var(--stone-900);
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.font-grotesk {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition:
+    background-color 0.3s,
+    border-color 0.3s;
+}
+
+.pattern-grid {
+  background-image: radial-gradient(#4a5d5e 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.05;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(74, 93, 94, 0.2);
+  border-radius: 20px;
+}

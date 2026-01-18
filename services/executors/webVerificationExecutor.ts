@@ -44,7 +44,8 @@ export const webVerificationExecutor = async ({
 
   const lesions = analysisPayload.lesions as { type?: string }[] | undefined;
   const lesionType = lesions?.[0]?.type ?? 'skin condition';
-  const query = `latest clinical guidelines and risk factors for ${lesionType} in Fitzpatrick skin type ${String(currentState.fitzpatrick_type) || 'unspecified'}`;
+  const fitzpatrickType = String(currentState.fitzpatrick_type ?? 'unspecified');
+  const query = `latest clinical guidelines and risk factors for ${lesionType} in Fitzpatrick skin type ${fitzpatrickType}`;
 
   try {
     const response = await ai.models.generateContent({
@@ -56,10 +57,14 @@ export const webVerificationExecutor = async ({
       },
     });
 
-    const sources = (response.candidates?.[0]?.groundingMetadata?.groundingChunks || [])
-      .map((c: WebSource) => ({
-        title: c.title,
-        uri: c.uri,
+    const sources = (response.candidates?.[0]?.groundingMetadata?.groundingChunks ?? [])
+      .map((chunk: unknown) => ({
+        title:
+          (chunk as { webSearchEntities?: Array<{ name?: string }>; title?: string })
+            ?.webSearchEntities?.[0]?.name ?? (chunk as { title?: string })?.title,
+        uri:
+          (chunk as { webSearchEntities?: Array<{ uri?: string }>; uri?: string })
+            ?.webSearchEntities?.[0]?.uri ?? (chunk as { uri?: string })?.uri,
       }))
       .filter(isValidSource)
       .slice(0, 3);
