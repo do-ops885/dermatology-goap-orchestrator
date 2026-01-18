@@ -112,9 +112,7 @@ const mockExecuteFn = vi.fn().mockImplementation(async () => {
 vi.mock('../../services/goap/agent', () => {
   class MockGoapAgent {
     async execute(...args: unknown[]) {
-      const trace = mockExecuteFn(...args);
-      // Return success object as real executeAnalysis does
-      return { success: true, data: { trace } };
+      return await mockExecuteFn(...args);
     }
   }
   return {
