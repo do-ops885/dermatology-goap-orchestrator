@@ -297,7 +297,8 @@ export default [
       'max-lines': 'off', // Tests can be longer
       complexity: 'off', // Tests can be complex
       'sonarjs/cognitive-complexity': 'off', // Tests can be complex
-      'sonarjs/no-duplicate-string': ['warn', { threshold: 5 }], // More lenient for tests
+      'sonarjs/no-duplicate-string': 'off', // Allow duplicate strings in tests
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
 
       // Allow console statements in tests for debugging
       'no-console': 'off',

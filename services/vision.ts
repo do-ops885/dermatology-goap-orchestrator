@@ -1,7 +1,3 @@
-import * as tf from '@tensorflow/tfjs';
-
-import '@tensorflow/tfjs-backend-webgpu';
-
 import {
   LOG_COMPONENT_VISION_SPECIALIST,
   MSG_CRITICAL_INITIALIZATION_FAILURE,
@@ -17,6 +13,20 @@ import {
 } from '../config/constants';
 
 import { Logger } from './logger';
+
+import type * as Tensorflow from '@tensorflow/tfjs';
+
+type TensorflowModule = typeof Tensorflow;
+
+let tfModule: TensorflowModule | null = null;
+
+const loadTensorflow = async () => {
+  if (!tfModule) {
+    tfModule = await import('@tensorflow/tfjs');
+    await import('@tensorflow/tfjs-backend-webgpu');
+  }
+  return tfModule;
+};
 
 export interface ClassificationResult {
   label: string;
@@ -37,7 +47,7 @@ const CLASSES = [
 
 export class VisionSpecialist {
   private static instance: VisionSpecialist;
-  private model: tf.GraphModel | null = null;
+  private model: Tensorflow.GraphModel | null = null;
   private isBackendReady = false;
 
   private constructor() {
@@ -54,6 +64,7 @@ export class VisionSpecialist {
     if (this.isBackendReady) return;
 
     try {
+      const tf = await loadTensorflow();
       await tf.ready();
 
       // Robust Backend Selection Strategy
@@ -99,8 +110,10 @@ export class VisionSpecialist {
 
   public async classify(imageElement: HTMLImageElement): Promise<ClassificationResult[]> {
     await this.initialize();
+    const tf = await loadTensorflow();
 
-    if (!this.model) {
+    const model = this.model;
+    if (!model) {
       throw new Error(MSG_VISION_MODEL_NOT_LOADED);
     }
 
@@ -115,7 +128,7 @@ export class VisionSpecialist {
           .expandDims();
 
         // 2. Real Inference
-        const prediction = this.model?.predict(tensor) as tf.Tensor;
+        const prediction = model.predict(tensor) as Tensorflow.Tensor;
         const probabilities = prediction.dataSync(); // Use dataSync inside tidy for clean return
 
         // 3. Output Mapping
@@ -164,6 +177,7 @@ export class VisionSpecialist {
    * Highlights high-contrast central regions (lesions) in a JET colormap.
    */
   private async generateSaliencyMap(img: HTMLImageElement): Promise<string> {
+    const tf = await loadTensorflow();
     const t = tf.browser.fromPixels(img).toFloat().div(255);
     const [h, w] = t.shape.slice(0, 2) as [number, number];
 
@@ -198,7 +212,7 @@ export class VisionSpecialist {
     const heatmap = tf.stack([r, g, b], 2);
 
     // D. Resize for output
-    const resized = tf.image.resizeBilinear(heatmap as tf.Tensor3D, [h, w]);
+    const resized = tf.image.resizeBilinear(heatmap as Tensorflow.Tensor3D, [h, w]);
 
     // E. Draw to Canvas to get DataURL
     const canvas = document.createElement('canvas');
@@ -230,6 +244,14 @@ export class VisionSpecialist {
   }
 
   public getTensorStats() {
+    const tf = tfModule;
+    if (!tf) {
+      return {
+        numTensors: 0,
+        numDataBuffers: 0,
+        numBytes: 0,
+      };
+    }
     const mem = tf.memory();
     return {
       numTensors: mem.numTensors,

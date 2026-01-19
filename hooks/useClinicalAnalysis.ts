@@ -1,6 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
 import {
-  useActionState,
   useState,
   useRef,
   useEffect,
@@ -25,6 +24,8 @@ import { Logger } from '../services/logger';
 import { RouterAgent } from '../services/router';
 import { VisionSpecialist } from '../services/vision';
 import { INITIAL_STATE } from '../types';
+
+const DEBUG_HOOK = import.meta.env.DEV;
 
 import type { ExecutionTrace, ExecutionAgentRecord } from '../services/goap/agent';
 import type { AgentLogEntry, WorldState, AgentAction } from '../types';
@@ -195,9 +196,11 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
   useEffect(() => {
     const initCoreServices = async () => {
       try {
+        if (DEBUG_HOOK) Logger.debug('Hook', 'Starting core services initialization');
         encryptionKeyRef.current = await CryptoService.generateEphemeralKey();
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const db = await createDatabase('./agent-memory.db');
-        const embedder = new EmbeddingService({
+        const embedder: EmbeddingService = new EmbeddingService({
           model: 'Xenova/all-MiniLM-L6-v2',
           dimension: 384,
           provider: 'transformers',
@@ -331,12 +334,33 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     [initAIServices],
   );
 
-  async function submitAnalysis(_: unknown, __: FormData): Promise<ClinicalAnalysisResult | null> {
+  async function submitAnalysis(
+    _state: unknown,
+    _formData: FormData,
+  ): Promise<ClinicalAnalysisResult | null> {
     const result = await executeAnalysis();
     return result && result.success ? (result.data as ClinicalAnalysisResult) : null;
   }
 
-  const [, action, pending] = useActionState(submitAnalysis, null);
+  const useActionStateCompat = <TState>(
+    actionFn: (_state: TState, _formData: FormData) => Promise<TState>,
+    initialState: TState,
+  ) => {
+    const [state, setState] = useState(initialState);
+    const [pendingState, setPendingState] = useState(false);
+    const actionHandler = useCallback(
+      async (formData: FormData) => {
+        setPendingState(true);
+        const nextState = await actionFn(state, formData);
+        setState(nextState);
+        setPendingState(false);
+        return nextState;
+      },
+      [actionFn, state],
+    );
+    return [state, actionHandler, pendingState] as const;
+  };
+  const [, action, pending] = useActionStateCompat(submitAnalysis, null);
 
   // eslint-disable-next-line complexity
   const executeAnalysis = useCallback(async () => {
@@ -513,7 +537,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     executeAnalysis,
     privacyMode,
     setPrivacyMode,
-    action,
+    action: (_formData: FormData) => void action(_formData),
     actionState: null,
     trace,
     currentAgent,

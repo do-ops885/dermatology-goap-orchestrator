@@ -60,17 +60,17 @@ export class PIIRedactor {
     let redactedText = text;
 
     // Apply standard patterns based on options
-    if (options.maskSSN) {
+    if (options.maskSSN === true) {
       redactedText = redactedText.replace(PIIPatterns.ssn, '[SSN-REDACTED]');
       redactedText = redactedText.replace(PIIPatterns.ssnNoDashes, '[SSN-REDACTED]');
     }
 
-    if (options.maskPhone) {
+    if (options.maskPhone === true) {
       redactedText = redactedText.replace(PIIPatterns.phone, '[PHONE-REDACTED]');
       redactedText = redactedText.replace(PIIPatterns.phoneFormatted, '[PHONE-REDACTED]');
     }
 
-    if (options.maskEmail) {
+    if (options.maskEmail === true) {
       redactedText = redactedText.replace(PIIPatterns.email, '[EMAIL-REDACTED]');
     }
 
@@ -78,7 +78,7 @@ export class PIIRedactor {
     redactedText = redactedText.replace(PIIPatterns.creditCard, '[CREDIT-CARD-REDACTED]');
     redactedText = redactedText.replace(PIIPatterns.ipAddress, '[IP-REDACTED]');
 
-    if (options.maskDOB) {
+    if (options.maskDOB === true) {
       redactedText = redactedText.replace(PIIPatterns.dob, '[DOB-REDACTED]');
     }
 

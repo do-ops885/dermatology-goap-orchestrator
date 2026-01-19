@@ -17,6 +17,9 @@ export interface PooledTensor {
   accessCount: number;
 }
 
+const GPU_MEMORY_POOL_LOG = 'GPU Memory Pool';
+const WEBGPU_BACKEND = 'webgpu';
+
 export class GPUMemoryPool {
   private static instance: GPUMemoryPool;
   private pools: Map<string, PooledTensor[]> = new Map();
@@ -89,7 +92,7 @@ export class GPUMemoryPool {
     const reusableTensor = this.findReusableTensor(pool, shape, dtype as string);
 
     if (reusableTensor) {
-      Logger.debug('GPU Memory Pool', `Reused tensor from ${tier.name} pool`, {
+      Logger.debug(GPU_MEMORY_POOL_LOG, `Reused tensor from ${tier.name} pool`, {
         shape,
         dtype,
         size: estimatedSize,
@@ -105,7 +108,7 @@ export class GPUMemoryPool {
         return tf.zeros(shape, dtype ?? 'float32');
       });
 
-      Logger.debug('GPU Memory Pool', `Allocated new tensor in ${tier.name} pool`, {
+      Logger.debug(GPU_MEMORY_POOL_LOG, `Allocated new tensor in ${tier.name} pool`, {
         shape,
         dtype,
         size: estimatedSize,
@@ -113,7 +116,7 @@ export class GPUMemoryPool {
 
       return tensor;
     } catch (error) {
-      Logger.error('GPU Memory Pool', 'Failed to allocate tensor', { error, shape, dtype });
+      Logger.error(GPU_MEMORY_POOL_LOG, 'Failed to allocate tensor', { error, shape, dtype });
       throw new Error(`Failed to allocate tensor: ${error}`);
     }
   }
@@ -151,7 +154,7 @@ export class GPUMemoryPool {
 
   public async release(tensor: tf.Tensor, _key = 'default'): Promise<void> {
     if (tensor.isDisposed) {
-      Logger.warn('GPU Memory Pool', 'Attempted to release disposed tensor');
+      Logger.warn(GPU_MEMORY_POOL_LOG, 'Attempted to release disposed tensor');
       return;
     }
 
@@ -173,7 +176,7 @@ export class GPUMemoryPool {
       const removed = pool.splice(oldestIndex, 1)[0];
       if (removed?.tensor) {
         removed.tensor.dispose();
-        Logger.debug('GPU Memory Pool', `Evicted tensor from ${tier.name} pool`);
+        Logger.debug(GPU_MEMORY_POOL_LOG, `Evicted tensor from ${tier.name} pool`);
       }
     }
 
@@ -185,7 +188,7 @@ export class GPUMemoryPool {
       accessCount: 0,
     });
 
-    Logger.debug('GPU Memory Pool', `Released tensor to ${tier.name} pool`, {
+    Logger.debug(GPU_MEMORY_POOL_LOG, `Released tensor to ${tier.name} pool`, {
       shape: tensor.shape,
       dtype: tensor.dtype,
       size: estimatedSize,
@@ -223,10 +226,11 @@ export class GPUMemoryPool {
     return stats;
   }
 
+  // eslint-disable-next-line sonarjs/cognitive-complexity, complexity
   public async withErrorScope<T>(fn: () => Promise<T>): Promise<T> {
     try {
       // Push error scope for WebGPU backend
-      if (tf.getBackend() === 'webgpu') {
+      if (tf.getBackend() === WEBGPU_BACKEND) {
         const backend = tf.backend() as unknown;
         if (typeof backend === 'object' && backend !== null && 'context' in backend) {
           const ctx = (backend as { context?: unknown }).context;
@@ -244,7 +248,7 @@ export class GPUMemoryPool {
       const result = await fn();
 
       // Pop error scope and check for errors
-      if (tf.getBackend() === 'webgpu') {
+      if (tf.getBackend() === WEBGPU_BACKEND) {
         const backend = tf.backend() as unknown;
         if (typeof backend === 'object' && backend !== null && 'context' in backend) {
           const ctx = (backend as { context?: unknown }).context;
@@ -273,16 +277,16 @@ export class GPUMemoryPool {
 
   private async fallbackToCPU(): Promise<void> {
     try {
-      Logger.warn('GPU Memory Pool', 'Falling back to CPU backend due to memory errors');
+      Logger.warn(GPU_MEMORY_POOL_LOG, 'Falling back to CPU backend due to memory errors');
       await tf.setBackend('cpu');
 
       // Clear all pools to free GPU memory
       await this.clearAllPools();
 
       // Notify about backend change
-      Logger.info('GPU Memory Pool', 'Successfully switched to CPU backend');
+      Logger.info(GPU_MEMORY_POOL_LOG, 'Successfully switched to CPU backend');
     } catch (error) {
-      Logger.error('GPU Memory Pool', 'Failed to fallback to CPU', { error });
+      Logger.error(GPU_MEMORY_POOL_LOG, 'Failed to fallback to CPU', { error });
       throw error;
     }
   }
@@ -291,7 +295,7 @@ export class GPUMemoryPool {
     for (const [tierName, pool] of this.pools) {
       pool.forEach((item) => item.tensor.dispose());
       pool.length = 0;
-      Logger.debug('GPU Memory Pool', `Cleared ${tierName} pool`);
+      Logger.debug(GPU_MEMORY_POOL_LOG, `Cleared ${tierName} pool`);
     }
   }
 

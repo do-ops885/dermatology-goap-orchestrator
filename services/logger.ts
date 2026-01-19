@@ -42,11 +42,14 @@ class LoggerService {
     };
 
     // Console output with sanitized data
+    // eslint-disable-next-line no-console
     if (level === 'error') {
       console.error(`[${component}] ${sanitization.sanitizedEvent}`, entry);
     } else if (level === 'warn') {
+      // eslint-disable-next-line no-console
       console.warn(`[${component}] ${sanitization.sanitizedEvent}`, entry);
     } else {
+      // eslint-disable-next-line no-console
       console.info(`[${component}] ${sanitization.sanitizedEvent}`, entry);
     }
 
@@ -59,7 +62,8 @@ class LoggerService {
       // Only persist if user has given consent for data storage
       if (typeof window !== 'undefined' && 'localStorage' in window) {
         // Check if we should persist logs (could be controlled by consent)
-        const logs = JSON.parse(localStorage.getItem('app_logs') || '[]');
+        const logsRaw = localStorage.getItem('app_logs');
+        const logs: LogEntry[] = logsRaw !== null ? (JSON.parse(logsRaw) as LogEntry[]) : [];
         logs.push(entry);
 
         // Keep only last 100 logs to prevent storage bloat
@@ -71,6 +75,7 @@ class LoggerService {
       }
     } catch (error) {
       // Silently fail to avoid breaking functionality
+      // eslint-disable-next-line no-console
       console.debug('Failed to persist log:', error);
     }
   }
