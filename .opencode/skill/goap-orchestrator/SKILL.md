@@ -21,28 +21,34 @@ Use this when you need to:
 - Modify the planning algorithm or action costs
 - Add new agents to the pipeline
 
+## Quick Reference
+
+| Component             | Location                 | Purpose                                     |
+| :-------------------- | :----------------------- | :------------------------------------------ |
+| **GOAPPlanner**       | `services/goap.ts`       | A\* search implementation                   |
+| **AVAILABLE_ACTIONS** | `services/goap/agent.ts` | Agent action definitions                    |
+| **WorldState**        | `types.ts`               | State tracking interface                    |
+| **AgentAction**       | `types.ts`               | Action interface with preconditions/effects |
+
 ## Key Concepts
 
-- **WorldState**: Object tracking pipeline progress (e.g., `{ image_verified: true, skin_tone_detected: false }`)
-- **AgentAction**: Actions with `preconditions`, `effects`, and `cost`
-- **A\* Planning**: Uses backward-chaining heuristic to find optimal paths
-- **State Key**: Serialized state representation for closed-set tracking
+**WorldState**: Object tracking pipeline progress (e.g., `{ image_verified: true, skin_tone_detected: false }`)
 
-## Source Files
+**AgentAction**: Actions with `preconditions`, `effects`, and `cost`
 
-- `services/goap.ts`: Main planner implementation (GOAPPlanner class)
-- `services/goap/agent.ts`: Agent action definitions
-- `types.ts`: WorldState and AgentAction interfaces
+**A\* Planning**: Uses backward-chaining heuristic to find optimal paths
 
-## Code Patterns
-
-- Actions defined in `AVAILABLE_ACTIONS` array
-- Each action has unique `agentId` for tracking
-- Planner iterates up to 5000 times to prevent infinite loops
-- Heuristic walks backwards from unsatisfied goals through dependency chain
+**State Key**: Serialized state representation for closed-set tracking
 
 ## Operational Constraints
 
 - MAX 500 LOC per file - refactor to `services/executors/` if exceeded
 - All inference must return confidence scores (0-1)
 - Graceful degradation: return "skipped" for non-critical failures
+- Planner iterates up to 5000 times to prevent infinite loops
+
+## Documentation
+
+- [Best Practices](BEST_PRACTICES.md) - Action design, state management, planning efficiency
+- [Implementation Guide](IMPLEMENTATION_GUIDE.md) - Adding agents, custom heuristics, debugging
+- [Testing Guide](TESTING_GUIDE.md) - Unit tests, integration tests, edge cases

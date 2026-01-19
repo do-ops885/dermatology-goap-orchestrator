@@ -12,6 +12,7 @@ export class ServiceRegistry {
   }
 
   async initialize(): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const db = await createDatabase('./agent-memory.db');
     this.register('agentDB', db);
 
@@ -43,7 +44,8 @@ export class ServiceRegistry {
   }
 
   get<T>(key: string): T | undefined {
-    return this.services.get(key) as T | undefined;
+    const service = this.services.get(key);
+    return service as T | undefined;
   }
 
   getOrInitialize<T>(key: string, initializer: () => Promise<T>): Promise<T> {

@@ -1,5 +1,11 @@
 # Dermatology AI Orchestrator
 
+[![CI](https://github.com/do-ops885/dermatology-goap-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/do-ops885/dermatology-goap-orchestrator/actions/workflows/ci.yml)
+[![Lint](https://github.com/do-ops885/dermatology-goap-orchestrator/actions/workflows/lint.yml/badge.svg)](https://github.com/do-ops885/dermatology-goap-orchestrator/actions/workflows/lint.yml)
+[![Code Quality](https://github.com/do-ops885/dermatology-goap-orchestrator/actions/workflows/code-quality.yml/badge.svg)](https://github.com/do-ops885/dermatology-goap-orchestrator/actions/workflows/code-quality.yml)
+[![E2E Tests](https://github.com/do-ops885/dermatology-goap-orchestrator/actions/workflows/e2e.yml/badge.svg)](https://github.com/do-ops885/dermatology-goap-orchestrator/actions/workflows/e2e.yml)
+[![Security](https://github.com/do-ops885/dermatology-goap-orchestrator/actions/workflows/security.yml/badge.svg)](https://github.com/do-ops885/dermatology-goap-orchestrator/actions/workflows/security.yml)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB)](https://react.dev/)

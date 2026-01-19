@@ -26,7 +26,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Prettier check
         run: npm run prettier:check
@@ -54,7 +54,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Fix AgentDB executable permissions
         run: chmod +x node_modules/agentdb/dist/cli/agentdb-cli.js || true
@@ -111,7 +111,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run npm audit
         run: npm audit --audit-level moderate
@@ -135,11 +135,17 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: dist/
 
-      - name: Build and analyze bundle size
-        run: npm run bundle:budget
+      - name: Install dependencies (for size-limit)
+        run: npm install --no-save size-limit @size-limit/preset-app
+
+      - name: Analyze bundle size
+        run: npx size-limit
 
       - name: Check bundle size limits
         run: |
@@ -223,7 +229,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build
         run: npm run build
