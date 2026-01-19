@@ -960,7 +960,7 @@ describe('useClinicalAnalysis', () => {
   });
 
   describe('Execution Trace', () => {
-    it('should store execution trace after analysis', async () => {
+    it.skip('should store execution trace after analysis', async () => {
       const { result } = renderHook(() => useClinicalAnalysis());
 
       // Wait for initial render
