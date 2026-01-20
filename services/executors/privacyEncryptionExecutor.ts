@@ -20,7 +20,12 @@ export const privacyEncryptionExecutor = async ({
     return { metadata: { error: 'key_missing' } };
   }
 
-  const { ciphertext, iv } = await CryptoService.encryptData(analysisPayload, encryptionKey);
+  const encryptionResult = await CryptoService.encryptData(analysisPayload, encryptionKey);
+  if (!encryptionResult) {
+    Logger.error('Crypto-Agent', 'Encryption failed');
+    return { metadata: { error: 'encryption_failed' } };
+  }
+  const { ciphertext, iv } = encryptionResult;
   const base64Cipher = CryptoService.arrayBufferToBase64(ciphertext);
 
   Object.assign(analysisPayload, {
