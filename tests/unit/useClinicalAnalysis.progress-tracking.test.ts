@@ -104,7 +104,7 @@ vi.mock('../../services/router', () => ({
 }));
 
 vi.mock('../../services/logger', () => {
-  const logFn = vi.fn().mockImplementation(() => {});
+  const logFn = vi.fn().mockImplementation(function () {});
   return {
     Logger: {
       info: logFn,

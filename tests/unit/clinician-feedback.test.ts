@@ -1,14 +1,32 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
 import AgentDB from '../../services/agentDB';
 
 import type { ClinicianFeedback } from '../../types';
+import type { ReasoningBank } from 'agentdb';
 
 describe('Clinician Feedback Integration', () => {
   let agentDB: AgentDB;
+  let mockReasoningBank: ReasoningBank;
 
   beforeEach(() => {
+    // Create a mock ReasoningBank
+    mockReasoningBank = {
+      addPattern: vi.fn().mockResolvedValue(undefined),
+      searchSimilar: vi.fn().mockResolvedValue([]),
+      storePattern: vi.fn().mockResolvedValue(undefined),
+      getAllPatterns: vi.fn().mockResolvedValue([]),
+      clear: vi.fn().mockResolvedValue(undefined),
+    } as unknown as ReasoningBank;
+
+    // Get AgentDB instance and set the mock ReasoningBank
     agentDB = AgentDB.getInstance();
+    agentDB.setReasoningBank(mockReasoningBank);
+  });
+
+  afterEach(() => {
+    // Clear mock calls between tests
+    vi.clearAllMocks();
   });
 
   describe('Feedback Storage', () => {

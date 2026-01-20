@@ -68,13 +68,27 @@ export const auditTrailExecutor = async ({
 function determineSafetyLevel(
   payload: Record<string, unknown> | undefined,
 ): 'LOW' | 'MEDIUM' | 'HIGH' {
-  if (payload?.criticalError != null) return 'HIGH';
-  const lesions = payload?.lesions as AnalysisPayload['lesions'];
-  if (lesions?.[0]?.type === 'Melanoma' && payload?.risk_label === 'High') {
-    return 'HIGH';
-  }
+  if (hasCriticalError(payload)) return 'HIGH';
+  if (hasHighRiskLesion(payload)) return 'HIGH';
+  return evaluateSkinToneConfidence(payload);
+}
+
+function hasCriticalError(payload: Record<string, unknown> | undefined): boolean {
+  return payload?.criticalError != null;
+}
+
+function hasHighRiskLesion(payload: Record<string, unknown> | undefined): boolean {
+  const lesions = payload?.lesions as AnalysisPayload['lesions'] | undefined;
+  if (lesions?.[0]?.type !== 'Melanoma') return false;
+  return payload?.risk_label === 'High';
+}
+
+function evaluateSkinToneConfidence(
+  payload: Record<string, unknown> | undefined,
+): 'LOW' | 'MEDIUM' | 'HIGH' {
   const skinToneConfidence = payload?.skinToneConfidence as number | undefined;
-  if (skinToneConfidence !== undefined && skinToneConfidence < 0.3) return 'HIGH';
-  if (skinToneConfidence !== undefined && skinToneConfidence < 0.65) return 'MEDIUM';
+  if (skinToneConfidence === undefined) return 'LOW';
+  if (skinToneConfidence < 0.3) return 'HIGH';
+  if (skinToneConfidence < 0.65) return 'MEDIUM';
   return 'LOW';
 }

@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
 
-import { test, expect } from '@playwright/test';
+import { test, expect, type Route } from '@playwright/test';
 
 const API_ROUTE_PATTERN = '**/models/*:generateContent?key=*';
 const RUN_ANALYSIS_BUTTON = 'Run Clinical Analysis';
@@ -32,8 +32,7 @@ const mockGroundingResponse = (text: string, sources: Array<{ title: string; uri
   ],
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const handleRoute = async (route: any) => {
+const handleRoute = async (route: Route) => {
   const requestBody = JSON.parse(route.request().postData() ?? '{}');
   const promptText =
     requestBody.contents?.[0]?.parts?.find((p: { text?: string }) => p.text)?.text ?? '';
@@ -161,8 +160,7 @@ test.describe('E2E Scenarios A-B: Complete Pipeline & Safety Routing', () => {
     test('simulates low confidence (<0.65), verifies GOAP routes to Safety-Calibration-Agent', async ({
       page,
     }) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await page.route(API_ROUTE_PATTERN, (route: any) => {
+      await page.route(API_ROUTE_PATTERN, (route: Route) => {
         void (async () => {
           const requestBody = JSON.parse(route.request().postData() ?? '{}');
           const promptText =

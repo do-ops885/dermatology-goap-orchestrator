@@ -18,7 +18,7 @@ vi.mock('../../services/agentDB', () => {
     generate: vi.fn().mockResolvedValue('test response'),
     unload: vi.fn(),
   };
-  const createDatabaseMock = vi.fn().mockImplementation(async () => {
+  const createDatabaseMock = vi.fn().mockImplementation(async function () {
     await new Promise((resolve) => setTimeout(resolve, 0));
     return {
       setReasoningBank: vi.fn(),
@@ -31,20 +31,28 @@ vi.mock('../../services/agentDB', () => {
   });
 
   const MockAgentDB = {
-    getInstance: vi.fn().mockImplementation(() => ({
-      setReasoningBank: vi.fn(),
-      getFairnessMetrics: vi.fn().mockReturnValue({}),
-      addCase: vi.fn().mockResolvedValue(undefined),
-      searchCases: vi.fn().mockResolvedValue([]),
-    })),
+    getInstance: vi.fn().mockImplementation(function () {
+      return {
+        setReasoningBank: vi.fn(),
+        getFairnessMetrics: vi.fn().mockReturnValue({}),
+        addCase: vi.fn().mockResolvedValue(undefined),
+        searchCases: vi.fn().mockResolvedValue([]),
+      };
+    }),
   };
 
   return {
     AgentDB: MockAgentDB,
     createDatabase: createDatabaseMock,
-    EmbeddingService: vi.fn().mockImplementation(() => mockEmbeddingService),
-    ReasoningBank: vi.fn().mockImplementation(() => mockReasoningBank),
-    LocalLLMService: vi.fn().mockImplementation(() => mockLocalLLMService),
+    EmbeddingService: vi.fn().mockImplementation(function () {
+      return mockEmbeddingService;
+    }),
+    ReasoningBank: vi.fn().mockImplementation(function () {
+      return mockReasoningBank;
+    }),
+    LocalLLMService: vi.fn().mockImplementation(function () {
+      return mockLocalLLMService;
+    }),
   };
 });
 
@@ -96,15 +104,19 @@ vi.mock('../../services/vision', () => ({
 
 vi.mock('../../services/router', () => ({
   RouterAgent: {
-    getInstance: vi.fn().mockImplementation(() => ({
-      route: vi.fn().mockReturnValue('VISION_ANALYSIS'),
-      getRequiredSpecialist: vi.fn().mockReturnValue('Vision-Specialist-MobileNetV3'),
-    })),
+    getInstance: vi.fn().mockImplementation(function () {
+      return {
+        route: vi.fn().mockReturnValue('VISION_ANALYSIS'),
+        getRequiredSpecialist: vi.fn().mockReturnValue('Vision-Specialist-MobileNetV3'),
+      };
+    }),
   },
 }));
 
 vi.mock('../../services/logger', () => {
-  const logFn = vi.fn().mockImplementation(() => {});
+  const logFn = vi.fn().mockImplementation(function () {
+    /* empty */
+  });
   return {
     Logger: {
       info: logFn,
@@ -173,7 +185,9 @@ describe('useClinicalAnalysis - Initial State', () => {
 
     vi.stubGlobal('URL', {
       createObjectURL: vi.fn().mockReturnValue('blob:mock-url'),
-      revokeObjectURL: vi.fn(),
+      revokeObjectURL: vi.fn(function () {
+        /* empty */
+      }),
     });
   });
 
