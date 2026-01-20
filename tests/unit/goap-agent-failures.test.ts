@@ -22,113 +22,65 @@ const HIGH_CONFIDENCE_STATE: WorldState = {
 describe('GoapAgent Failure Handling', () => {
   const noopExecutor: ExecutorFn = async () => Promise.resolve({ metadata: { ok: true } });
 
+  const FULL_PIPELINE_STATE: WorldState = {
+    ...INITIAL_STATE,
+    confidence_score: 0.8,
+    is_low_confidence: false,
+    image_verified: true,
+    skin_tone_detected: true,
+    calibration_complete: true,
+    image_preprocessed: true,
+    segmentation_complete: true,
+    features_extracted: true,
+    lesions_detected: true,
+  };
+
+  const FAILING_EXECUTOR: ExecutorFn = async () => {
+    throw new Error('Similarity search index unavailable');
+  };
+
+  const FULL_PIPELINE_EXECUTORS: Record<string, ExecutorFn> = {
+    'Image-Verification-Agent': noopExecutor,
+    'Skin-Tone-Detection-Agent': noopExecutor,
+    'Standard-Calibration-Agent': noopExecutor,
+    'Image-Preprocessing-Agent': noopExecutor,
+    'Segmentation-Agent': noopExecutor,
+    'Feature-Extraction-Agent': noopExecutor,
+    'Lesion-Detection-Agent': noopExecutor,
+    'Similarity-Search-Agent': FAILING_EXECUTOR,
+    'Risk-Assessment-Agent': noopExecutor,
+    'Fairness-Audit-Agent': noopExecutor,
+    'Web-Verification-Agent': noopExecutor,
+    'Recommendation-Agent': noopExecutor,
+    'Learning-Agent': noopExecutor,
+    'Privacy-Encryption-Agent': noopExecutor,
+    'Audit-Trail-Agent': noopExecutor,
+  };
+
   describe('Non-Critical Agent Failures', () => {
     it('should skip non-critical agents that fail and continue execution', async () => {
       const planner = new GOAPPlanner();
-
-      // Simulate a non-critical agent failure (e.g., Similarity-Search-Agent)
-      const failingExecutor: ExecutorFn = async () => {
-        throw new Error('Similarity search index unavailable');
-      };
-
-      // Start with high confidence state to avoid safety routing
-      // Set up state so that Similarity-Search-Agent will be in the plan
-      const highConfidenceState: WorldState = {
-        ...INITIAL_STATE,
-        confidence_score: 0.8, // High confidence
-        is_low_confidence: false,
-        image_verified: true,
-        skin_tone_detected: true,
-        calibration_complete: true,
-        image_preprocessed: true,
-        segmentation_complete: true,
-        features_extracted: true,
-        lesions_detected: true,
-        // Leave similarity_searched false so it will be planned
-        // Leave downstream states false so execution continues through the pipeline
-      };
-
-      const executors: Record<string, ExecutorFn> = {
-        'Image-Verification-Agent': noopExecutor,
-        'Skin-Tone-Detection-Agent': noopExecutor,
-        'Standard-Calibration-Agent': noopExecutor,
-        'Image-Preprocessing-Agent': noopExecutor,
-        'Segmentation-Agent': noopExecutor,
-        'Feature-Extraction-Agent': noopExecutor,
-        'Lesion-Detection-Agent': noopExecutor,
-        'Similarity-Search-Agent': failingExecutor, // Non-critical - should skip
-        'Risk-Assessment-Agent': noopExecutor,
-        'Fairness-Audit-Agent': noopExecutor,
-        'Web-Verification-Agent': noopExecutor,
-        'Recommendation-Agent': noopExecutor,
-        'Learning-Agent': noopExecutor,
-        'Privacy-Encryption-Agent': noopExecutor,
-        'Audit-Trail-Agent': noopExecutor,
-      };
-
-      const agent = new GoapAgent(planner, executors);
+      const agent = new GoapAgent(planner, FULL_PIPELINE_EXECUTORS);
       const trace = await agent.execute(
-        highConfidenceState,
+        FULL_PIPELINE_STATE,
         { audit_logged: true },
         {} as AgentContext,
       );
-
-      // Verify the failing agent was skipped
       const similarityAgent = trace.agents.find((a) => a.agentId === 'Similarity-Search-Agent');
       expect(similarityAgent).toBeDefined();
       expect(similarityAgent?.status).toBe('skipped');
-
-      // Verify execution continued and completed
       expect(trace.finalWorldState.audit_logged).toBe(true);
       expect(trace.agents.filter((a) => a.status === 'completed').length).toBeGreaterThan(0);
     });
 
     it('should log failure reasons for skipped agents', async () => {
       const planner = new GOAPPlanner();
-
-      const failingExecutor: ExecutorFn = async () => {
-        throw new Error('Similarity search index unavailable');
-      };
-
-      // Start with high confidence state to avoid safety routing
-      const highConfidenceState: WorldState = {
-        ...INITIAL_STATE,
-        confidence_score: 0.8, // High confidence
-        is_low_confidence: false,
-        image_verified: true,
-        skin_tone_detected: true,
-        calibration_complete: true,
-        image_preprocessed: true,
-        segmentation_complete: true,
-        features_extracted: true,
-        lesions_detected: true,
-      };
-
-      const executors: Record<string, ExecutorFn> = {
-        'Image-Verification-Agent': noopExecutor,
-        'Skin-Tone-Detection-Agent': noopExecutor,
-        'Standard-Calibration-Agent': noopExecutor,
-        'Image-Preprocessing-Agent': noopExecutor,
-        'Segmentation-Agent': noopExecutor,
-        'Feature-Extraction-Agent': noopExecutor,
-        'Lesion-Detection-Agent': noopExecutor,
-        'Similarity-Search-Agent': failingExecutor,
-        'Risk-Assessment-Agent': noopExecutor,
-        'Fairness-Audit-Agent': noopExecutor,
-        'Web-Verification-Agent': noopExecutor,
-        'Recommendation-Agent': noopExecutor,
-        'Learning-Agent': noopExecutor,
-        'Privacy-Encryption-Agent': noopExecutor,
-        'Audit-Trail-Agent': noopExecutor,
-      };
-
-      const agent = new GoapAgent(planner, executors);
+      const agent = new GoapAgent(planner, FULL_PIPELINE_EXECUTORS);
       const trace = await agent.execute(
-        highConfidenceState,
+        FULL_PIPELINE_STATE,
         { audit_logged: true },
         {} as AgentContext,
       );
-
       const similarityAgent = trace.agents.find((a) => a.agentId === 'Similarity-Search-Agent');
       expect(similarityAgent?.status).toBe('skipped');
       expect(similarityAgent?.error).toBeDefined();
@@ -323,8 +275,6 @@ describe('GoapAgent Failure Handling', () => {
       );
 
       expect(replanTriggered).toBe(true);
-      // Note: is_low_confidence should remain false because agents after replanning may complete
-      // The key verification is that replanning was triggered
       const agentsAfterSkinTone = trace.agents.filter(
         (a) => a.agentId === 'Skin-Tone-Detection-Agent',
       );
@@ -367,7 +317,6 @@ describe('GoapAgent Failure Handling', () => {
         {} as AgentContext,
       );
 
-      // Verify custom state updates are preserved
       expect((trace.finalWorldState as any).verification_timestamp).toBeDefined();
       expect(typeof (trace.finalWorldState as any).verification_timestamp).toBe('number');
     });
@@ -505,11 +454,9 @@ describe('GoapAgent Failure Handling', () => {
       const inconsistentState: WorldState = {
         ...INITIAL_STATE,
         confidence_score: 0.4,
-        is_low_confidence: false, // Should be corrected to true
+        is_low_confidence: false,
       };
-
       const correctedState = coordinator.ensureStateConsistency(inconsistentState);
-
       expect(correctedState.is_low_confidence).toBe(true);
     });
   });

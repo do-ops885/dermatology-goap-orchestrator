@@ -22,6 +22,11 @@ import { GoapAgent } from '../services/goap/agent';
 import { EXECUTOR_REGISTRY } from '../services/goap/registry';
 import { Logger } from '../services/logger';
 import { RouterAgent } from '../services/router';
+import {
+  optimizeImage,
+  calculateImageHash,
+  validateImageSignature,
+} from '../services/utils/imageProcessing';
 import { VisionSpecialist } from '../services/vision';
 import { INITIAL_STATE } from '../types';
 
@@ -32,74 +37,6 @@ import type { AgentLogEntry, WorldState, AgentAction } from '../types';
 import type { ChangeEvent } from 'react';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY ?? '';
-
-const optimizeImage = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_SIZE = 800;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_SIZE) {
-            height *= MAX_SIZE / width;
-            width = MAX_SIZE;
-          }
-        } else {
-          if (height > MAX_SIZE) {
-            width *= MAX_SIZE / height;
-            height = MAX_SIZE;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-
-        const dataUrl = canvas.toDataURL(
-          file.type === 'image/png' ? 'image/png' : 'image/jpeg',
-          0.85,
-        );
-        const base64Part = dataUrl.split(',')[1];
-        if (base64Part === undefined || base64Part === null || base64Part === '') {
-          reject(new Error('Failed to extract base64 data from data URL'));
-          return;
-        }
-        resolve(base64Part);
-      };
-      img.onerror = (err) => {
-        reject(new Error(err instanceof Error ? err.message : 'Image load failed'));
-      };
-    };
-    reader.onerror = (err) => {
-      reject(new Error(err instanceof Error ? err.message : 'File read failed'));
-    };
-  });
-};
-
-const calculateImageHash = async (file: File): Promise<string> => {
-  const arrayBuffer = await file.arrayBuffer();
-  const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-};
-
-const validateImageSignature = async (file: File): Promise<boolean> => {
-  const buffer = await file.slice(0, 12).arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-
-  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return true;
-  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return true;
-  if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46) return true;
-  return false;
-};
 
 export interface ClinicalAnalysisResult {
   skinTone?: string;
