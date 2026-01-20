@@ -148,8 +148,10 @@ test.describe('E2E Scenarios A-B: Complete Pipeline & Safety Routing', () => {
       await expect(page.locator('text=Type III')).toBeVisible();
 
       const worldStateCheck = await page.evaluate(() => {
-        return (window as unknown as { worldState?: { audit_logged: boolean } }).worldState
-          ?.audit_logged === true;
+        return (
+          (window as unknown as { worldState?: { audit_logged: boolean } }).worldState
+            ?.audit_logged === true
+        );
       });
       expect(worldStateCheck).toBeTruthy();
     });
@@ -208,8 +210,10 @@ test.describe('E2E Scenarios A-B: Complete Pipeline & Safety Routing', () => {
       await expect(page.locator('text=SAFETY_CALIBRATION_ACTIVE')).toBeVisible();
 
       const safetyStateCheck = await page.evaluate(() => {
-        return (window as unknown as { worldState?: { safety_calibrated: boolean } }).worldState
-          ?.safety_calibrated === true;
+        return (
+          (window as unknown as { worldState?: { safety_calibrated: boolean } }).worldState
+            ?.safety_calibrated === true
+        );
       });
       expect(safetyStateCheck).toBeTruthy();
     });
