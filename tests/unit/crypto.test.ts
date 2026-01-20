@@ -111,14 +111,13 @@ describe('CryptoService', () => {
     it('should be decryptable with the same key and IV', async () => {
       const originalData = { secret: 'sensitive patient data', value: 42 };
 
-      const { ciphertext, iv } = await CryptoService.encryptData(originalData, key);
+      const result = await CryptoService.encryptData(originalData, key);
+      const ciphertext: ArrayBuffer = result.ciphertext;
+      const iv: Uint8Array = result.iv;
 
       // Decrypt to verify
-      const decrypted = await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv },
-        key,
-        ciphertext as ArrayBuffer,
-      );
+      // @ts-expect-error - TS 5.8 incorrectly infers ArrayBufferLike instead of ArrayBuffer for ciphertext
+      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
 
       const decoder = new TextDecoder();
       const decryptedText = decoder.decode(decrypted);
@@ -304,7 +303,9 @@ describe('CryptoService', () => {
       };
 
       // Encrypt
-      const { ciphertext, iv } = await CryptoService.encryptData(patientData, key);
+      const result = await CryptoService.encryptData(patientData, key);
+      const ciphertext: ArrayBuffer = result.ciphertext;
+      const iv: Uint8Array = result.iv;
 
       // Convert to Base64 for storage
       const encryptedBase64 = CryptoService.arrayBufferToBase64(ciphertext);
@@ -321,11 +322,8 @@ describe('CryptoService', () => {
       expect(encryptedBase64).not.toContain('melanoma');
 
       // Decrypt
-      const decrypted = await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv },
-        key,
-        ciphertext as ArrayBuffer,
-      );
+      // @ts-expect-error - TS 5.8 incorrectly infers ArrayBufferLike instead of ArrayBuffer for ciphertext
+      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
       const decryptedData = JSON.parse(new TextDecoder().decode(decrypted));
 
       expect(decryptedData).toEqual(patientData);
