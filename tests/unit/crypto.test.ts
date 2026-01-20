@@ -2,6 +2,13 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 import { CryptoService } from '../../services/crypto';
 
+// Workaround for TypeScript 5.8+ ArrayBufferLike type strictness
+declare global {
+  interface ArrayBufferTypes {
+    ArrayBuffer: ArrayBuffer;
+  }
+}
+
 /**
  * Tests for CryptoService
  * Validates encryption, hashing, and key generation utilities
@@ -107,7 +114,11 @@ describe('CryptoService', () => {
       const { ciphertext, iv } = await CryptoService.encryptData(originalData, key);
 
       // Decrypt to verify
-      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+      const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        ciphertext as ArrayBuffer,
+      );
 
       const decoder = new TextDecoder();
       const decryptedText = decoder.decode(decrypted);
@@ -310,7 +321,11 @@ describe('CryptoService', () => {
       expect(encryptedBase64).not.toContain('melanoma');
 
       // Decrypt
-      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+      const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        ciphertext as ArrayBuffer,
+      );
       const decryptedData = JSON.parse(new TextDecoder().decode(decrypted));
 
       expect(decryptedData).toEqual(patientData);

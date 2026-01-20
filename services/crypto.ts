@@ -151,11 +151,11 @@ export const CryptoService = {
       throw new Error('Failed to generate IV');
     }
 
-    const ciphertext = await window.crypto.subtle.encrypt(
+    const ciphertext = (await window.crypto.subtle.encrypt(
       { name: 'AES-GCM', iv },
       key,
       encodedData,
-    );
+    )) as ArrayBuffer;
 
     return { ciphertext, iv };
   },

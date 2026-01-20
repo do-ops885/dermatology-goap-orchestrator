@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 import { Buffer } from 'buffer';
 
 import { test, expect } from '@playwright/test';

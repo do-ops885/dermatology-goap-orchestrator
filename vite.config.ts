@@ -80,6 +80,17 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
+      onwarn(warning, warn) {
+        // Suppress eval warning from onnxruntime-web third-party library
+        if (
+          warning.code === 'EVAL' &&
+          typeof warning.id === 'string' &&
+          warning.id.includes('onnxruntime-web')
+        ) {
+          return;
+        }
+        warn(warning);
+      },
       external: [/(.*)\.node$/, /node_modules\/@ruvector/],
       output: {
         manualChunks: {

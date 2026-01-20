@@ -42,11 +42,9 @@ class LoggerService {
     };
 
     // Console output with sanitized data
-    // eslint-disable-next-line no-console
     if (level === 'error') {
       console.error(`[${component}] ${sanitization.sanitizedEvent}`, entry);
     } else if (level === 'warn') {
-      // eslint-disable-next-line no-console
       console.warn(`[${component}] ${sanitization.sanitizedEvent}`, entry);
     } else {
       // eslint-disable-next-line no-console
