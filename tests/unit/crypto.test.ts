@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { CryptoService } from '../../services/crypto';
+import { CryptoService, CryptoError } from '../../services/crypto';
 
 // Workaround for TypeScript 5.8+ ArrayBufferLike type strictness
 declare global {
@@ -66,10 +66,10 @@ describe('CryptoService', () => {
       const result = await CryptoService.encryptData(testData, key);
 
       expect(result).toBeDefined();
-      expect(result.ciphertext).toBeDefined();
-      expect(result.ciphertext.byteLength).toBeGreaterThan(0);
-      expect(result.iv).toBeInstanceOf(Uint8Array);
-      expect(result.iv.length).toBe(12); // Standard GCM IV length
+      expect(result!.ciphertext).toBeDefined();
+      expect(result!.ciphertext.byteLength).toBeGreaterThan(0);
+      expect(result!.iv).toBeInstanceOf(Uint8Array);
+      expect(result!.iv.length).toBe(12); // Standard GCM IV length
     });
 
     it('should produce different ciphertexts for same data (nonce randomness)', async () => {
@@ -79,11 +79,11 @@ describe('CryptoService', () => {
       const result2 = await CryptoService.encryptData(testData, key);
 
       // IVs should be different
-      expect(Array.from(result1.iv)).not.toEqual(Array.from(result2.iv));
+      expect(Array.from(result1!.iv)).not.toEqual(Array.from(result2!.iv));
 
       // Ciphertexts should be different due to different IVs
-      const cipher1 = new Uint8Array(result1.ciphertext);
-      const cipher2 = new Uint8Array(result2.ciphertext);
+      const cipher1 = new Uint8Array(result1!.ciphertext);
+      const cipher2 = new Uint8Array(result2!.ciphertext);
       expect(Array.from(cipher1)).not.toEqual(Array.from(cipher2));
     });
 
@@ -104,16 +104,17 @@ describe('CryptoService', () => {
 
       const result = await CryptoService.encryptData(complexData, key);
 
-      expect(result.ciphertext.byteLength).toBeGreaterThan(0);
-      expect(result.iv.length).toBe(12);
+      expect(result!.ciphertext.byteLength).toBeGreaterThan(0);
+      expect(result!.iv.length).toBe(12);
     });
 
     it('should be decryptable with the same key and IV', async () => {
       const originalData = { secret: 'sensitive patient data', value: 42 };
 
       const result = await CryptoService.encryptData(originalData, key);
-      const ciphertext: ArrayBuffer = result.ciphertext;
-      const iv: Uint8Array = result.iv;
+      expect(result).toBeDefined();
+      const ciphertext: ArrayBuffer = result!.ciphertext;
+      const iv: Uint8Array = result!.iv;
 
       // Decrypt to verify
       // @ts-expect-error - TS 5.8 incorrectly infers ArrayBufferLike instead of ArrayBuffer for ciphertext
@@ -131,8 +132,8 @@ describe('CryptoService', () => {
 
       const result = await CryptoService.encryptData(emptyData, key);
 
-      expect(result.ciphertext).toBeDefined();
-      expect(result.ciphertext.byteLength).toBeGreaterThan(0);
+      expect(result!.ciphertext).toBeDefined();
+      expect(result!.ciphertext.byteLength).toBeGreaterThan(0);
     });
 
     it('should handle objects with null and undefined values', async () => {
@@ -144,8 +145,8 @@ describe('CryptoService', () => {
 
       const result = await CryptoService.encryptData(dataWithNulls, key);
 
-      expect(result.ciphertext).toBeDefined();
-      expect(result.iv.length).toBe(12);
+      expect(result!.ciphertext).toBeDefined();
+      expect(result!.iv.length).toBe(12);
     });
   });
 
@@ -304,8 +305,9 @@ describe('CryptoService', () => {
 
       // Encrypt
       const result = await CryptoService.encryptData(patientData, key);
-      const ciphertext: ArrayBuffer = result.ciphertext;
-      const iv: Uint8Array = result.iv;
+      expect(result).toBeDefined();
+      const ciphertext: ArrayBuffer = result!.ciphertext;
+      const iv: Uint8Array = result!.iv;
 
       // Convert to Base64 for storage
       const encryptedBase64 = CryptoService.arrayBufferToBase64(ciphertext);
@@ -327,6 +329,132 @@ describe('CryptoService', () => {
       const decryptedData = JSON.parse(new TextDecoder().decode(decrypted));
 
       expect(decryptedData).toEqual(patientData);
+    });
+  });
+
+  describe('Error Handling and Graceful Degradation', () => {
+    it('should throw CryptoError for invalid key with missing encrypt usage', async () => {
+      const invalidKey = await window.crypto.subtle.generateKey(
+        { name: 'AES-GCM', length: 256 },
+        true,
+        ['decrypt'], // Missing encrypt usage
+      );
+
+      await expect(CryptoService.encryptData({ test: 'data' }, invalidKey)).rejects.toThrow(
+        CryptoError,
+      );
+      await expect(CryptoService.encryptData({ test: 'data' }, invalidKey)).rejects.toThrow(
+        'must support encryption',
+      );
+    });
+
+    it('should throw CryptoError for null key', async () => {
+      await expect(
+        CryptoService.encryptData({ test: 'data' }, null as unknown as CryptoKey),
+      ).rejects.toThrow(CryptoError);
+      await expect(
+        CryptoService.encryptData({ test: 'data' }, null as unknown as CryptoKey),
+      ).rejects.toThrow('must support encryption');
+    });
+
+    it('should throw CryptoError for invalid data (non-object)', async () => {
+      const key = await CryptoService.generateEphemeralKey();
+
+      await expect(
+        CryptoService.encryptData(null as unknown as Record<string, unknown>, key),
+      ).rejects.toThrow(CryptoError);
+      await expect(
+        CryptoService.encryptData('string' as unknown as Record<string, unknown>, key),
+      ).rejects.toThrow('must be an object');
+    });
+
+    it('should throw CryptoError for decryption with invalid IV length', async () => {
+      const key = await CryptoService.generateEphemeralKey();
+      const ciphertext = new ArrayBuffer(32);
+      const invalidIV = new Uint8Array(16); // Wrong length (should be 12)
+
+      await expect(CryptoService.decryptData(ciphertext, invalidIV, key)).rejects.toThrow(
+        CryptoError,
+      );
+      await expect(CryptoService.decryptData(ciphertext, invalidIV, key)).rejects.toThrow(
+        'must be 12 bytes',
+      );
+    });
+
+    it('should throw CryptoError for decryption with invalid key usage', async () => {
+      const invalidKey = await window.crypto.subtle.generateKey(
+        { name: 'AES-GCM', length: 256 },
+        true,
+        ['encrypt'], // Missing decrypt usage
+      );
+      const ciphertext = new ArrayBuffer(32);
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+
+      await expect(CryptoService.decryptData(ciphertext, iv, invalidKey)).rejects.toThrow(
+        CryptoError,
+      );
+      await expect(CryptoService.decryptData(ciphertext, iv, invalidKey)).rejects.toThrow(
+        'must support decryption',
+      );
+    });
+
+    it('should throw CryptoError for decryption with empty ciphertext', async () => {
+      const key = await CryptoService.generateEphemeralKey();
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+      const emptyCiphertext = new ArrayBuffer(0);
+
+      await expect(CryptoService.decryptData(emptyCiphertext, iv, key)).rejects.toThrow(
+        CryptoError,
+      );
+      await expect(CryptoService.decryptData(emptyCiphertext, iv, key)).rejects.toThrow(
+        'empty buffer',
+      );
+    });
+
+    it('should use fallback hash when crypto API is unavailable', async () => {
+      const originalCrypto = window.crypto;
+      // Temporarily remove crypto API
+      Object.defineProperty(window, 'crypto', {
+        value: { subtle: null },
+        writable: true,
+      });
+
+      const hash = await CryptoService.generateHash('test data');
+      expect(hash).toBeDefined();
+      expect(hash.length).toBe(64);
+
+      // Restore crypto API
+      Object.defineProperty(window, 'crypto', {
+        value: originalCrypto,
+        writable: true,
+      });
+    });
+
+    it('should return empty string for base64 conversion of empty buffer', () => {
+      const result = CryptoService.arrayBufferToBase64(new ArrayBuffer(0));
+      expect(result).toBe('');
+    });
+
+    it('should return empty string for base64 conversion of null buffer', () => {
+      const result = CryptoService.arrayBufferToBase64(null as unknown as ArrayBuffer);
+      expect(result).toBe('');
+    });
+
+    it('should throw CryptoError when Web Crypto API is unavailable for key generation', async () => {
+      const originalCrypto = window.crypto;
+      Object.defineProperty(window, 'crypto', {
+        value: { subtle: null },
+        writable: true,
+      });
+
+      await expect(CryptoService.generateEphemeralKey()).rejects.toThrow(CryptoError);
+      await expect(CryptoService.generateEphemeralKey()).rejects.toThrow('not available');
+
+      // Restore crypto API
+      Object.defineProperty(window, 'crypto', {
+        value: originalCrypto,
+        writable: true,
+      });
     });
   });
 });

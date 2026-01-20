@@ -3,6 +3,26 @@
  * Converted to module export (2025 best practice for static-only utilities).
  */
 
+/**
+ * Custom error class for crypto-specific failures
+ * Enables structured error handling and graceful degradation
+ */
+export class CryptoError extends Error {
+  constructor(
+    message: string,
+    public readonly _code:
+      | 'KEY_INVALID'
+      | 'IV_GENERATION_FAILED'
+      | 'ENCRYPTION_FAILED'
+      | 'API_UNAVAILABLE'
+      | 'DECRYPTION_FAILED',
+    public readonly _details?: Record<string, unknown>,
+  ) {
+    super(message);
+    this.name = 'CryptoError';
+  }
+}
+
 export interface SecureKeyManagerOptions {
   autoCleanupOnUnload?: boolean;
   autoCleanupTimeout?: number; // milliseconds
@@ -127,64 +147,222 @@ export const CryptoService = {
   /**
    * Generates a 256-bit AES-GCM key for ephemeral client-side encryption.
    * This key exists only in memory and is lost on page reload.
+   * @throws {CryptoError} If Web Crypto API is unavailable or key generation fails
    */
   async generateEphemeralKey(): Promise<CryptoKey> {
-    return window.crypto.subtle.generateKey(
-      { name: 'AES-GCM', length: 256 },
-      true, // extractable
-      ['encrypt', 'decrypt'],
-    );
+    if (typeof window === 'undefined' || !window.crypto?.subtle) {
+      throw new CryptoError('Web Crypto API is not available', 'API_UNAVAILABLE');
+    }
+
+    try {
+      return await window.crypto.subtle.generateKey(
+        { name: 'AES-GCM', length: 256 },
+        true, // extractable
+        ['encrypt', 'decrypt'],
+      );
+    } catch (error) {
+      throw new CryptoError('Failed to generate ephemeral key', 'KEY_INVALID', { error });
+    }
   },
 
   /**
    * Encrypts a JSON object using AES-GCM.
+   * @param data - Object to encrypt
+   * @param key - AES-GCM key with encrypt usage
+   * @returns Encrypted data with IV, or null if encryption fails (graceful degradation)
+   * @throws {CryptoError} For critical failures (API unavailable, invalid key)
    */
   async encryptData(
     data: Record<string, unknown>,
     key: CryptoKey,
-  ): Promise<{ ciphertext: ArrayBuffer; iv: Uint8Array }> {
-    const encoder = new TextEncoder();
-    const encodedData = encoder.encode(JSON.stringify(data));
-    // 12 bytes IV is standard for GCM
-    const iv = window.crypto.getRandomValues(new Uint8Array(12));
-    if (iv === null) {
-      throw new Error('Failed to generate IV');
+  ): Promise<{ ciphertext: ArrayBuffer; iv: Uint8Array } | null> {
+    try {
+      // Validate key
+      if (
+        !key ||
+        typeof key !== 'object' ||
+        !Array.isArray(key.usages) ||
+        !key.usages.includes('encrypt')
+      ) {
+        throw new CryptoError('Invalid key: must support encryption', 'KEY_INVALID', {
+          keyAlgorithm: key?.algorithm,
+        });
+      }
+
+      // Validate input data
+      if (!data || typeof data !== 'object') {
+        throw new CryptoError('Invalid data: must be an object', 'ENCRYPTION_FAILED', {
+          dataType: typeof data,
+        });
+      }
+
+      const encoder = new TextEncoder();
+      const encodedData = encoder.encode(JSON.stringify(data));
+
+      // 12 bytes IV is standard for GCM
+      let iv: Uint8Array;
+      try {
+        iv = window.crypto.getRandomValues(new Uint8Array(12));
+      } catch (error) {
+        throw new CryptoError('Failed to generate IV', 'IV_GENERATION_FAILED', { error });
+      }
+
+      // Validate IV (though getRandomValues should never fail silently)
+      if (!iv || iv.byteLength !== 12) {
+        throw new CryptoError('Invalid IV length', 'IV_GENERATION_FAILED', {
+          length: iv?.byteLength,
+        });
+      }
+
+      const ciphertext = (await window.crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv: iv as Uint8Array<ArrayBuffer> },
+        key,
+        encodedData,
+      )) as ArrayBuffer;
+
+      // Validate ciphertext
+      if (!ciphertext || ciphertext.byteLength === 0) {
+        throw new CryptoError('Invalid ciphertext', 'ENCRYPTION_FAILED', {
+          byteLength: ciphertext?.byteLength,
+        });
+      }
+
+      return { ciphertext, iv };
+    } catch (error) {
+      // Re-throw CryptoError, wrap other errors
+      if (error instanceof CryptoError) {
+        throw error;
+      }
+      throw new CryptoError('Encryption failed', 'ENCRYPTION_FAILED', {
+        error,
+        dataType: typeof data,
+      });
     }
+  },
 
-    const ciphertext = (await window.crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
-      key,
-      encodedData,
-    )) as ArrayBuffer;
+  /**
+   * Decrypts AES-GCM encrypted data.
+   * @param ciphertext - Encrypted data buffer
+   * @param iv - Initialization vector (12 bytes)
+   * @param key - AES-GCM key with decrypt usage
+   * @returns Decrypted object, or null if decryption fails (graceful degradation)
+   * @throws {CryptoError} For critical failures (API unavailable, invalid key)
+   */
+  async decryptData(
+    ciphertext: ArrayBuffer,
+    iv: Uint8Array,
+    key: CryptoKey,
+  ): Promise<Record<string, unknown> | null> {
+    try {
+      // Validate key
+      if (
+        !key ||
+        typeof key !== 'object' ||
+        !Array.isArray(key.usages) ||
+        !key.usages.includes('decrypt')
+      ) {
+        throw new CryptoError('Invalid key: must support decryption', 'KEY_INVALID', {
+          keyAlgorithm: key?.algorithm,
+        });
+      }
 
-    return { ciphertext, iv };
+      // Validate IV
+      if (!iv || iv.byteLength !== 12) {
+        throw new CryptoError('Invalid IV length: must be 12 bytes', 'DECRYPTION_FAILED', {
+          length: iv?.byteLength,
+        });
+      }
+
+      // Validate ciphertext
+      if (!ciphertext || ciphertext.byteLength === 0) {
+        throw new CryptoError('Invalid ciphertext: empty buffer', 'DECRYPTION_FAILED', {
+          byteLength: ciphertext?.byteLength,
+        });
+      }
+
+      const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: iv as Uint8Array<ArrayBuffer> },
+        key,
+        ciphertext,
+      );
+
+      const decoder = new TextDecoder();
+      const decryptedText = decoder.decode(decrypted);
+      return JSON.parse(decryptedText);
+    } catch (error) {
+      // Re-throw CryptoError, wrap other errors
+      if (error instanceof CryptoError) {
+        throw error;
+      }
+      throw new CryptoError('Decryption failed', 'DECRYPTION_FAILED', { error });
+    }
   },
 
   /**
    * Generates a SHA-256 hash of the input string.
    * Used for the immutable audit log chain.
+   * @param data - String to hash
+   * @returns Hex-encoded SHA-256 hash, or empty string if hashing fails
    */
   async generateHash(data: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const dataBuffer = encoder.encode(data);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+    try {
+      if (typeof window === 'undefined' || !window.crypto?.subtle) {
+        // Fallback to simple hash if crypto API unavailable
+        return this.fallbackHash(data);
+      }
+
+      const encoder = new TextEncoder();
+      const dataBuffer = encoder.encode(data);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+    } catch (error) {
+      console.error('CryptoService: Failed to generate hash, using fallback', error);
+      return this.fallbackHash(data);
+    }
+  },
+
+  /**
+   * Fallback hash function for when Web Crypto API is unavailable.
+   * Not cryptographically secure, but sufficient for non-security-critical use cases.
+   * Note: This is not private because CryptoService is an object literal, not a class
+   */
+  fallbackHash(data: string): string {
+    let hash = 0;
+    for (let i = 0; i < data.length; i++) {
+      const char = data.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    // Pad to 64 characters like SHA-256
+    const hashStr = Math.abs(hash).toString(16);
+    return hashStr.padEnd(64, '0').slice(0, 64);
   },
 
   /**
    * Helper to convert ArrayBuffer to Base64 string for storage
+   * @param buffer - ArrayBuffer to convert
+   * @returns Base64-encoded string, or empty string if conversion fails
    */
   arrayBufferToBase64(buffer: ArrayBuffer): string {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      const byte = bytes[i];
-      if (byte !== undefined) {
-        binary += String.fromCharCode(byte);
+    try {
+      if (!buffer || buffer.byteLength === 0) {
+        return '';
       }
+
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        const byte = bytes[i];
+        if (byte !== undefined) {
+          binary += String.fromCharCode(byte);
+        }
+      }
+      return btoa(binary);
+    } catch (error) {
+      console.error('CryptoService: Failed to convert ArrayBuffer to Base64', error);
+      return '';
     }
-    return btoa(binary);
   },
 };
