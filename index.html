@@ -23,6 +23,7 @@
         window.Buffer = window.buffer.Buffer;
       }
 
+      // Polyfill Node.js globals for browser
       window.process = {
         env: { NODE_ENV: 'production' },
         browser: true,
@@ -32,6 +33,10 @@
         nextTick: (cb) => setTimeout(cb, 0),
         cwd: () => '/',
       };
+
+      // Polyfill __filename and __dirname for browser
+      window.__filename = '/';
+      window.__dirname = '/';
 
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
