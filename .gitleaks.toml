@@ -2,12 +2,14 @@ title = "gitleaks-config"
 
 # Allowlist for known non-sensitive locations
 [[rules]]
+id = "ignore-test-fixtures"
 description = "Ignore test fixtures"
 regex = '''(?i)(test-fixtures|fixtures|tests?/data)'''
 [rules.paths]
   allowlist = ["test-fixtures/", "tests/fixture/"]
 
 [[rules]]
+id = "ignore-github-workflows"
 description = "Ignore GitHub workflow files"
 regex = '''\.github/workflows/'''
 [rules.paths]
@@ -15,32 +17,39 @@ regex = '''\.github/workflows/'''
 
 # High priority secret detectors
 [[rules]]
+id = "aws-access-key"
 description = "AWS Access Key ID"
 regex = '''AKIA[0-9A-Z]{16}'''
 
 [[rules]]
+id = "aws-secret-key"
 description = "AWS Secret Access Key (40 chars base64-like)"
 regex = '''(?i)aws(.{0,10})?(secret|secret_access)?(.{0,10})?(key|token).{0,50}[A-Za-z0-9/+=]{40,}'''
 
 [[rules]]
+id = "google-api-key"
 description = "Google API Key"
 regex = '''AIza[0-9A-Za-z\-_]{35}'''
 
 [[rules]]
+id = "slack-token"
 description = "Slack token"
 regex = '''xox[baprs]-[0-9a-zA-Z-]{10,}'''
 
 [[rules]]
+id = "private-key"
 description = "Private key detected"
 regex = '''-----BEGIN (RSA|DSA|EC|OPENSSH|PGP) PRIVATE KEY-----'''
 
 # Generic high entropy: long base64-like strings
 [[rules]]
+id = "high-entropy"
 description = "High entropy base64-like string"
 regex = '''[A-Za-z0-9+/]{40,}={0,2}'''
 
 # Reduce false positives: ignore commonly committed config & docs
 [[rules]]
+id = "ignore-docs"
 description = "Ignore common docs and fixtures"
 regex = '''(?i)(README|CHANGELOG|LICENSE|\.md|docs/)'''
 [rules.paths]
