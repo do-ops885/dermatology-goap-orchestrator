@@ -55,4 +55,11 @@ id = "ignore-docs"
 description = "Ignore common docs and fixtures"
 regex = '''(?i)(README|CHANGELOG|LICENSE|\.md|docs/)'''
 [rules.paths]
-  allowlist = ["README.md", "CHANGELOG.md", "LICENSE", "plans/"]
+  allowlist = ["README.md", "CHANGELOG.md", "LICENSE", "plans/**/*"]
+
+[[rules]]
+id = "ignore-redacted"
+description = "Ignore REDACTED placeholders"
+regex = '''REDACTED'''
+[rules.paths]
+  allowlist = ["plans/**/*", "test-fixtures/**/*"]
