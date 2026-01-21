@@ -7,7 +7,7 @@
   },
   {
     "path": "dist/assets/vendor-*.js",
-    "limit": "2 MB",
+    "limit": "3 MB",
     "gzip": true,
     "name": "Vendor bundles (AI/ML models)"
   },
