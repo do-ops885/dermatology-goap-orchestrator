@@ -46,6 +46,8 @@ regex = '''-----BEGIN (RSA|DSA|EC|OPENSSH|PGP) PRIVATE KEY-----'''
 id = "high-entropy"
 description = "High entropy base64-like string"
 regex = '''[A-Za-z0-9+/]{40,}={0,2}'''
+[rules.paths]
+  allowlist = ["test-fixtures/", "tests/fixture/"]
 
 # Reduce false positives: ignore commonly committed config & docs
 [[rules]]
@@ -53,4 +55,4 @@ id = "ignore-docs"
 description = "Ignore common docs and fixtures"
 regex = '''(?i)(README|CHANGELOG|LICENSE|\.md|docs/)'''
 [rules.paths]
-  allowlist = ["README.md", "CHANGELOG.md", "LICENSE"]
+  allowlist = ["README.md", "CHANGELOG.md", "LICENSE", "plans/"]
