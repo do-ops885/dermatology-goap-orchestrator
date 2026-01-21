@@ -150,7 +150,11 @@ export const CryptoService = {
    * @throws {CryptoError} If Web Crypto API is unavailable or key generation fails
    */
   async generateEphemeralKey(): Promise<CryptoKey> {
-    if (typeof window === 'undefined' || !window.crypto?.subtle) {
+    if (
+      typeof window === 'undefined' ||
+      window.crypto?.subtle === undefined ||
+      window.crypto?.subtle === null
+    ) {
       throw new CryptoError('Web Crypto API is not available', 'API_UNAVAILABLE');
     }
 
@@ -179,7 +183,8 @@ export const CryptoService = {
     try {
       // Validate key
       if (
-        !key ||
+        key === null ||
+        key === undefined ||
         typeof key !== 'object' ||
         !Array.isArray(key.usages) ||
         !key.usages.includes('encrypt')
@@ -190,7 +195,7 @@ export const CryptoService = {
       }
 
       // Validate input data
-      if (!data || typeof data !== 'object') {
+      if (data === null || data === undefined || typeof data !== 'object') {
         throw new CryptoError('Invalid data: must be an object', 'ENCRYPTION_FAILED', {
           dataType: typeof data,
         });
@@ -208,7 +213,7 @@ export const CryptoService = {
       }
 
       // Validate IV (though getRandomValues should never fail silently)
-      if (!iv || iv.byteLength !== 12) {
+      if (iv === null || iv === undefined || iv.byteLength !== 12) {
         throw new CryptoError('Invalid IV length', 'IV_GENERATION_FAILED', {
           length: iv?.byteLength,
         });
@@ -221,7 +226,7 @@ export const CryptoService = {
       )) as ArrayBuffer;
 
       // Validate ciphertext
-      if (!ciphertext || ciphertext.byteLength === 0) {
+      if (ciphertext === null || ciphertext === undefined || ciphertext.byteLength === 0) {
         throw new CryptoError('Invalid ciphertext', 'ENCRYPTION_FAILED', {
           byteLength: ciphertext?.byteLength,
         });
@@ -256,7 +261,8 @@ export const CryptoService = {
     try {
       // Validate key
       if (
-        !key ||
+        key === null ||
+        key === undefined ||
         typeof key !== 'object' ||
         !Array.isArray(key.usages) ||
         !key.usages.includes('decrypt')
@@ -267,14 +273,14 @@ export const CryptoService = {
       }
 
       // Validate IV
-      if (!iv || iv.byteLength !== 12) {
+      if (iv === null || iv === undefined || iv.byteLength !== 12) {
         throw new CryptoError('Invalid IV length: must be 12 bytes', 'DECRYPTION_FAILED', {
           length: iv?.byteLength,
         });
       }
 
       // Validate ciphertext
-      if (!ciphertext || ciphertext.byteLength === 0) {
+      if (ciphertext === null || ciphertext === undefined || ciphertext.byteLength === 0) {
         throw new CryptoError('Invalid ciphertext: empty buffer', 'DECRYPTION_FAILED', {
           byteLength: ciphertext?.byteLength,
         });
@@ -306,7 +312,11 @@ export const CryptoService = {
    */
   async generateHash(data: string): Promise<string> {
     try {
-      if (typeof window === 'undefined' || !window.crypto?.subtle) {
+      if (
+        typeof window === 'undefined' ||
+        window.crypto?.subtle === undefined ||
+        window.crypto?.subtle === null
+      ) {
         // Fallback to simple hash if crypto API unavailable
         return this.fallbackHash(data);
       }
@@ -346,7 +356,7 @@ export const CryptoService = {
    */
   arrayBufferToBase64(buffer: ArrayBuffer): string {
     try {
-      if (!buffer || buffer.byteLength === 0) {
+      if (buffer === null || buffer === undefined || buffer.byteLength === 0) {
         return '';
       }
 

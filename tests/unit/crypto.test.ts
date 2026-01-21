@@ -117,8 +117,11 @@ describe('CryptoService', () => {
       const iv: Uint8Array = result!.iv;
 
       // Decrypt to verify
-      // @ts-expect-error - TS 5.8 incorrectly infers ArrayBufferLike instead of ArrayBuffer for ciphertext
-      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+      const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: iv as unknown as BufferSource },
+        key,
+        ciphertext,
+      );
 
       const decoder = new TextDecoder();
       const decryptedText = decoder.decode(decrypted);
@@ -324,8 +327,11 @@ describe('CryptoService', () => {
       expect(encryptedBase64).not.toContain('melanoma');
 
       // Decrypt
-      // @ts-expect-error - TS 5.8 incorrectly infers ArrayBufferLike instead of ArrayBuffer for ciphertext
-      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+      const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: iv as unknown as BufferSource },
+        key,
+        ciphertext,
+      );
       const decryptedData = JSON.parse(new TextDecoder().decode(decrypted));
 
       expect(decryptedData).toEqual(patientData);

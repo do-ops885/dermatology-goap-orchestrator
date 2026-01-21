@@ -87,7 +87,7 @@ export default [
       '@typescript-eslint/await-thenable': 'error',
       '@typescript-eslint/no-misused-promises': 'error',
       '@typescript-eslint/prefer-nullish-coalescing': 'warn',
-      '@typescript-eslint/strict-boolean-expressions': 'warn',
+      '@typescript-eslint/strict-boolean-expressions': 'error',
       'security/detect-eval-with-expression': 'error',
       'security/detect-non-literal-require': 'error',
       'security/detect-unsafe-regex': 'warn',
