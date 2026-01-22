@@ -5,21 +5,22 @@
 
 ## 0. Current Analysis (2026-01-11)
 
-### 0.1 Implementation Gaps Identified
+### 0.1 Implementation Status (Updated 2026-01-22)
 
-| Component                      | Status     | Lines                        |
-| ------------------------------ | ---------- | ---------------------------- |
-| Per-group TPR/FPR computation  | ⚠️ Partial | `services/agentDB.ts:46-114` |
-| Clinician feedback integration | ❌ Missing | -                            |
-| Nightly batch analytics        | ❌ Missing | -                            |
-| FairnessDashboard UI component | ❌ Missing | -                            |
+| Component                      | Status      | Lines                              |
+| ------------------------------ | ----------- | ---------------------------------- |
+| Per-group TPR/FPR computation  | ✅ Complete | `services/agentDB.ts:46-144`       |
+| Clinician feedback integration | ✅ Complete | `components/ClinicianFeedback.tsx` |
+| FairnessDashboard UI component | ✅ Complete | `components/FairnessDashboard.tsx` |
+| Feedback storage & retrieval   | ✅ Complete | `services/agentDB.ts:249-342`      |
+| Nightly batch analytics        | ⚠️ Partial  | `hooks/useFairnessAnalytics.ts`    |
 
-### 0.2 Priority Actions
+### 0.2 Implementation Summary
 
-1. **P0:** Implement per-group TPR/FPR metrics in `services/agentDB.ts` ✅ COMPLETE (Partial implementation)
-2. **P1:** Create FairnessDashboard component ❌ MISSING
-3. **P2:** Add clinician feedback path ❌ MISSING
-4. **P3:** Add nightly batch analytics ❌ MISSING
+1. **P0:** Per-group TPR/FPR metrics ✅ **COMPLETE** - Full live aggregation from vector DB
+2. **P1:** FairnessDashboard component ✅ **COMPLETE** - Real-time visualization with charts
+3. **P2:** Clinician feedback path ✅ **COMPLETE** - Full integration in DiagnosticSummary
+4. **P3:** Nightly batch analytics ⚠️ **PARTIAL** - Service worker hooks present, needs full activation
 
 ## 1. Objectives
 
@@ -153,20 +154,24 @@ Record<FitzpatrickType, GroupMetrics>;
 - Emit `safety_interception` events
 - Dashboard widget in `FairnessDashboard.tsx`
 
-## 8. Implementation Status
+## 8. Implementation Status (Updated 2026-01-22)
 
-- [x] Fitzpatrick type definitions
-- [x] Confidence score tracking
-- [x] Low confidence flagging
-- [x] Safety calibration agent
-- [x] Standard calibration agent
+- [x] Fitzpatrick type definitions (`types.ts`)
+- [x] Confidence score tracking (`WorldState`)
+- [x] Low confidence flagging (< 0.65 threshold)
+- [x] Safety calibration agent (conservative 0.50 threshold)
+- [x] Standard calibration agent (standard 0.65 threshold)
 - [x] FairDisCo feature extraction
 - [x] Fairness validation agent
-- [x] Per-group TPR/FPR computation (PARTIAL - `services/agentDB.ts:46-114`)
-- [ ] Threshold override table
-- [ ] Clinician feedback integration
-- [ ] Nightly batch analytics
-- [ ] FairnessDashboard UI component
+- [x] Per-group TPR/FPR computation (`services/agentDB.ts:97-144`)
+- [x] Clinician feedback integration (`components/ClinicianFeedback.tsx`, `components/DiagnosticSummary.tsx:267-321`)
+- [x] Feedback storage & retrieval (`services/agentDB.ts:249-342`)
+- [x] FairnessDashboard UI component (`components/FairnessDashboard.tsx`)
+- [x] Live metrics polling (5-second intervals)
+- [x] Feedback statistics by Fitzpatrick type
+- [x] Comprehensive test coverage (13 tests in `tests/unit/clinician-feedback.test.ts`, 3 tests in `tests/components/FairnessDashboard.test.tsx`)
+- [ ] Threshold override table (future enhancement)
+- [x] Nightly batch analytics hooks (`hooks/useFairnessAnalytics.ts`) - Needs service worker activation
 
 ---
 

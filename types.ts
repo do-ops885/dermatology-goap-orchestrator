@@ -215,3 +215,70 @@ export const INITIAL_STATE: WorldState = {
   safety_calibrated: false,
   calibration_complete: false,
 };
+
+export type AgentEventType =
+  | 'agent:start'
+  | 'agent:complete'
+  | 'agent:fail'
+  | 'state:change'
+  | 'plan:created'
+  | 'plan:execute'
+  | 'action:pre'
+  | 'action:post'
+  | 'error:occurred'
+  | 'cleanup:requested'
+  | 'replay:start'
+  | 'replay:complete';
+
+export interface AgentEventPayload {
+  agentId: string;
+  timestamp: number;
+  data?: Record<string, unknown>;
+  error?: Error;
+}
+
+export interface StateChangeEventPayload {
+  prevState: WorldState;
+  newState: WorldState;
+  changedKeys: Array<keyof WorldState>;
+}
+
+export interface PlanEventPayload {
+  plan: AgentAction[];
+  startState: WorldState;
+  goalState: Partial<WorldState>;
+}
+
+export interface ActionEventPayload {
+  action: AgentAction;
+  state: WorldState;
+  duration?: number;
+}
+
+export interface EventMap {
+  'agent:start': AgentEventPayload;
+  'agent:complete': AgentEventPayload;
+  'agent:fail': AgentEventPayload;
+  'state:change': StateChangeEventPayload;
+  'plan:created': PlanEventPayload;
+  'plan:execute': PlanEventPayload;
+  'action:pre': ActionEventPayload;
+  'action:post': ActionEventPayload;
+  'error:occurred': { error: Error; context?: Record<string, unknown> };
+  'cleanup:requested': { reason?: string };
+  'replay:start': { fromTime?: number; eventTypes?: AgentEventType[] };
+  'replay:complete': { replayedEvents: number };
+}
+
+export type EventHandler<T = unknown> = (_payload: T) => void | Promise<void>;
+
+export interface EventHistoryEntry<T = unknown> {
+  type: string;
+  payload: T;
+  timestamp: number;
+}
+
+export interface EventBusConfig {
+  maxHistorySize?: number;
+  enableHistory?: boolean;
+}
