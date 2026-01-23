@@ -9,7 +9,8 @@ interface Listener<T> {
   once: boolean;
 }
 
-export class EventBus<TEventMap extends Record<string, unknown> = EventMap> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class EventBus<TEventMap extends Record<string, any> = EventMap> {
   private listeners: Map<EventKey, Set<Listener<unknown>>> = new Map();
   private history: EventHistoryEntry<unknown>[] = [];
   private readonly maxHistorySize: number;
@@ -178,12 +179,14 @@ export class EventBus<TEventMap extends Record<string, unknown> = EventMap> {
 
     let eventsToReplay = matchingEvents;
 
-    if (options?.fromTime !== undefined) {
-      eventsToReplay = eventsToReplay.filter((entry) => entry.timestamp >= options.fromTime);
+    const fromTime = options?.fromTime;
+    if (fromTime !== undefined) {
+      eventsToReplay = eventsToReplay.filter((entry) => entry.timestamp >= fromTime);
     }
 
-    if (options?.limit !== undefined) {
-      eventsToReplay = eventsToReplay.slice(0, options.limit);
+    const limit = options?.limit;
+    if (limit !== undefined) {
+      eventsToReplay = eventsToReplay.slice(0, limit);
     }
 
     for (const entry of eventsToReplay) {
@@ -200,12 +203,14 @@ export class EventBus<TEventMap extends Record<string, unknown> = EventMap> {
 
     let eventsToReplay = [...this.history];
 
-    if (options?.fromTime !== undefined) {
-      eventsToReplay = eventsToReplay.filter((entry) => entry.timestamp >= options.fromTime);
+    const fromTime = options?.fromTime;
+    if (fromTime !== undefined) {
+      eventsToReplay = eventsToReplay.filter((entry) => entry.timestamp >= fromTime);
     }
 
-    if (options?.limit !== undefined) {
-      eventsToReplay = eventsToReplay.slice(0, options.limit);
+    const limit = options?.limit;
+    if (limit !== undefined) {
+      eventsToReplay = eventsToReplay.slice(0, limit);
     }
 
     for (const entry of eventsToReplay) {
@@ -223,7 +228,8 @@ export class EventBus<TEventMap extends Record<string, unknown> = EventMap> {
         .map((entry) => entry as EventHistoryEntry<TEventMap[K]>);
     }
 
-    return this.history as EventHistoryEntry<TEventMap[EventKey]>[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return this.history as EventHistoryEntry<TEventMap[K]>[];
   }
 
   public clearHistory(): void {

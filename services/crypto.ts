@@ -143,6 +143,100 @@ export class SecureKeyManager {
   }
 }
 
+/**
+ * Validates encryption key has required usages
+ * @throws {CryptoError} If key is invalid
+ */
+function validateEncryptionKey(key: CryptoKey): void {
+  if (
+    key === null ||
+    key === undefined ||
+    typeof key !== 'object' ||
+    !Array.isArray(key.usages) ||
+    !key.usages.includes('encrypt')
+  ) {
+    throw new CryptoError('Invalid key: must support encryption', 'KEY_INVALID', {
+      keyAlgorithm: key?.algorithm,
+    });
+  }
+}
+
+/**
+ * Validates decryption key has required usages
+ * @throws {CryptoError} If key is invalid
+ */
+function validateDecryptionKey(key: CryptoKey): void {
+  if (
+    key === null ||
+    key === undefined ||
+    typeof key !== 'object' ||
+    !Array.isArray(key.usages) ||
+    !key.usages.includes('decrypt')
+  ) {
+    throw new CryptoError('Invalid key: must support decryption', 'KEY_INVALID', {
+      keyAlgorithm: key?.algorithm,
+    });
+  }
+}
+
+/**
+ * Validates input data for encryption
+ * @throws {CryptoError} If data is invalid
+ */
+function validateEncryptionData(data: Record<string, unknown>): void {
+  if (data === null || data === undefined || typeof data !== 'object') {
+    throw new CryptoError('Invalid data: must be an object', 'ENCRYPTION_FAILED', {
+      dataType: typeof data,
+    });
+  }
+}
+
+/**
+ * Generates a secure IV for AES-GCM
+ * @returns 12-byte initialization vector
+ * @throws {CryptoError} If IV generation fails
+ */
+function generateIV(): Uint8Array {
+  let iv: Uint8Array;
+  try {
+    iv = window.crypto.getRandomValues(new Uint8Array(12));
+  } catch (error) {
+    throw new CryptoError('Failed to generate IV', 'IV_GENERATION_FAILED', { error });
+  }
+
+  if (iv === null || iv === undefined || iv.byteLength !== 12) {
+    throw new CryptoError('Invalid IV length', 'IV_GENERATION_FAILED', {
+      length: iv?.byteLength,
+    });
+  }
+
+  return iv;
+}
+
+/**
+ * Validates IV for decryption
+ * @throws {CryptoError} If IV is invalid
+ */
+function validateIV(iv: Uint8Array): void {
+  if (iv === null || iv === undefined || iv.byteLength !== 12) {
+    throw new CryptoError('Invalid IV length: must be 12 bytes', 'DECRYPTION_FAILED', {
+      length: iv?.byteLength,
+    });
+  }
+}
+
+/**
+ * Validates ciphertext buffer
+ * @throws {CryptoError} If ciphertext is invalid
+ */
+function validateCiphertext(ciphertext: ArrayBuffer): void {
+  if (ciphertext === null || ciphertext === undefined || ciphertext.byteLength === 0) {
+    throw new CryptoError('Invalid ciphertext: empty buffer', 'DECRYPTION_FAILED', {
+      byteLength: ciphertext?.byteLength,
+    });
+  }
+}
+
 export const CryptoService = {
   /**
    * Generates a 256-bit AES-GCM key for ephemeral client-side encryption.
@@ -181,43 +275,12 @@ export const CryptoService = {
     key: CryptoKey,
   ): Promise<{ ciphertext: ArrayBuffer; iv: Uint8Array } | null> {
     try {
-      // Validate key
-      if (
-        key === null ||
-        key === undefined ||
-        typeof key !== 'object' ||
-        !Array.isArray(key.usages) ||
-        !key.usages.includes('encrypt')
-      ) {
-        throw new CryptoError('Invalid key: must support encryption', 'KEY_INVALID', {
-          keyAlgorithm: key?.algorithm,
-        });
-      }
-
-      // Validate input data
-      if (data === null || data === undefined || typeof data !== 'object') {
-        throw new CryptoError('Invalid data: must be an object', 'ENCRYPTION_FAILED', {
-          dataType: typeof data,
-        });
-      }
+      validateEncryptionKey(key);
+      validateEncryptionData(data);
 
       const encoder = new TextEncoder();
       const encodedData = encoder.encode(JSON.stringify(data));
-
-      // 12 bytes IV is standard for GCM
-      let iv: Uint8Array;
-      try {
-        iv = window.crypto.getRandomValues(new Uint8Array(12));
-      } catch (error) {
-        throw new CryptoError('Failed to generate IV', 'IV_GENERATION_FAILED', { error });
-      }
-
-      // Validate IV (though getRandomValues should never fail silently)
-      if (iv === null || iv === undefined || iv.byteLength !== 12) {
-        throw new CryptoError('Invalid IV length', 'IV_GENERATION_FAILED', {
-          length: iv?.byteLength,
-        });
-      }
+      const iv = generateIV();
 
       const ciphertext = (await window.crypto.subtle.encrypt(
         { name: 'AES-GCM', iv: iv as Uint8Array<ArrayBuffer> },
@@ -259,32 +322,9 @@ export const CryptoService = {
     key: CryptoKey,
   ): Promise<Record<string, unknown> | null> {
     try {
-      // Validate key
-      if (
-        key === null ||
-        key === undefined ||
-        typeof key !== 'object' ||
-        !Array.isArray(key.usages) ||
-        !key.usages.includes('decrypt')
-      ) {
-        throw new CryptoError('Invalid key: must support decryption', 'KEY_INVALID', {
-          keyAlgorithm: key?.algorithm,
-        });
-      }
-
-      // Validate IV
-      if (iv === null || iv === undefined || iv.byteLength !== 12) {
-        throw new CryptoError('Invalid IV length: must be 12 bytes', 'DECRYPTION_FAILED', {
-          length: iv?.byteLength,
-        });
-      }
-
-      // Validate ciphertext
-      if (ciphertext === null || ciphertext === undefined || ciphertext.byteLength === 0) {
-        throw new CryptoError('Invalid ciphertext: empty buffer', 'DECRYPTION_FAILED', {
-          byteLength: ciphertext?.byteLength,
-        });
-      }
+      validateDecryptionKey(key);
+      validateIV(iv);
+      validateCiphertext(ciphertext);
 
       const decrypted = await crypto.subtle.decrypt(
         { name: 'AES-GCM', iv: iv as Uint8Array<ArrayBuffer> },

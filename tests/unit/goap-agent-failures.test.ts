@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 
 import { GOAPPlanner, AVAILABLE_ACTIONS } from '../../services/goap';
-import { GoapAgent, AgentHandoffCoordinator } from '../../services/goap/agent';
+import { GoapAgent } from '../../services/goap/agent';
+import { AgentHandoffCoordinator } from '../../services/goap/handoffCoordinator';
 import { INITIAL_STATE } from '../../types';
 
 import type { AgentContext } from '../../services/executors/types';
@@ -456,7 +457,10 @@ describe('GoapAgent Failure Handling', () => {
         confidence_score: 0.4,
         is_low_confidence: false,
       };
-      const correctedState = coordinator.ensureStateConsistency(inconsistentState);
+      const correctedState = coordinator.autoCorrectState(
+        inconsistentState,
+        'feature-extraction-agent',
+      );
       expect(correctedState.is_low_confidence).toBe(true);
     });
   });

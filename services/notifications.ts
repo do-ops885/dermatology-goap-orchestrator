@@ -15,9 +15,9 @@ export class NotificationService {
   async sendCriticalAlert(params: {
     analysisId: string;
     triggerReason: string;
-    diagnosis?: string;
-    riskLevel?: string;
-    patientId?: string;
+    diagnosis?: string | undefined;
+    riskLevel?: string | undefined;
+    patientId?: string | undefined;
   }): Promise<ClinicianNotification> {
     const notification: ClinicianNotification = {
       id: 'notif_' + Math.random().toString(36).substring(2, 11),
@@ -58,7 +58,11 @@ export class NotificationService {
     return notification;
   }
 
-  acknowledgeNotification(notificationId: string, clinicianId: string, notes?: string): void {
+  acknowledgeNotification(
+    notificationId: string,
+    clinicianId: string,
+    notes?: string | undefined,
+  ): void {
     const notification = this.notifications.find((n) => n.id === notificationId);
     if (notification) {
       notification.status = 'acknowledged';

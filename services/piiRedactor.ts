@@ -133,7 +133,7 @@ export class PIIRedactor {
   public sanitizeAgentLog(
     event: string,
     metadata?: Record<string, unknown>,
-  ): { sanitizedEvent: string; sanitizedMetadata?: Record<string, unknown> } {
+  ): { sanitizedEvent: string; sanitizedMetadata?: Record<string, unknown> | undefined } {
     const sanitizedEvent = this.redactPII(event);
     const sanitizedMetadata = metadata ? this.sanitizeMetadata(metadata) : undefined;
 

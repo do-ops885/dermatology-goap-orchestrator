@@ -4,19 +4,20 @@
 
 **Last Updated:** 2026-01-15
 
-### 0.1 Reliability Posture
+### 0.1 Reliability Posture (Updated 2026-01-22)
 
-| Component          | Status                 | Implementation                          | Notes                                        |
-| ------------------ | ---------------------- | --------------------------------------- | -------------------------------------------- |
-| Error Boundaries   | ✅ Complete            | `components/ErrorBoundary.tsx`          | Wrapped in key components                    |
-| Structured Logging | ✅ Complete            | `services/logger.ts` (68 lines)         | PII redaction active                         |
-| Core Web Vitals    | ✅ Complete            | `services/reportWebVitals.ts`           | CLS, FID, LCP captured                       |
-| GOAP Tracing       | ✅ Complete            | `services/goap/agent.ts` (144 lines)    | plan_start, agent_start, agent_end, plan_end |
-| Agent Timings      | ✅ Complete            | `services/agent-timings.ts` (~50 lines) | Per-agent timing collection                  |
-| Metrics Dashboard  | ✅ Complete            | `components/FairnessDashboard.tsx`      | Real-time metrics visualization              |
-| Circuit Breaker    | ❌ **Not Implemented** | N/A                                     | Missing pattern                              |
-| Error Recovery     | ⚠️ Partial             | Basic try/catch only                    | No recovery strategies                       |
-| Memory Monitoring  | ⚠️ Partial             | TF.js cleanup only                      | No JS heap monitoring                        |
+| Component          | Status          | Implementation                           | Notes                                        |
+| ------------------ | --------------- | ---------------------------------------- | -------------------------------------------- |
+| Error Boundaries   | ✅ Complete     | `components/ErrorBoundary.tsx`           | Wrapped in key components                    |
+| Structured Logging | ✅ Complete     | `services/logger.ts` (118 lines)         | PII redaction active, log level filtering    |
+| Core Web Vitals    | ✅ Complete     | `services/reportWebVitals.ts` (78 lines) | CLS, FID, LCP, TTFB, INP captured            |
+| GOAP Tracing       | ✅ Complete     | `services/goap/agent.ts` (580+ lines)    | plan_start, agent_start, agent_end, plan_end |
+| Agent Timings      | ✅ Complete     | `services/agent-timings.ts` (~50 lines)  | Per-agent timing collection                  |
+| Metrics Dashboard  | ✅ Complete     | `components/FairnessDashboard.tsx`       | Real-time metrics visualization              |
+| Circuit Breaker    | ✅ **Complete** | `services/circuitBreaker.ts` (172 lines) | Full pattern with state machine              |
+| Error Recovery     | ✅ **Complete** | `types.ts` RECOVERY_STRATEGIES           | Per-agent recovery config                    |
+| Event Bus          | ✅ **Complete** | `services/eventBus.ts` (278 lines)       | Event history & replay support               |
+| Memory Monitoring  | ✅ **Complete** | `services/memoryMonitor.ts` (193 lines)  | Heap size monitoring & alerts                |
 
 ## 0.2 Observability Implementation Status
 

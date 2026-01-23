@@ -107,6 +107,7 @@ export class CircuitBreaker {
         this.transitionToClosed();
       }
     } else if (this.state === 'CLOSED') {
+      this.successCount++;
       this.failureCount = 0;
     }
   }

@@ -195,9 +195,9 @@ describe('RouterAgent', () => {
 
       it('should handle null values in context', () => {
         const result = router.route({
-          file: undefined,
-          text: undefined,
-          action: undefined,
+          file: undefined as unknown as File,
+          text: undefined as unknown as string,
+          action: undefined as unknown as string,
         });
 
         expect(result).toBe('CONVERSATIONAL_QUERY');

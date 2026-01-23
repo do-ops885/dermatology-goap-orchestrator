@@ -31,7 +31,7 @@ describe('privacyEncryptionExecutor', () => {
 
   it('should return error when encryption key is missing', async () => {
     const context = createMockContext({
-      encryptionKey: undefined,
+      encryptionKey: undefined as unknown as CryptoKey | null,
       analysisPayload: { data: 'test' },
     });
 

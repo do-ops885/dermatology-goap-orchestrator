@@ -3,11 +3,11 @@ import { Logger } from '../logger';
 import type { AgentContext, ExecutorResult, ClinicalAnalysisResult } from './types';
 
 interface WebSource {
-  title?: string;
-  uri?: string;
+  title?: string | undefined;
+  uri?: string | undefined;
 }
 
-function isValidSource(s: WebSource): s is { title?: string | undefined; uri: string } {
+function isValidSource(s: WebSource): s is { uri: string; title?: string | undefined } {
   return typeof s.uri === 'string' && s.uri.length > 0;
 }
 
