@@ -48,7 +48,10 @@ export const ConsentStateSchema = z.object({
   offlineAnalysis: z.boolean().default(false), // For local-only mode
   dataStorage: z.boolean().default(true), // For IndexedDB
   analytics: z.boolean().default(false), // For anonymous telemetry
-  timestamp: z.number().default(() => Date.now()),
+  timestamp: z
+    .number()
+    .min(0)
+    .default(() => Date.now()),
   userId: z.string().optional(), // Anonymous user ID for consent tracking
 });
 
