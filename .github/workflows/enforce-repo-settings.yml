@@ -17,13 +17,6 @@ jobs:
       - name: Checkout (to access .github/repository-settings.yml)
         uses: actions/checkout@v4
 
-      - name: Read repository settings
-        id: settings
-        run: |
-          echo "Loading .github/repository-settings.yml"
-          cat .github/repository-settings.yml
-          echo "settings=$(cat .github/repository-settings.yml | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}')" >> $GITHUB_OUTPUT
-
       - name: Install js-yaml
         run: |
           npm install js-yaml@4
@@ -31,7 +24,6 @@ jobs:
       - name: Apply repository settings via GitHub Script
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const yaml = require('js-yaml');
@@ -45,13 +37,13 @@ jobs:
               owner,
               repo,
               default_branch: cfg.default_branch || 'main',
-              allow_squash_merge: !!cfg.allow_squash_merge,
-              allow_merge_commit: !!cfg.allow_merge_commit,
-              allow_rebase_merge: !!cfg.allow_rebase_merge,
-              has_wiki: !!cfg.has_wiki,
-              has_projects: !!cfg.has_projects,
-              allow_forking: !!cfg.allow_forking,
-              archived: !!cfg.archived
+              allow_squash_merge: Boolean(cfg.allow_squash_merge),
+              allow_merge_commit: Boolean(cfg.allow_merge_commit),
+              allow_rebase_merge: Boolean(cfg.allow_rebase_merge),
+              has_wiki: Boolean(cfg.has_wiki),
+              has_projects: Boolean(cfg.has_projects),
+              allow_forking: Boolean(cfg.allow_forking),
+              archived: Boolean(cfg.archived)
             });
 
             console.log('Repository settings updated');
@@ -66,13 +58,13 @@ jobs:
                   owner,
                   repo,
                   branch,
-                  required_status_checks: { strict: !!(bp.required_status_checks && bp.required_status_checks.strict), contexts },
-                  enforce_admins: !!bp.enforce_admins,
+                  required_status_checks: { strict: Boolean(bp.required_status_checks && bp.required_status_checks.strict), contexts },
+                  enforce_admins: Boolean(bp.enforce_admins),
                   required_pull_request_reviews: bp.required_pull_request_reviews || null,
                   restrictions: null,
-                  required_linear_history: bp.required_linear_history || null,
-                  allow_force_pushes: !!bp.allow_force_pushes,
-                  allow_deletions: !!bp.allow_deletions
+                  required_linear_history: Boolean(bp.required_linear_history),
+                  allow_force_pushes: Boolean(bp.allow_force_pushes),
+                  allow_deletions: Boolean(bp.allow_deletions)
                 });
 
                 console.log(`Applied branch protection to ${branch} with contexts: ${contexts.join(',')}`);
@@ -80,5 +72,3 @@ jobs:
             }
 
             return { ok: true };
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
