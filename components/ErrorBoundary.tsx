@@ -46,7 +46,9 @@ export class ErrorBoundary extends Component<Props, State> {
             {this.props.componentName ?? 'System'} Module Failed
           </h3>
           <p className="text-xs text-red-600 mb-4 max-w-xs leading-relaxed">
-            {this.state.error?.message ?? 'An unexpected error occurred.'}
+            {this.state.error?.message !== '' && this.state.error?.message !== undefined
+              ? this.state.error.message
+              : 'An unexpected error occurred.'}
           </p>
           <button
             onClick={this.handleReset}

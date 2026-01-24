@@ -84,7 +84,8 @@ describe('ErrorBoundary', () => {
         </ErrorBoundary>,
       );
 
-      expect(screen.getByText('Child Content')).toBeVisible();
+      expect(screen.getByText(/module failed/i)).toBeVisible();
+      expect(screen.getByText(/an unexpected error occurred/i)).toBeVisible();
     });
   });
 
