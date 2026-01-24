@@ -65,7 +65,8 @@ describe('validateImageSignature', () => {
   it('should handle file smaller than 12 bytes', async () => {
     const smallHeader = new Uint8Array([0xff, 0xd8]);
     const file = new File([smallHeader], 'small.jpg', { type: 'image/jpeg' });
-    await expect(async () => await validateImageSignature(file)).resolves.toBe(false);
+    const result = await validateImageSignature(file);
+    expect(result).toBe(false);
   });
 
   it('should validate JPEG with different SOI markers', async () => {
