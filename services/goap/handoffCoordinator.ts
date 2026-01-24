@@ -13,129 +13,91 @@ export class AgentHandoffCoordinator {
     _currentAgent: string,
     nextAgent: string,
     currentState: WorldState,
-    _nextAction: AgentAction,
+    nextAction: AgentAction,
   ): { valid: boolean; reason?: string | undefined; warnings?: string[] | undefined } {
     const warnings: string[] = [];
 
-    // Quality Gate 1: Low Confidence Safety Routing
+    // Quality Gate 1: Low Confidence Safety Routing (check first for specific error messages)
     const safetyValidation = this.validateSafetyCalibration(nextAgent, currentState);
     if (!safetyValidation.valid) return safetyValidation;
 
-    // Quality Gate 2: Sequential Dependencies
-    const seqValidation = this.validateSequentialDependency(nextAgent, currentState);
-    if (!seqValidation.valid) return seqValidation;
+    // Quality Gate 2: Validate action preconditions
+    const preconditionValidation = this.validateActionPreconditions(currentState, nextAction);
+    if (!preconditionValidation.valid) return preconditionValidation;
 
-    // Quality Gate 3: State Consistency
-    const stateValidation = this.validateStateConsistency(nextAgent, currentState);
-    if (!stateValidation.valid) return stateValidation;
-
-    // Quality Gate 4: Confidence Thresholds
-    const confValidation = this.validateConfidenceThreshold(nextAgent, currentState);
-    if (!confValidation.valid) return confValidation;
+    // Quality Gate 3: State Consistency Checks (adds warnings, doesn't fail)
+    this.checkStateInconsistencies(currentState, nextAgent, warnings);
 
     return { valid: true, warnings: warnings.length > 0 ? warnings : undefined };
+  }
+
+  private validateActionPreconditions(
+    currentState: WorldState,
+    action: AgentAction,
+  ): { valid: boolean; reason?: string | undefined } {
+    for (const [key, requiredValue] of Object.entries(action.preconditions)) {
+      const stateValue = (currentState as unknown as Record<string, unknown>)[key];
+      if (stateValue !== requiredValue) {
+        return {
+          valid: false,
+          reason: `Precondition not met: ${key} should be ${requiredValue}, but got ${stateValue}`,
+        };
+      }
+    }
+    return { valid: true };
   }
 
   private validateSafetyCalibration(
     nextAgent: string,
     currentState: WorldState,
   ): { valid: boolean; reason?: string | undefined } {
-    if (currentState.is_low_confidence === true && nextAgent === 'image-preprocessing-agent') {
+    // Safety-Calibration-Agent can only execute when is_low_confidence is true
+    if (nextAgent === 'Safety-Calibration-Agent' && currentState.is_low_confidence !== true) {
       return {
         valid: false,
-        reason:
-          'Low-confidence detection MUST be routed through safety-calibration-agent before preprocessing',
+        reason: 'Safety-Calibration-Agent can only be executed when is_low_confidence is true',
       };
     }
+
+    // Standard-Calibration-Agent cannot execute when is_low_confidence is true
+    if (nextAgent === 'Standard-Calibration-Agent' && currentState.is_low_confidence === true) {
+      return {
+        valid: false,
+        reason: 'Standard-Calibration-Agent cannot be executed when is_low_confidence is true',
+      };
+    }
+
     return { valid: true };
   }
 
-  private validateSequentialDependency(
-    nextAgent: string,
+  private checkStateInconsistencies(
     currentState: WorldState,
-  ): { valid: boolean; reason?: string | undefined } {
-    // Image verification must precede skin tone detection
-    if (nextAgent === 'skin-tone-detection-agent' && currentState.image_verified !== true) {
-      return {
-        valid: false,
-        reason:
-          'skin-tone-detection-agent requires image_verified=true (image-verification-agent must run first)',
-      };
-    }
-
-    // Lesion detection requires preprocessing
-    if (nextAgent === 'lesion-detection-agent' && currentState.image_preprocessed !== true) {
-      return {
-        valid: false,
-        reason:
-          'lesion-detection-agent requires image_preprocessed=true (image-preprocessing-agent must run first)',
-      };
-    }
-
-    // Similarity search requires lesion detection
-    if (nextAgent === 'similarity-search-agent' && currentState.lesions_detected !== true) {
-      return {
-        valid: false,
-        reason:
-          'similarity-search-agent requires lesions_detected=true (lesion-detection-agent must run first)',
-      };
-    }
-
-    return { valid: true };
-  }
-
-  private validateStateConsistency(
-    nextAgent: string,
-    currentState: WorldState,
-  ): { valid: boolean; reason?: string | undefined } {
-    // Feature extraction requires valid skin tone
-    if (nextAgent === 'feature-extraction-agent' && currentState.skin_tone === 'unknown') {
-      return {
-        valid: false,
-        reason: 'feature-extraction-agent requires valid skin_tone (cannot be "unknown")',
-      };
-    }
-
-    return { valid: true };
-  }
-
-  private validateConfidenceThreshold(
     _nextAgent: string,
-    currentState: WorldState,
-  ): { valid: boolean; reason?: string | undefined } {
+    warnings: string[],
+  ): void {
+    // Check for inconsistency between confidence_score and is_low_confidence
     if (
-      currentState.confidence_threshold !== undefined &&
-      (currentState.confidence_threshold < 0 || currentState.confidence_threshold > 1)
+      currentState.confidence_score !== undefined &&
+      currentState.confidence_score < 0.65 &&
+      currentState.is_low_confidence === false
     ) {
-      return {
-        valid: false,
-        reason: 'confidence_threshold must be between 0 and 1',
-      };
+      warnings.push('State inconsistency: confidence_score < 0.65 but is_low_confidence is false');
     }
-    return { valid: true };
   }
 
   /**
    * Attempts to correct common state inconsistencies before handoff
    */
-  autoCorrectState(currentState: WorldState, nextAgent: string): WorldState {
+  autoCorrectState(currentState: WorldState, _nextAgent: string): WorldState {
     const correctedState = { ...currentState };
 
-    // Auto-set default confidence threshold if missing
+    // Auto-correct is_low_confidence based on confidence_score
     if (
-      nextAgent === 'lesion-detection-agent' &&
-      correctedState.confidence_threshold === undefined
+      correctedState.confidence_score !== undefined &&
+      correctedState.confidence_score < 0.65 &&
+      !correctedState.is_low_confidence
     ) {
-      correctedState.confidence_threshold = 0.65;
-    }
-
-    // Auto-fix unknown skin tone if calibration was done
-    if (
-      nextAgent === 'feature-extraction-agent' &&
-      correctedState.skin_tone === 'unknown' &&
-      correctedState.calibration_complete === true
-    ) {
-      correctedState.skin_tone = 'III';
+      correctedState.is_low_confidence = true;
     }
 
     return correctedState;
