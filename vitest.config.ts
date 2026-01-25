@@ -32,12 +32,12 @@ export default defineConfig({
         'tests/e2e/**/*',
       ],
       thresholds: {
-        // Adjusted to current coverage levels (33.46%)
-        // TODO: Gradually increase to 80% as tests are added
-        lines: 30,
-        functions: 25,
-        branches: 25,
-        statements: 30,
+        // Current coverage: 44.19% statements, 38.18% branches, 43.21% functions, 44.73% lines
+        // Target: Gradually increase to 80% as tests are added (see @plans/coverage-roadmap.md)
+        lines: 44,
+        functions: 43,
+        branches: 38,
+        statements: 44,
       },
     },
   },
