@@ -9,12 +9,21 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : (undefined as unknown as string | number),
   reporter: 'html',
+
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
     video: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
+
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:5173',
+    timeout: 120000,
+    reuseExistingServer: !process.env.CI,
+  },
+
   projects: [
     {
       name: 'chromium',
@@ -24,5 +33,6 @@ export default defineConfig({
       },
     },
   ],
+
   timeout: 60000,
 });

@@ -13,7 +13,7 @@ const importPluginFixup = fixupPluginRules(importPlugin);
 const unicornFixup = fixupPluginRules(unicorn);
 
 export default [
-  { ignores: ['dist', 'node_modules', 'eslint.config.js'] },
+  { ignores: ['dist', 'node_modules', 'eslint.config.js', '.opencode/**/*'] },
   js.configs.recommended,
   {
     files: ['**/*.{js,mjs,cjs}'],

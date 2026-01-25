@@ -27,5 +27,6 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
   },
+  "include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
   "exclude": ["node_modules", "dist", "public", "postcss.config.js", "sw.js", "tailwind.config.js"]
 }
