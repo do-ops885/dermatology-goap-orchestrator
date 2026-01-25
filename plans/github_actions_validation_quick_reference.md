@@ -7,11 +7,11 @@
 
 ## Quick Links
 
-| Document                  | Location                                         | Purpose                                  |
-| :------------------------ | :----------------------------------------------- | :--------------------------------------- |
-| **Test Plan**             | `@plans/github_actions_validation_test_plan.md`  | Complete testing strategy and test cases |
-| **Success Criteria**      | `@plans/github_actions_success_criteria.md`      | Pass/fail conditions and metrics         |
-| **Coordination Timeline** | `@plans/github_actions_coordination_timeline.md` | Agent coordination and milestones        |
+| Document                  | Location                                        | Purpose                                  |
+| :------------------------ | :---------------------------------------------- | :--------------------------------------- |
+| **Test Plan**             | `plans/github_actions_validation_test_plan.md`  | Complete testing strategy and test cases |
+| **Success Criteria**      | `plans/github_actions_success_criteria.md`      | Pass/fail conditions and metrics         |
+| **Coordination Timeline** | `plans/github_actions_coordination_timeline.md` | Agent coordination and milestones        |
 
 ---
 

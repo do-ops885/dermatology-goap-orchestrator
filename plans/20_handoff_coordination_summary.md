@@ -134,50 +134,50 @@ The update cycle focused on enhancing the dermatology GOAP orchestrator with imp
 
 ### 1. Security Audit Protocol Enhancement
 
-**File:** `@plans/04_security_audit.md`  
+**File:** `plans/04_security_audit.md`  
 **Change:** Expanded coverage to include CSP validation, input sanitization verification, encryption standards review, and GDPR compliance checks for clinical data.
 
 **Outcome:** Security protocols now explicitly address browser-based deployment requirements with Content Security Policy validation and cryptographic standards verification.
 
 ### 2. Testing Strategy Implementation
 
-**File:** `@plans/01_testing_strategy.md`  
+**File:** `plans/01_testing_strategy.md`  
 **Change:** Defined comprehensive testing requirements with >80% code coverage mandate and E2E safety scenarios for critical clinical workflows.
 
 **Outcome:** Established testing framework using Vitest for unit tests and Playwright for end-to-end testing with defined safety interception scenarios.
 
 ### 3. Edge ML Implementation Guidelines
 
-**File:** `@plans/02_edge_ml_implementation.md`  
+**File:** `plans/02_edge_ml_implementation.md`  
 **Change:** Specified TensorFlow.js WebGPU backend configuration, WebLLM offline inference requirements, and memory safety practices for heavy ML models.
 
 **Outcome:** Clear guidelines for running ML inference entirely in-browser with proper tensor cleanup and model unloading procedures.
 
 ### 4. DevOps Workflow Standardization
 
-**File:** `@plans/03_devops_workflow.md`  
+**File:** `plans/03_devops_workflow.md`  
 **Change:** Defined CI/CD pipeline requirements, linting standards with ESLint and SonarJS, and release tagging conventions for production deployments.
 
 **Outcome:** Automated build, test, and release processes with quality gates at each stage.
 
 ### 5. UX and Accessibility Requirements
 
-**File:** `@plans/05_ux_pwa_strategy.md`  
+**File:** `plans/05_ux_pwa_strategy.md`  
 **Change:** Established WCAG 2.1 compliance requirements, dark mode support specifications, and PWA manifest configuration for offline-capable clinical application.
 
 **Outcome:** Accessible, installable web application with progressive enhancement capabilities.
 
 ### 6. Reliability and Observability Standards
 
-**File:** `@plans/06_reliability_observability.md`  
+**File:** `plans/06_reliability_observability.md`  
 **Change:** Defined error boundary requirements, structured JSON logging format, and telemetry collection standards for production monitoring.
 
 **Outcome:** Production-ready observability with crash reporting and performance monitoring capabilities.
 
 ### 7. Developer Documentation Standards
 
-**File:** `@plans/18_developer_quick_reference.md`  
-**Change:** Established consistent documentation structure for all markdown files created in the `@plans/` directory with naming conventions and content templates.
+**File:** `plans/18_developer_quick_reference.md`  
+**Change:** Established consistent documentation structure for all markdown files created in the `plans/` directory with naming conventions and content templates.
 
 **Outcome:** Standardized documentation approach ensuring maintainable knowledge base for the development team.
 
@@ -307,7 +307,7 @@ The update cycle focused on enhancing the dermatology GOAP orchestrator with imp
 
 3. **Test Execution:** Execute `npm run test` and verify all unit tests pass before merge.
 
-4. **Documentation Review:** Ensure all new documents follow `@plans/` naming conventions.
+4. **Documentation Review:** Ensure all new documents follow `plans/` naming conventions.
 
 ### Handoff Checklist
 
