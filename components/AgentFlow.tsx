@@ -6,7 +6,7 @@ import type { ExecutionTrace } from '../services/goap/agent';
 
 interface AgentFlowProps {
   trace: ExecutionTrace | null;
-  currentAgent?: string;
+  currentAgent?: string | undefined;
 }
 
 export const AgentFlow = React.forwardRef<HTMLDivElement, AgentFlowProps>(
@@ -213,7 +213,7 @@ function formatDuration(start: number, end?: number): string {
 // Status Components
 interface StatusIconProps {
   status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
-  className?: string;
+  className?: string | undefined;
 }
 
 const StatusIcon: React.FC<StatusIconProps> = ({ status, className }) => {

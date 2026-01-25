@@ -21,17 +21,17 @@ interface AnalysisIntakeProps {
   analyzing: boolean;
   dbReady: boolean;
   file: File | null;
-  heatmapOverlay?: string;
+  heatmapOverlay?: string | undefined;
   onFileChange: (_e: React.ChangeEvent<HTMLInputElement>) => void;
   onExecute: () => void;
-  privacyMode?: boolean;
-  setPrivacyMode?: (_val: boolean) => void;
+  privacyMode?: boolean | undefined;
+  setPrivacyMode?: ((_val: boolean) => void) | undefined;
 }
 
 // Helper: Privacy mode toggle button
 const PrivacyToggle: React.FC<{
-  privacyMode?: boolean;
-  setPrivacyMode?: (_val: boolean) => void;
+  privacyMode?: boolean | undefined;
+  setPrivacyMode?: ((_val: boolean) => void) | undefined;
 }> = ({ privacyMode, setPrivacyMode }) => {
   if (typeof setPrivacyMode !== 'function') return null;
 
@@ -80,7 +80,7 @@ const AlertMessage: React.FC<{
 // Helper: Image preview with heatmap overlay
 const ImagePreview: React.FC<{
   preview: string;
-  heatmapOverlay?: string;
+  heatmapOverlay?: string | undefined;
   showHeatmap: boolean;
   onToggleHeatmap: () => void;
 }> = ({ preview, heatmapOverlay, showHeatmap, onToggleHeatmap }) => (
@@ -123,7 +123,7 @@ const ImagePreview: React.FC<{
 );
 
 // Helper: Empty state placeholder
-const EmptyPreview: React.FC<{ privacyMode?: boolean }> = ({ privacyMode }) => (
+const EmptyPreview: React.FC<{ privacyMode?: boolean | undefined }> = ({ privacyMode }) => (
   <div className="text-center p-6">
     <Upload className="w-8 h-8 mx-auto mb-3 text-stone-400 group-hover:text-terracotta-500 transition-colors" />
     <p className="text-sm font-medium text-stone-600">Drop high-res dermatoscopy</p>

@@ -89,15 +89,74 @@ if (typeof globalThis.ImageData === 'undefined') {
   (globalThis as { ImageData: typeof ImageData }).ImageData = ImageData;
 }
 
-// Polyfill File.arrayBuffer for jsdom
-if (typeof File !== 'undefined') {
-  const OriginalFile = File;
-  (globalThis as { File: typeof OriginalFile }).File = class File extends OriginalFile {
-    override arrayBuffer(): Promise<ArrayBuffer> {
-      // Mock implementation - return empty ArrayBuffer
-      return Promise.resolve(new ArrayBuffer(0));
+// Polyfill File.arrayBuffer and Blob.slice().arrayBuffer() for jsdom
+if (typeof File !== 'undefined' && typeof Blob !== 'undefined') {
+  const OriginalBlob = Blob;
+
+  // Polyfill Blob with proper arrayBuffer support
+  class BlobPolyfill extends OriginalBlob {
+    private _parts: BlobPart[];
+
+    constructor(parts?: BlobPart[], options?: BlobPropertyBag) {
+      super(parts || [], options);
+      this._parts = parts || [];
     }
-  };
+
+    override slice(start?: number, end?: number, contentType?: string): Blob {
+      const s = start || 0;
+      const e = end || this.size;
+
+      // Convert all parts to Uint8Array for slicing
+      const allBytes: number[] = [];
+      for (const part of this._parts) {
+        if (part instanceof Uint8Array) {
+          allBytes.push(...Array.from(part));
+        } else if (typeof part === 'string') {
+          const encoded = new TextEncoder().encode(part);
+          allBytes.push(...Array.from(encoded));
+        } else if (part instanceof ArrayBuffer) {
+          allBytes.push(...Array.from(new Uint8Array(part)));
+        } else if (part instanceof Blob) {
+          // For nested blobs, we'll just skip for simplicity in tests
+          continue;
+        }
+      }
+
+      const slicedBytes = new Uint8Array(allBytes.slice(s, e));
+      return new BlobPolyfill([slicedBytes], { type: contentType || this.type });
+    }
+
+    override arrayBuffer(): Promise<ArrayBuffer> {
+      const allBytes: number[] = [];
+      for (const part of this._parts) {
+        if (part instanceof Uint8Array) {
+          allBytes.push(...Array.from(part));
+        } else if (typeof part === 'string') {
+          const encoded = new TextEncoder().encode(part);
+          allBytes.push(...Array.from(encoded));
+        } else if (part instanceof ArrayBuffer) {
+          allBytes.push(...Array.from(new Uint8Array(part)));
+        }
+      }
+      const buffer = new Uint8Array(allBytes).buffer;
+      return Promise.resolve(buffer);
+    }
+  }
+
+  // Polyfill File with proper support
+  class FilePolyfill extends BlobPolyfill {
+    readonly name: string;
+    readonly lastModified: number;
+
+    constructor(parts: BlobPart[], name: string, options?: FilePropertyBag) {
+      super(parts, options);
+      this.name = name;
+      this.lastModified = options?.lastModified || Date.now();
+    }
+  }
+
+  (globalThis as unknown as { Blob: typeof BlobPolyfill }).Blob = BlobPolyfill;
+  (globalThis as unknown as { File: typeof FilePolyfill }).File = FilePolyfill;
 }
 
 // Mock HTMLCanvasElement for jsdom (canvas API not available by default)

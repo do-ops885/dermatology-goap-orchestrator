@@ -3,7 +3,7 @@ import { useState, type FormEvent } from 'react';
 
 interface Feedback {
   diagnosis: string;
-  correctedDiagnosis?: string;
+  correctedDiagnosis?: string | undefined;
   confidence: number;
   notes: string;
   timestamp: number;

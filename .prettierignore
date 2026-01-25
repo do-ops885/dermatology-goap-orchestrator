@@ -1,0 +1,15 @@
+# Build outputs
+dist/
+build/
+coverage/
+
+# Test reports and artifacts
+playwright-report/
+.playwright/
+test-results/
+
+# Dependencies
+node_modules/
+
+# Lockfiles
+package-lock.json

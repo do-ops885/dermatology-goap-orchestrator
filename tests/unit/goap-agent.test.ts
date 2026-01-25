@@ -99,14 +99,15 @@ describe('GoapAgent', () => {
 
       const executors: Record<string, ExecutorFn> = {
         'Image-Verification-Agent': noopExecutor,
-        'Skin-Tone-Detection-Agent': failingExecutor,
+        'Skin-Tone-Detection-Agent': noopExecutor,
+        'Standard-Calibration-Agent': failingExecutor,
       };
 
       const agent = new GoapAgent(planner, executors);
 
       const trace = await agent.execute(
-        INITIAL_STATE,
-        { skin_tone_detected: true },
+        { ...INITIAL_STATE, image_verified: true, skin_tone_detected: true },
+        { calibration_complete: true },
         createMockAgentContext(),
       );
 

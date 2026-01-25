@@ -21,14 +21,14 @@ import {
 export class QualityGateGoapEngine {
   private coordinator: CICheckCoordinationProtocol;
   private _state: QualityGateWorldState;
-  private onStateChange?: (_state: QualityGateWorldState) => void;
-  private onAgentExecute?: (_agent: string, _action: QualityGateAction) => void;
-  private onError?: (_error: Error, _context: string) => void;
+  private onStateChange?: ((_state: QualityGateWorldState) => void) | undefined;
+  private onAgentExecute?: ((_agent: string, _action: QualityGateAction) => void) | undefined;
+  private onError?: ((_error: Error, _context: string) => void) | undefined;
 
   constructor(options?: {
-    onStateChange?: (_state: QualityGateWorldState) => void;
-    onAgentExecute?: (_agent: string, _action: QualityGateAction) => void;
-    onError?: (_error: Error, _context: string) => void;
+    onStateChange?: ((_state: QualityGateWorldState) => void) | undefined;
+    onAgentExecute?: ((_agent: string, _action: QualityGateAction) => void) | undefined;
+    onError?: ((_error: Error, _context: string) => void) | undefined;
   }) {
     this.coordinator = new QualityGateCoordinationProtocol();
     this._state = createInitialQualityGateState();
@@ -136,7 +136,7 @@ export class QualityGateGoapEngine {
     success: boolean;
     finalState: QualityGateWorldState;
     steps: number;
-    lastAction?: { agent: string; action: QualityGateAction };
+    lastAction?: { agent: string; action: QualityGateAction } | undefined;
   }> {
     let steps = 0;
     const maxSteps = 50;

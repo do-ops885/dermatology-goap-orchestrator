@@ -381,7 +381,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
         },
         onAgentEnd: (
           action: AgentAction,
-          record: { status: string; metadata?: Record<string, unknown> },
+          record: { status: string; metadata?: Record<string, unknown> | undefined },
         ) => {
           const key = action.agentId + '|' + action.name;
           const logId = uiLogMap.get(key);

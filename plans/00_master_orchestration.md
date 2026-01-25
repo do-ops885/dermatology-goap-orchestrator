@@ -1,8 +1,9 @@
 # GOAP Orchestrator: Master Development Plan
 
-**Status:** RELEASE CANDIDATE (RC-1)
+**Status:** RELEASE CANDIDATE (RC-2)
 **Objective:** Harden Dermatology AI Orchestrator for Production Deployment.
 **Orchestrator:** `goap-agent` (System Orchestrator)
+**Last Updated:** 2026-01-22
 
 **Orchestrator Plan:** See `07_goap_agent_orchestration.md` for runtime responsibilities, tracing, and testing.
 
@@ -13,15 +14,16 @@
 
 ## 2. Agent Handoff Coordination
 
-| Agent ID                | Role              | Assigned Plan                     | Status                                                                                                          |
-| :---------------------- | :---------------- | :-------------------------------- | :-------------------------------------------------------------------------------------------------------------- |
-| `QA-Specialist`         | Test Engineering  | `01_testing_strategy.md`          | **COMPLETED** - Full Suite.                                                                                     |
-| `ML-Edge-Engineer`      | AI Implementation | `02_edge_ml_implementation.md`    | **COMPLETED** - Memory Safe.                                                                                    |
-| `DevOps-Lead`           | Infrastructure    | `03_devops_workflow.md`           | **COMPLETED** - Configured.                                                                                     |
-| `Sec-Ops`               | Security          | `04_security_audit.md`            | **COMPLETED** - Encrypted.                                                                                      |
-| `UX-A11y-Lead`          | Frontend/PWA      | `05_ux_pwa_strategy.md`           | **COMPLETED** - A11y Focus Mgmt.                                                                                |
-| `Reliability-Architect` | Observability     | `06_reliability_observability.md` | **COMPLETED** - Vitals Active.                                                                                  |
-| `GOAP-Agent`            | Orchestrator      | `07_goap_agent_orchestration.md`  | **COMPLETED** - Full implementation with A\* planner, execution trace collection, and comprehensive test suite. |
+| Agent ID                | Role              | Assigned Plan                            | Status                                                                                                          |
+| :---------------------- | :---------------- | :--------------------------------------- | :-------------------------------------------------------------------------------------------------------------- |
+| `QA-Specialist`         | Test Engineering  | `01_testing_strategy.md`                 | **COMPLETED** - Full Suite.                                                                                     |
+| `ML-Edge-Engineer`      | AI Implementation | `02_edge_ml_implementation.md`           | **COMPLETED** - Memory Safe.                                                                                    |
+| `DevOps-Lead`           | Infrastructure    | `03_devops_workflow.md`                  | **COMPLETED** - Configured.                                                                                     |
+| `Sec-Ops`               | Security          | `04_security_audit.md`                   | **COMPLETED** - Encrypted.                                                                                      |
+| `UX-A11y-Lead`          | Frontend/PWA      | `05_ux_pwa_strategy.md`                  | **COMPLETED** - A11y Focus Mgmt.                                                                                |
+| `Reliability-Architect` | Observability     | `06_reliability_observability.md`        | **COMPLETED** - Vitals Active.                                                                                  |
+| `GOAP-Agent`            | Orchestrator      | `07_goap_agent_orchestration.md`         | **COMPLETED** - Full implementation with A\* planner, execution trace collection, and comprehensive test suite. |
+| `Fairness-Lead`         | Equity Assurance  | `08_fairness_and_safety_improvements.md` | **COMPLETED** - FairnessDashboard, clinician feedback, live TPR/FPR metrics fully operational.                  |
 
 ## 3. Dependency Graph (DAG)
 

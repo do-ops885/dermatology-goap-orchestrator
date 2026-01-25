@@ -2,6 +2,17 @@ import { PIIRedactorInstance } from './piiRedactor';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
+/**
+ * Log level priority for filtering
+ * Lower values indicate higher priority
+ */
+export const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
+  debug: 0,
+  info: 1,
+  warn: 2,
+  error: 3,
+} as const;
+
 export interface LogEntry {
   timestamp: number;
   level: LogLevel;
@@ -13,14 +24,39 @@ export interface LogEntry {
 
 class LoggerService {
   private static instance: LoggerService;
+  private minLevel: LogLevel;
 
   private constructor() {
     // Private constructor for singleton pattern
+    // Default to info level in production, debug in development
+    this.minLevel = (import.meta.env.DEV ? 'debug' : 'info') as LogLevel;
   }
 
   public static getInstance(): LoggerService {
     LoggerService.instance ??= new LoggerService();
     return LoggerService.instance;
+  }
+
+  /**
+   * Set the minimum log level
+   * Logs below this level will be filtered out
+   */
+  public setMinLevel(level: LogLevel): void {
+    this.minLevel = level;
+  }
+
+  /**
+   * Get current minimum log level
+   */
+  public getMinLevel(): LogLevel {
+    return this.minLevel;
+  }
+
+  /**
+   * Check if a log level should be logged based on current minimum level
+   */
+  private shouldLog(level: LogLevel): boolean {
+    return LOG_LEVEL_PRIORITY[level] >= LOG_LEVEL_PRIORITY[this.minLevel];
   }
 
   public log(
@@ -29,6 +65,11 @@ class LoggerService {
     event: string,
     metadata?: Record<string, unknown>,
   ) {
+    // Filter logs based on minimum level
+    if (!this.shouldLog(level)) {
+      return;
+    }
+
     // Sanitize event and metadata for PII
     const sanitization = PIIRedactorInstance.sanitizeAgentLog(event, metadata);
 
@@ -37,7 +78,7 @@ class LoggerService {
       level,
       component,
       event: sanitization.sanitizedEvent,
-      metadata: sanitization.sanitizedMetadata,
+      metadata: sanitization.sanitizedMetadata ?? {},
       piiSanitized: sanitization.sanitizedEvent !== event || !!sanitization.sanitizedMetadata,
     };
 

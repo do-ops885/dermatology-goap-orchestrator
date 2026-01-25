@@ -27,15 +27,15 @@ export interface AgentContext {
   encryptionKey: CryptoKey | null;
   lastAuditHashRef: { current: string };
   privacyMode: boolean;
-  _action?: AgentAction;
-  onAgentStart?: (_action: AgentAction) => string | void;
-  onAgentEnd?: (_action: AgentAction, _record: ExecutionAgentRecord) => void;
+  _action?: AgentAction | undefined;
+  onAgentStart?: ((_action: AgentAction) => string | void) | undefined;
+  onAgentEnd?: ((_action: AgentAction, _record: ExecutionAgentRecord) => void) | undefined;
 }
 
 export interface ExecutorResult {
   metadata: Record<string, unknown>;
-  newStateUpdates?: Partial<WorldState>;
-  shouldReplan?: boolean;
+  newStateUpdates?: Partial<WorldState> | undefined;
+  shouldReplan?: boolean | undefined;
 }
 
 export const cleanAndParseJSON = (text: string | undefined): Record<string, unknown> => {

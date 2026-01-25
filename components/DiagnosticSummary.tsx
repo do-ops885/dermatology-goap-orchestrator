@@ -26,7 +26,7 @@ interface DiagnosticSummaryProps {
 }
 
 // Helper: Security badge component
-const SecurityBadge: React.FC<{ encrypted?: boolean }> = ({ encrypted }) => {
+const SecurityBadge: React.FC<{ encrypted?: boolean | undefined }> = ({ encrypted }) => {
   if (encrypted === true) {
     return (
       <div
@@ -270,7 +270,7 @@ export const DiagnosticSummary: React.FC<DiagnosticSummaryProps> = ({ result }) 
 
   const handleFeedback = async (feedback: {
     diagnosis: string;
-    correctedDiagnosis?: string;
+    correctedDiagnosis?: string | undefined;
     confidence: number;
     notes: string;
     timestamp: number;
