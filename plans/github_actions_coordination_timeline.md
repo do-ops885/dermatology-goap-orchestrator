@@ -121,9 +121,9 @@ This document outlines the coordination timeline between DevOps Agent, QA Agent,
 
 **Deliverables:**
 
-- [x] Testing plan: `@plans/github_actions_validation_test_plan.md`
+- [x] Testing plan: `plans/github_actions_validation_test_plan.md`
 - [x] Validation scripts: `scripts/validate-*.sh`
-- [x] Success criteria: `@plans/github_actions_success_criteria.md`
+- [x] Success criteria: `plans/github_actions_success_criteria.md`
 - [x] Coordination timeline: This document
 
 ---

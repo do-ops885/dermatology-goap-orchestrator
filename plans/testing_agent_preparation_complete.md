@@ -17,7 +17,7 @@ Testing Agent has completed all preparation tasks for validating GitHub Actions 
 
 ### 1. Testing Plan Document
 
-**File:** `@plans/github_actions_validation_test_plan.md`
+**File:** `plans/github_actions_validation_test_plan.md`
 
 **Contents:**
 
@@ -104,7 +104,7 @@ Testing Agent has completed all preparation tasks for validating GitHub Actions 
 
 ### 3. Success Criteria Document
 
-**File:** `@plans/github_actions_success_criteria.md`
+**File:** `plans/github_actions_success_criteria.md`
 
 **Contents:**
 
@@ -127,7 +127,7 @@ Testing Agent has completed all preparation tasks for validating GitHub Actions 
 
 ### 4. Coordination Timeline Document
 
-**File:** `@plans/github_actions_coordination_timeline.md`
+**File:** `plans/github_actions_coordination_timeline.md`
 
 **Contents:**
 
@@ -148,7 +148,7 @@ Testing Agent has completed all preparation tasks for validating GitHub Actions 
 
 ### 5. Quick Reference Document
 
-**File:** `@plans/github_actions_validation_quick_reference.md`
+**File:** `plans/github_actions_validation_quick_reference.md`
 
 **Contents:**
 
@@ -306,7 +306,7 @@ When you complete the fixes, please provide:
 4. Confirmation all workflows tested locally
 
 Handoff template provided in:
-@plans/github_actions_coordination_timeline.md
+plans/github_actions_coordination_timeline.md
 
 Estimated start time for Phase 4 (Test Execution):
 21:30 UTC (after QA and Git phases complete)
@@ -328,10 +328,10 @@ Your validation checklist (Phase 2) should verify:
 4. Action versions
 
 Test plan available at:
-@plans/github_actions_validation_test_plan.md
+plans/github_actions_validation_test_plan.md
 
 Success criteria available at:
-@plans/github_actions_success_criteria.md
+plans/github_actions_success_criteria.md
 ```
 
 ---
