@@ -15,7 +15,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "syntax:check": "bash scripts/validate-syntax.sh",
     "test": "npx vitest run --config vitest.config.ts",
-    "test:fast": "npx vitest -c --run --threads 1 --reporter verbose",
+    "test:fast": "npx vitest run --config vitest.config.ts --threads 1 --reporter verbose",
     "test:ci": "npx vitest run --config vitest.config.ts --coverage --reporter=verbose",
     "ci": "npm run prettier:check && npm run lint && npm run typecheck && npm run test",
     "quality-gate": "bash scripts/quality-gate.sh",
