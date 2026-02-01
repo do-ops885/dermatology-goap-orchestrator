@@ -2,7 +2,7 @@
 name: playwright-e2e-test-generation
 description: Generate Playwright E2E tests for user-facing workflows. Use when asked to write browser tests, test user interactions, or create integration tests for web applications.
 metadata:
-  version: "1.0.0"
+  version: '1.0.0'
   dependencies:
     - playwright-cli
 ---
