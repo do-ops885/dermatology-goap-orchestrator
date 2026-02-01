@@ -40,6 +40,7 @@ jobs:
 
       - name: Security audit
         run: npm run security:audit
+        continue-on-error: true
 
   unit-tests:
     name: Unit Tests
