@@ -58,7 +58,7 @@ jobs:
 
       - name: Check file sizes (Max 500 LOC)
         run: |
-          find . -name "*.ts" -o -name "*.tsx" | grep -v node_modules | grep -v coverage | while read file; do
+          find . \( -name "*.ts" -o -name "*.tsx" \) ! -path "./node_modules/*" ! -path "./coverage/*" | while read file; do
             lines=$(wc -l < "$file")
             if [ "$lines" -gt 500 ]; then
               echo "::error file=$file::File exceeds 500 lines limit ($lines lines)"
