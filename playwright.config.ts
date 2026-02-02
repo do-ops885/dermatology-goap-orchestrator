@@ -27,10 +27,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore - TypeScript doesn't recognize Playwright's WebSource type
-      },
+      use: {},
     },
   ],
 

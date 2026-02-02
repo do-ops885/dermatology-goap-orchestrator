@@ -107,7 +107,6 @@ export class MemoryMonitor {
       return null;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const memory = (
       performance as {
         memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number };

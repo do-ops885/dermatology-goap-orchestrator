@@ -2,20 +2,20 @@
 
 **For AI Coding Agents** — A machine-readable guide to working with this codebase.
 
-**Last Updated:** 2026-01-15
+**Last Updated:** 2026-02-02
 
 ---
 
 ## 1. Quick Start
 
-| Command               | Purpose                                       |
-| :-------------------- | :-------------------------------------------- |
-| `npm run dev`         | Start Vite dev server (http://localhost:5173) |
-| `npm run build`       | Production bundle with manual chunks          |
-| `npm run preview`     | Preview production build                      |
-| `npm run lint`        | ESLint + TypeScript strict + security rules   |
-| `npm run test`        | Vitest suite (jsdom)                          |
-| `npx playwright test` | E2E tests (Playwright)                        |
+| Command               | Purpose                                        |
+| :-------------------- | :--------------------------------------------- |
+| `npm run dev`         | Start Vite dev server (http://localhost:5173)  |
+| `npm run build`       | Production bundle with manual chunks           |
+| `npm run preview`     | Preview production build                       |
+| `npm run lint`        | ESLint v9 + TypeScript strict + security rules |
+| `npm run test`        | Vitest suite (jsdom)                           |
+| `npx playwright test` | E2E tests (Playwright)                         |
 
 **Test Locations:**
 
@@ -131,7 +131,43 @@
 
 ---
 
-## 9. Documentation Organization
+## 10. GitHub Actions Verification
+
+### 10.1 CI/CD Workflow Status
+
+All PRs require passing GitHub Actions before merge:
+
+| Workflow         | Status                                                             |
+| :--------------- | :----------------------------------------------------------------- |
+| **CI**           | ✓ Formatting, Lint & Type Check, Unit Tests, Build, Security Audit |
+| **Code Quality** | ✓ SonarCloud Scan, Code Complexity                                 |
+| **Security**     | ✓ CodeQL, Dependency Review, NPM Audit                             |
+| **E2E Tests**    | ✓ Playwright E2E Tests                                             |
+
+### 10.2 PR #50 Resolution (ESLint v9 Upgrade)
+
+| Issue                            | Resolution                                                                     |
+| :------------------------------- | :----------------------------------------------------------------------------- |
+| **SonarCloud Scan FAILURE**      | ESLint v9 flat config format was already correct; no config changes needed     |
+| **Playwright E2E Tests FAILURE** | Removed unused `eslint-disable` directives flagged by ESLint v9 stricter rules |
+
+### 10.3 ESLint v9 Rules
+
+- **No unused eslint-disable** — ESLint v9 warns on unused disable directives
+- **No explicit `any`** — Use `unknown` or proper types (see Section 2.1)
+- **Run `npm run lint` before tests** — Never skip lint step
+
+---
+
+## 11. Verification Checklist
+
+Before committing any changes:
+
+1. Run `npm run lint` — Must pass with no errors
+2. Run `npm run test` — At least 1 test must pass
+3. Push to remote and verify all GitHub Actions pass
+
+## 12. Documentation Organization
 
 All documentation files **MUST** be created in `plans/`:
 

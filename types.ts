@@ -272,6 +272,7 @@ export interface EventMap {
   'cleanup:requested': { reason?: string | undefined };
   'replay:start': { fromTime?: number | undefined; eventTypes?: AgentEventType[] | undefined };
   'replay:complete': { replayedEvents: number };
+  [key: string]: unknown;
 }
 
 export type EventHandler<T = unknown> = (_payload: T) => void | Promise<void>;
