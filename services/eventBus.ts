@@ -9,8 +9,7 @@ interface Listener<T> {
   once: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export class EventBus<TEventMap extends Record<string, any> = EventMap> {
+export class EventBus {
   private listeners: Map<EventKey, Set<Listener<unknown>>> = new Map();
   private history: EventHistoryEntry<unknown>[] = [];
   private readonly maxHistorySize: number;
@@ -22,11 +21,11 @@ export class EventBus<TEventMap extends Record<string, any> = EventMap> {
     this.enableHistory = config.enableHistory ?? true;
   }
 
-  public on<K extends EventKey>(eventType: K, handler: EventHandler<TEventMap[K]>): () => void {
+  public on<K extends EventKey>(eventType: K, handler: EventHandler<unknown>): () => void {
     const id = this.generateListenerId();
-    const typedListener: Listener<TEventMap[K]> = {
+    const typedListener: Listener<unknown> = {
       id,
-      handler: handler as EventHandler<unknown>,
+      handler,
       once: false,
     };
 
@@ -39,16 +38,16 @@ export class EventBus<TEventMap extends Record<string, any> = EventMap> {
       throw new Error(`Failed to initialize listener set for event type: ${String(eventType)}`);
     }
 
-    listenerSet.add(typedListener as Listener<unknown>);
+    listenerSet.add(typedListener);
 
     return () => this.off(eventType, id);
   }
 
-  public once<K extends EventKey>(eventType: K, handler: EventHandler<TEventMap[K]>): () => void {
+  public once<K extends EventKey>(eventType: K, handler: EventHandler<unknown>): () => void {
     const id = this.generateListenerId();
-    const typedListener: Listener<TEventMap[K]> = {
+    const typedListener: Listener<unknown> = {
       id,
-      handler: handler as EventHandler<unknown>,
+      handler,
       once: true,
     };
 
@@ -61,7 +60,7 @@ export class EventBus<TEventMap extends Record<string, any> = EventMap> {
       throw new Error(`Failed to initialize listener set for event type: ${String(eventType)}`);
     }
 
-    listenerSet.add(typedListener as Listener<unknown>);
+    listenerSet.add(typedListener);
 
     return () => this.off(eventType, id);
   }
@@ -83,14 +82,14 @@ export class EventBus<TEventMap extends Record<string, any> = EventMap> {
   }
 
   public removeAllListeners(eventType?: EventKey): void {
-    if (eventType) {
+    if (eventType !== undefined) {
       this.listeners.delete(eventType);
     } else {
       this.listeners.clear();
     }
   }
 
-  public async emit<K extends EventKey>(eventType: K, payload: TEventMap[K]): Promise<void> {
+  public async emit<K extends EventKey>(eventType: K, payload: unknown): Promise<void> {
     const listenerSet = this.listeners.get(eventType);
     if (!listenerSet || listenerSet.size === 0) {
       this.addToHistory(eventType, payload);
@@ -131,7 +130,7 @@ export class EventBus<TEventMap extends Record<string, any> = EventMap> {
     this.addToHistory(eventType, payload);
   }
 
-  public async emitSync<K extends EventKey>(eventType: K, payload: TEventMap[K]): Promise<void> {
+  public async emitSync<K extends EventKey>(eventType: K, payload: unknown): Promise<void> {
     const listenerSet = this.listeners.get(eventType);
     if (!listenerSet || listenerSet.size === 0) {
       this.addToHistory(eventType, payload);
@@ -190,7 +189,7 @@ export class EventBus<TEventMap extends Record<string, any> = EventMap> {
     }
 
     for (const entry of eventsToReplay) {
-      await this.emit(eventType, entry.payload as TEventMap[K]);
+      await this.emit(eventType, entry.payload as unknown);
     }
 
     return eventsToReplay.length;
@@ -215,21 +214,20 @@ export class EventBus<TEventMap extends Record<string, any> = EventMap> {
 
     for (const entry of eventsToReplay) {
       const eventType = entry.type as EventKey;
-      await this.emit(eventType, entry.payload as TEventMap[EventKey]);
+      await this.emit(eventType, entry.payload as unknown);
     }
 
     return eventsToReplay.length;
   }
 
-  public getHistory<K extends EventKey>(eventType?: K): EventHistoryEntry<TEventMap[K]>[] {
-    if (eventType) {
+  public getHistory<K extends EventKey>(eventType?: K): EventHistoryEntry<unknown>[] {
+    if (eventType !== undefined) {
       return this.history
         .filter((entry) => entry.type === String(eventType))
-        .map((entry) => entry as EventHistoryEntry<TEventMap[K]>);
+        .map((entry) => entry as EventHistoryEntry<unknown>);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return this.history as EventHistoryEntry<TEventMap[K]>[];
+    return this.history as EventHistoryEntry<unknown>[];
   }
 
   public clearHistory(): void {
@@ -237,7 +235,7 @@ export class EventBus<TEventMap extends Record<string, any> = EventMap> {
   }
 
   public getListenerCount(eventType?: EventKey): number {
-    if (eventType) {
+    if (eventType !== undefined) {
       return this.listeners.get(eventType)?.size ?? 0;
     }
 
@@ -257,12 +255,12 @@ export class EventBus<TEventMap extends Record<string, any> = EventMap> {
     this.clearHistory();
   }
 
-  private addToHistory<K extends EventKey>(eventType: K, payload: TEventMap[K]): void {
+  private addToHistory<K extends EventKey>(eventType: K, payload: unknown): void {
     if (!this.enableHistory) {
       return;
     }
 
-    const entry: EventHistoryEntry<TEventMap[K]> = {
+    const entry: EventHistoryEntry<unknown> = {
       type: String(eventType),
       payload,
       timestamp: Date.now(),

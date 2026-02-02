@@ -2,10 +2,10 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 import { EventBus, globalEventBus } from '../../services/eventBus';
 
-import type { EventMap, AgentEventPayload } from '../../types';
+import type { AgentEventPayload } from '../../types';
 
 describe('EventBus', () => {
-  let eventBus: EventBus<EventMap>;
+  let eventBus: EventBus;
 
   beforeEach(() => {
     eventBus = new EventBus({ maxHistorySize: 10, enableHistory: true });
@@ -154,7 +154,7 @@ describe('EventBus', () => {
         receivedPayload = payload;
       };
 
-      eventBus.on('agent:start', handler);
+      eventBus.on('agent:start', handler as (payload: unknown) => void);
 
       const payload: AgentEventPayload = {
         agentId: 'TestAgent',
@@ -177,8 +177,8 @@ describe('EventBus', () => {
         calls.push(payload);
       };
 
-      eventBus.on('agent:start', handler1);
-      eventBus.on('agent:start', handler2);
+      eventBus.on('agent:start', handler1 as (payload: unknown) => void);
+      eventBus.on('agent:start', handler2 as (payload: unknown) => void);
 
       const payload: AgentEventPayload = {
         agentId: 'TestAgent',
