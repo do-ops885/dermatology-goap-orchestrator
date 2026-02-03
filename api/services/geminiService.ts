@@ -63,7 +63,7 @@ export class GeminiService {
     // Check cache
     const cached = this.getFromCache<SkinToneResult>(cacheKey);
     if (cached) {
-      console.log('[GeminiService] Cache hit for skin tone detection');
+      console.warn('[GeminiService] Cache hit for skin tone detection');
       return cached;
     }
 
@@ -110,7 +110,7 @@ OUTPUT JSON ONLY: {
     
     const cached = this.getFromCache<FeatureExtractionResult>(cacheKey);
     if (cached) {
-      console.log('[GeminiService] Cache hit for feature extraction');
+      console.warn('[GeminiService] Cache hit for feature extraction');
       return cached;
     }
 
@@ -153,7 +153,7 @@ OUTPUT JSON ONLY: {
     
     const cached = this.getFromCache<RecommendationResult>(cacheKey);
     if (cached) {
-      console.log('[GeminiService] Cache hit for recommendation');
+      console.warn('[GeminiService] Cache hit for recommendation');
       return cached;
     }
 
@@ -192,7 +192,7 @@ OUTPUT JSON ONLY: {
     
     const cached = this.getFromCache<{ verified: boolean; confidence: number; reasoning: string }>(cacheKey);
     if (cached) {
-      console.log('[GeminiService] Cache hit for web verification');
+      console.warn('[GeminiService] Cache hit for web verification');
       return cached;
     }
 
@@ -254,7 +254,7 @@ OUTPUT JSON ONLY: {
    * Parse JSON response with error handling
    */
   private parseJSON<T>(text: string | undefined): T {
-    if (!text) {
+    if (text == null) {
       throw new Error('Empty response from Gemini API');
     }
 
@@ -324,7 +324,7 @@ OUTPUT JSON ONLY: {
    */
   clearCache(): void {
     this.cache.clear();
-    console.log('[GeminiService] Cache cleared');
+    console.warn('[GeminiService] Cache cleared');
   }
 
   /**
@@ -343,7 +343,7 @@ let geminiServiceInstance: GeminiService | null = null;
 
 export const getGeminiService = (): GeminiService => {
   if (!geminiServiceInstance) {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = globalThis.process?.env?.GEMINI_API_KEY;
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY environment variable is not set');
     }

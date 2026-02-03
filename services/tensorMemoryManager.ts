@@ -17,7 +17,7 @@ interface TensorPoolEntry {
 }
 
 class TensorMemoryManager {
-  private static instance: TensorMemoryManager;
+  private static instance: TensorMemoryManager | null = null;
   private pools = new Map<string, TensorPoolEntry[]>();
   private readonly MAX_POOL_SIZE = 10;
   private readonly POOL_CLEANUP_INTERVAL = 60000; // 1 minute
@@ -106,7 +106,7 @@ class TensorMemoryManager {
     const key = this.getPoolKey(shape, dtype);
     const pool = this.pools.get(key);
 
-    if (!pool) {
+    if (pool === undefined) {
       // Not from pool, dispose immediately
       tensor.dispose();
       return;
@@ -129,7 +129,7 @@ class TensorMemoryManager {
    */
   disposeAll(tensors: tf.Tensor[]): void {
     for (const tensor of tensors) {
-      if (tensor && !tensor.isDisposed) {
+      if (tensor && tensor === null || tensor === undefined.isDisposed) {
         tensor.dispose();
       }
     }
