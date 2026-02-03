@@ -1,6 +1,6 @@
 /**
  * Search API Routes
- * 
+ *
  * Handles medical literature search requests
  * Placeholder for future implementation
  */
@@ -21,10 +21,13 @@ search.post('/medical-literature', async (c) => {
     }>();
 
     if (!body.query) {
-      return c.json({
-        success: false,
-        error: 'Missing required field: query',
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          error: 'Missing required field: query',
+        },
+        400,
+      );
     }
 
     // TODO: Implement actual search functionality
@@ -38,10 +41,13 @@ search.post('/medical-literature', async (c) => {
     });
   } catch (error) {
     console.error('[Search API] Medical literature search failed', error);
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Search failed',
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Search failed',
+      },
+      500,
+    );
   }
 });
 

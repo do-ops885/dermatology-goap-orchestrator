@@ -31,6 +31,7 @@ open scripts/test-react-performance.html
 ```
 
 **What it tests:**
+
 - ✅ Bundle size (< 500 kB main, < 4 MB total)
 - ✅ Code splitting (8+ chunks)
 - ✅ Build artifacts (source maps, PWA manifest)
@@ -38,6 +39,7 @@ open scripts/test-react-performance.html
 - ✅ Lighthouse performance score (target: 90+)
 
 **Expected output:**
+
 ```
 🚀 Dermatology AI - Performance Testing Suite
 ==============================================
@@ -104,26 +106,31 @@ npx serve scripts
 ### 2.2 Test Suite Overview
 
 **Test 1: React.memo Effectiveness**
+
 - Simulates 100 rapid parent updates
 - Checks if memoized components avoid re-renders
 - Measures average update time
 
 **Test 2: Lazy Loading**
+
 - Provides manual verification steps
 - Lists expected lazy chunks
 - Network tab observation guide
 
 **Test 3: useMemo & useCallback**
+
 - Demonstrates memoization benefits
 - Shows performance improvement percentage
 - Provides app verification steps
 
 **Test 4: Component Render Count**
+
 - Opens app in new tab
 - Guides React DevTools usage
 - Highlights render behavior
 
 **Test 5: Memory Profiling**
+
 - Shows current memory usage
 - Provides heap snapshot guide
 - Leak detection steps
@@ -131,16 +138,19 @@ npx serve scripts
 ### 2.3 Using React DevTools
 
 **Install Extension:**
+
 1. Chrome Web Store: "React Developer Tools"
 2. Or Firefox: "React Developer Tools"
 
 **Enable Profiler:**
+
 1. Open your app: http://localhost:5173
 2. Open DevTools → Profiler tab
 3. Click gear icon → Check "Highlight updates when components render"
 4. Perform actions and watch for highlighted components
 
 **Expected behavior:**
+
 - Memoized components: No highlight when parent updates (props unchanged)
 - Non-memoized: Highlight on every parent update
 - Good: Only necessary updates highlighted
@@ -165,6 +175,7 @@ npm run dev
 Then paste the contents of `scripts/measure-web-vitals.js`
 
 **Expected output:**
+
 ```
 🎯 Web Vitals Measurement Started
 Interact with the app to collect metrics...
@@ -197,6 +208,7 @@ Interact with the app to collect metrics...
 The app automatically tracks Web Vitals via `services/performanceMonitor.ts`.
 
 **Check in console:**
+
 ```javascript
 // Get current metrics
 const metrics = performanceMonitor.getMetrics();
@@ -228,6 +240,7 @@ npm run bundle:analyze
 ```
 
 **Opens interactive visualization showing:**
+
 - Bundle composition
 - Chunk sizes
 - Dependency tree
@@ -262,6 +275,7 @@ fi
 ### 5.1 Heap Snapshot Method
 
 **Steps:**
+
 1. Open app: http://localhost:5173
 2. DevTools → Memory tab
 3. Take heap snapshot (Snapshot 1)
@@ -272,6 +286,7 @@ fi
 8. Compare snapshots
 
 **Look for:**
+
 - Detached DOM nodes (should be minimal)
 - Tensors not disposed (check for `@tensorflow/tfjs`)
 - Event listeners not removed
@@ -301,6 +316,7 @@ tensorMemoryManager.logMemoryUsage();
 ```
 
 **Good values:**
+
 - numTensors: Should stabilize after analysis (not grow indefinitely)
 - numBytes: Should return to baseline after analysis complete
 - Unreliable: false (indicates browser supports memory tracking)
@@ -312,6 +328,7 @@ tensorMemoryManager.logMemoryUsage();
 ### 6.1 Network Tab Method
 
 **Steps:**
+
 1. Open app: http://localhost:5173
 2. DevTools → Network tab
 3. Filter by "JS"
@@ -319,6 +336,7 @@ tensorMemoryManager.logMemoryUsage();
 5. Upload an image for analysis
 
 **Expected behavior:**
+
 ```
 Initial load (before analysis):
   ✓ index-[hash].js (main bundle)
@@ -337,6 +355,7 @@ On demand:
 ### 6.2 Coverage Tool
 
 **Steps:**
+
 1. DevTools → More tools → Coverage
 2. Click record (⚫)
 3. Interact with app
@@ -344,6 +363,7 @@ On demand:
 5. View unused JavaScript
 
 **Good results:**
+
 - Initial load: < 30% unused code
 - After full flow: < 10% unused code
 
@@ -373,12 +393,14 @@ console.log(stats);
 ### 7.2 Test Non-blocking Behavior
 
 **Method 1: Performance Tab**
+
 1. DevTools → Performance tab
 2. Record while performing analysis
 3. Look for "Worker" sections in flame graph
 4. Main thread should remain mostly idle during inference
 
 **Method 2: FPS Meter**
+
 1. DevTools → More tools → Rendering
 2. Enable "Frame Rendering Stats"
 3. Perform analysis
@@ -392,26 +414,29 @@ console.log(stats);
 
 **Lighthouse Performance Score (0-100):**
 
-| Range | Rating | Action |
-|:------|:-------|:-------|
-| 90-100 | Excellent | ✅ No action needed |
-| 70-89 | Good | ⚠️ Minor optimizations |
-| 50-69 | Needs Improvement | ⚠️ Optimization required |
-| 0-49 | Poor | ❌ Critical issues |
+| Range  | Rating            | Action                   |
+| :----- | :---------------- | :----------------------- |
+| 90-100 | Excellent         | ✅ No action needed      |
+| 70-89  | Good              | ⚠️ Minor optimizations   |
+| 50-69  | Needs Improvement | ⚠️ Optimization required |
+| 0-49   | Poor              | ❌ Critical issues       |
 
 **Key Metrics:**
 
 **LCP (Largest Contentful Paint):**
+
 - Good: < 2.5s
 - Needs Improvement: 2.5s - 4s
 - Poor: > 4s
 
 **FID (First Input Delay):**
+
 - Good: < 100ms
 - Needs Improvement: 100ms - 300ms
 - Poor: > 300ms
 
 **CLS (Cumulative Layout Shift):**
+
 - Good: < 0.1
 - Needs Improvement: 0.1 - 0.25
 - Poor: > 0.25
@@ -419,12 +444,14 @@ console.log(stats);
 ### 8.2 Bundle Size Targets
 
 **Main Bundle:**
+
 - ✅ Excellent: < 400 kB
 - ✅ Good: 400-500 kB
 - ⚠️ Acceptable: 500-600 kB
 - ❌ Too Large: > 600 kB
 
 **Total Bundle:**
+
 - ✅ Excellent: < 3 MB
 - ✅ Good: 3-4 MB
 - ⚠️ Acceptable: 4-5 MB
@@ -433,11 +460,13 @@ console.log(stats);
 ### 8.3 Memory Usage Targets
 
 **JavaScript Heap:**
+
 - ✅ Good: < 50 MB
 - ⚠️ Acceptable: 50-100 MB
 - ❌ High: > 100 MB
 
 **TensorFlow.js:**
+
 - ✅ Good: < 20 tensors after cleanup
 - ⚠️ Acceptable: 20-50 tensors
 - ❌ Leak suspected: > 50 tensors and growing
@@ -449,16 +478,19 @@ console.log(stats);
 ### 9.1 Bundle Size Over Budget
 
 **Diagnosis:**
+
 ```bash
 npm run bundle:analyze
 ```
 
 **Common causes:**
+
 - Large dependencies not tree-shaken
 - Duplicate dependencies
 - Unused code not removed
 
 **Solutions:**
+
 - Use dynamic imports for large libs
 - Check for duplicate packages: `npm ls [package]`
 - Enable tree-shaking in build config
@@ -466,15 +498,18 @@ npm run bundle:analyze
 ### 9.2 Poor LCP Score
 
 **Diagnosis:**
+
 - Check Network tab for slow resources
 - Use Lighthouse "View Trace" button
 
 **Common causes:**
+
 - Large images not optimized
 - Render-blocking resources
 - Slow server response
 
 **Solutions:**
+
 - Optimize images (WebP, lazy loading)
 - Preload critical resources
 - Use CDN for static assets
@@ -482,15 +517,18 @@ npm run bundle:analyze
 ### 9.3 High CLS Score
 
 **Diagnosis:**
+
 - Enable "Layout Shift Regions" in Rendering panel
 - Look for elements loading late
 
 **Common causes:**
+
 - Images without dimensions
 - Ads/embeds loading dynamically
 - Fonts causing layout shift
 
 **Solutions:**
+
 - Add width/height to images
 - Reserve space for dynamic content
 - Use font-display: swap
@@ -498,20 +536,23 @@ npm run bundle:analyze
 ### 9.4 Memory Leaks
 
 **Diagnosis:**
+
 ```javascript
 // Take 3 heap snapshots with analysis in between
 // Compare "Detached" elements
 
 // Check tensor count
-tf.memory().numTensors
+tf.memory().numTensors;
 ```
 
 **Common causes:**
+
 - Event listeners not removed
 - Tensors not disposed
 - React components not unmounting properly
 
 **Solutions:**
+
 - Add cleanup in useEffect
 - Use tensorMemoryManager.tidy()
 - Check ErrorBoundary implementations
@@ -523,10 +564,12 @@ tf.memory().numTensors
 ### 10.1 GitHub Actions
 
 **Workflows created:**
+
 - `.github/workflows/bundle-size.yml` - Checks bundle size on every PR
 - `.github/workflows/lighthouse.yml` - Runs Lighthouse audit on every PR
 
 **View results:**
+
 1. Go to PR → "Checks" tab
 2. Click "Bundle Size Check" or "Lighthouse CI"
 3. View logs and artifacts
@@ -566,18 +609,21 @@ npm run bundle:size
 ## 12. Next Steps
 
 **Immediate:**
+
 1. Run `./scripts/test-performance.sh`
 2. Review Lighthouse report
 3. Test Web Vitals in browser
 4. Check bundle size breakdown
 
 **Optimization:**
+
 1. Address any failed tests
 2. Optimize assets flagged by Lighthouse
 3. Implement preloading for critical resources
 4. Add service worker for offline caching
 
 **Monitoring:**
+
 1. Setup Real User Monitoring (RUM)
 2. Configure performance alerts
 3. Track Web Vitals in production
@@ -588,12 +634,14 @@ npm run bundle:size
 ## Resources
 
 **Tools:**
+
 - Lighthouse: https://developers.google.com/web/tools/lighthouse
 - Web Vitals: https://web.dev/vitals/
 - React DevTools: https://react.dev/learn/react-developer-tools
 - Bundle Analyzer: https://github.com/btd/rollup-plugin-visualizer
 
 **Documentation:**
+
 - `plans/24_performance_optimization_strategy.md` - Strategy
 - `plans/31_performance_optimization_implementation_summary.md` - Implementation
 - `services/performanceMonitor.ts` - Monitoring code

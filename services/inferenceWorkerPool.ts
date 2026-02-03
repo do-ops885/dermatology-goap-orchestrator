@@ -1,9 +1,9 @@
 /**
  * Inference Worker Pool
- * 
+ *
  * Manages a pool of Web Workers for ML inference to maximize throughput
  * while keeping the main thread responsive.
- * 
+ *
  * @see plans/24_performance_optimization_strategy.md
  */
 
@@ -48,10 +48,9 @@ class InferenceWorkerPool {
     // Create worker pool
     for (let i = 0; i < this.maxWorkers; i++) {
       try {
-        const worker = new Worker(
-          new URL('../workers/inference.worker.ts', import.meta.url),
-          { type: 'module' }
-        );
+        const worker = new Worker(new URL('../workers/inference.worker.ts', import.meta.url), {
+          type: 'module',
+        });
 
         worker.onmessage = (event) => this.handleWorkerMessage(worker, event);
         worker.onerror = (error) => this.handleWorkerError(worker, error);
@@ -75,10 +74,7 @@ class InferenceWorkerPool {
   /**
    * Execute inference task
    */
-  async execute<T>(
-    type: 'classify' | 'preprocess' | 'saliency',
-    data: any
-  ): Promise<T> {
+  async execute<T>(type: 'classify' | 'preprocess' | 'saliency', data: any): Promise<T> {
     if (!this.initialized) {
       throw new Error('Worker pool not initialized');
     }

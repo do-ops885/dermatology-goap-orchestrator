@@ -8,8 +8,9 @@ import app from '../../api/index';
 describe('Gemini API Gateway', () => {
   describe('POST /api/gemini/skin-tone', () => {
     it('should detect skin tone from valid image', async () => {
-      const mockImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-      
+      const mockImageBase64 =
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+
       const res = await app.request('/api/gemini/skin-tone', {
         method: 'POST',
         headers: {
@@ -23,7 +24,7 @@ describe('Gemini API Gateway', () => {
       });
 
       expect(res.status).toBe(200);
-      
+
       const data = await res.json();
       expect(data.success).toBe(true);
       expect(data.data).toBeDefined();
@@ -44,7 +45,7 @@ describe('Gemini API Gateway', () => {
       });
 
       expect(res.status).toBe(400);
-      
+
       const data = await res.json();
       expect(data.success).toBe(false);
       expect(data.error).toContain('Missing required fields');
@@ -63,7 +64,7 @@ describe('Gemini API Gateway', () => {
       });
 
       expect(res.status).toBe(400);
-      
+
       const data = await res.json();
       expect(data.success).toBe(false);
       expect(data.error).toContain('Missing required fields');
@@ -72,8 +73,9 @@ describe('Gemini API Gateway', () => {
 
   describe('POST /api/gemini/extract-features', () => {
     it('should extract features from valid image', async () => {
-      const mockImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-      
+      const mockImageBase64 =
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+
       const res = await app.request('/api/gemini/extract-features', {
         method: 'POST',
         headers: {
@@ -87,7 +89,7 @@ describe('Gemini API Gateway', () => {
       });
 
       expect(res.status).toBe(200);
-      
+
       const data = await res.json();
       expect(data.success).toBe(true);
       expect(data.data).toBeDefined();
@@ -113,7 +115,7 @@ describe('Gemini API Gateway', () => {
       });
 
       expect(res.status).toBe(200);
-      
+
       const data = await res.json();
       expect(data.success).toBe(true);
       expect(data.data).toBeDefined();
@@ -125,7 +127,7 @@ describe('Gemini API Gateway', () => {
   describe('Rate Limiting', () => {
     it('should enforce rate limits', async () => {
       const requests: Promise<Response>[] = [];
-      
+
       // Make 101 requests (limit is 100 per 15 minutes)
       for (let i = 0; i < 101; i++) {
         requests.push(
@@ -139,16 +141,16 @@ describe('Gemini API Gateway', () => {
               imageBase64: 'test',
               mimeType: 'image/png',
             }),
-          })
+          }),
         );
       }
 
       const responses = await Promise.all(requests);
-      
+
       // Last request should be rate limited
       const lastResponse = responses[responses.length - 1];
       expect(lastResponse.status).toBe(429);
-      
+
       const data = await lastResponse.json();
       expect(data.error).toContain('Rate limit exceeded');
     });
@@ -175,7 +177,7 @@ describe('Gemini API Gateway', () => {
   describe('Caching', () => {
     it('should cache repeated requests', async () => {
       const mockImageBase64 = 'test-image-for-caching';
-      
+
       // First request
       const res1 = await app.request('/api/gemini/skin-tone', {
         method: 'POST',
@@ -218,7 +220,7 @@ describe('Gemini API Gateway', () => {
       const res = await app.request('/health');
 
       expect(res.status).toBe(200);
-      
+
       const data = await res.json();
       expect(data.status).toBe('healthy');
       expect(data.timestamp).toBeDefined();
@@ -229,7 +231,7 @@ describe('Gemini API Gateway', () => {
       const res = await app.request('/health/metrics');
 
       expect(res.status).toBe(200);
-      
+
       const data = await res.json();
       expect(data.status).toBe('healthy');
       expect(data.metrics).toBeDefined();

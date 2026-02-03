@@ -1,9 +1,9 @@
 /**
  * Gemini API Client (Frontend)
- * 
+ *
  * Replaces direct Gemini API calls with backend API gateway calls.
  * This ensures API keys are never exposed in the client.
- * 
+ *
  * @see plans/26_api_gateway_integration_strategy.md
  */
 
@@ -46,7 +46,7 @@ class GeminiAPIClient {
   constructor() {
     // Use environment variable or default to localhost in dev
     this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-    
+
     // Generate or retrieve user ID for rate limiting
     this.userId = this.getUserId();
   }
@@ -54,10 +54,7 @@ class GeminiAPIClient {
   /**
    * Detect skin tone from image
    */
-  async detectSkinTone(
-    imageBase64: string,
-    mimeType: string
-  ): Promise<SkinToneResult> {
+  async detectSkinTone(imageBase64: string, mimeType: string): Promise<SkinToneResult> {
     const response = await this.post<SkinToneResult>('/api/gemini/skin-tone', {
       imageBase64,
       mimeType,
@@ -73,10 +70,7 @@ class GeminiAPIClient {
   /**
    * Extract features from image
    */
-  async extractFeatures(
-    imageBase64: string,
-    mimeType: string
-  ): Promise<FeatureExtractionResult> {
+  async extractFeatures(imageBase64: string, mimeType: string): Promise<FeatureExtractionResult> {
     const response = await this.post<FeatureExtractionResult>('/api/gemini/extract-features', {
       imageBase64,
       mimeType,
@@ -93,7 +87,7 @@ class GeminiAPIClient {
    * Generate clinical recommendation
    */
   async generateRecommendation(
-    analysisData: Record<string, unknown>
+    analysisData: Record<string, unknown>,
   ): Promise<RecommendationResult> {
     const response = await this.post<RecommendationResult>('/api/gemini/recommendation', {
       analysisData,
@@ -109,10 +103,7 @@ class GeminiAPIClient {
   /**
    * Verify web content
    */
-  async verifyWebContent(
-    query: string,
-    context: string
-  ): Promise<VerificationResult> {
+  async verifyWebContent(query: string, context: string): Promise<VerificationResult> {
     const response = await this.post<VerificationResult>('/api/gemini/verify', {
       query,
       context,
@@ -128,10 +119,7 @@ class GeminiAPIClient {
   /**
    * Generic POST request with error handling
    */
-  private async post<T>(
-    endpoint: string,
-    body: Record<string, unknown>
-  ): Promise<APIResponse<T>> {
+  private async post<T>(endpoint: string, body: Record<string, unknown>): Promise<APIResponse<T>> {
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         method: 'POST',
@@ -145,9 +133,7 @@ class GeminiAPIClient {
       // Handle rate limiting
       if (response.status === 429) {
         const retryAfter = response.headers.get('Retry-After');
-        throw new Error(
-          `Rate limit exceeded. Please try again in ${retryAfter} seconds.`
-        );
+        throw new Error(`Rate limit exceeded. Please try again in ${retryAfter} seconds.`);
       }
 
       const data = await response.json();
@@ -163,15 +149,15 @@ class GeminiAPIClient {
    */
   private getUserId(): string {
     const storageKey = 'dermatology-ai-user-id';
-    
+
     let userId = localStorage.getItem(storageKey);
-    
+
     if (!userId) {
       // Generate random user ID
       userId = `user_${Math.random().toString(36).substring(2, 15)}`;
       localStorage.setItem(storageKey, userId);
     }
-    
+
     return userId;
   }
 }
@@ -193,8 +179,8 @@ export class MockGoogleGenAI {
       config?: { responseMimeType?: string };
     }) => {
       // Extract image and text from params
-      const imagePart = params.contents[0]?.parts.find(p => p.inlineData);
-      const textPart = params.contents[0]?.parts.find(p => p.text);
+      const imagePart = params.contents[0]?.parts.find((p) => p.inlineData);
+      const textPart = params.contents[0]?.parts.find((p) => p.text);
 
       if (!imagePart?.inlineData || !textPart?.text) {
         throw new Error('Invalid request format');

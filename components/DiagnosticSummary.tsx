@@ -192,42 +192,42 @@ const SimilarCases = memo<{ result: AnalysisResult }>(({ result }) => {
 SimilarCases.displayName = 'SimilarCases';
 
 // Helper: Web verification section (memoized)
-const WebVerification = memo<{ verification: AnalysisResult['webVerification'] }>(({
-  verification,
-}) => {
-  if (!verification) return null;
+const WebVerification = memo<{ verification: AnalysisResult['webVerification'] }>(
+  ({ verification }) => {
+    if (!verification) return null;
 
-  return (
-    <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
-      <span className="text-[10px] text-blue-800 uppercase font-bold tracking-widest block mb-2 flex items-center gap-1">
-        <Globe className="w-3 h-3" /> Web Verification (Gemini Grounding)
-      </span>
-      {verification.sources.length > 0 ? (
-        <div className="space-y-1.5 mb-2">
-          {verification.sources.map((source, i: number) => (
-            <a
-              key={i}
-              href={source.uri}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 p-1.5 hover:bg-blue-100/50 rounded-lg group transition-colors"
-            >
-              <ExternalLink className="w-3 h-3 text-blue-400 group-hover:text-blue-600" />
-              <span className="text-[10px] text-blue-700 truncate underline decoration-blue-200 group-hover:decoration-blue-400">
-                {source.title}
-              </span>
-            </a>
-          ))}
+    return (
+      <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
+        <span className="text-[10px] text-blue-800 uppercase font-bold tracking-widest block mb-2 flex items-center gap-1">
+          <Globe className="w-3 h-3" /> Web Verification (Gemini Grounding)
+        </span>
+        {verification.sources.length > 0 ? (
+          <div className="space-y-1.5 mb-2">
+            {verification.sources.map((source, i: number) => (
+              <a
+                key={i}
+                href={source.uri}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 p-1.5 hover:bg-blue-100/50 rounded-lg group transition-colors"
+              >
+                <ExternalLink className="w-3 h-3 text-blue-400 group-hover:text-blue-600" />
+                <span className="text-[10px] text-blue-700 truncate underline decoration-blue-200 group-hover:decoration-blue-400">
+                  {source.title}
+                </span>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="text-[10px] text-blue-400 italic mb-2">No direct guidelines found.</div>
+        )}
+        <div className="text-[10px] text-blue-900/70 italic border-l-2 border-blue-200 pl-2">
+          "{verification.summary.substring(0, 150)}..."
         </div>
-      ) : (
-        <div className="text-[10px] text-blue-400 italic mb-2">No direct guidelines found.</div>
-      )}
-      <div className="text-[10px] text-blue-900/70 italic border-l-2 border-blue-200 pl-2">
-        "{verification.summary.substring(0, 150)}..."
       </div>
-    </div>
-  );
-});
+    );
+  },
+);
 WebVerification.displayName = 'WebVerification';
 
 // Helper: Recommendation section (memoized)
@@ -248,21 +248,21 @@ const RecommendationSection = memo<{ recommendations: string[] }>(({ recommendat
 RecommendationSection.displayName = 'RecommendationSection';
 
 // Helper: Security footer (memoized)
-const SecurityFooter = memo<{ securityContext: AnalysisResult['securityContext'] }>(({
-  securityContext,
-}) => {
-  if (!securityContext) return null;
+const SecurityFooter = memo<{ securityContext: AnalysisResult['securityContext'] }>(
+  ({ securityContext }) => {
+    if (!securityContext) return null;
 
-  return (
-    <div className="px-2 py-1 flex items-center justify-between text-[9px] text-stone-400 font-mono">
-      <div className="flex items-center gap-1">
-        <KeyRound className="w-3 h-3" />
-        Ephem-Key: Active
+    return (
+      <div className="px-2 py-1 flex items-center justify-between text-[9px] text-stone-400 font-mono">
+        <div className="flex items-center gap-1">
+          <KeyRound className="w-3 h-3" />
+          Ephem-Key: Active
+        </div>
+        <div>IV: {securityContext.iv.slice(0, 4).join('')}...</div>
       </div>
-      <div>IV: {securityContext.iv.slice(0, 4).join('')}...</div>
-    </div>
-  );
-});
+    );
+  },
+);
 SecurityFooter.displayName = 'SecurityFooter';
 
 // Helper: Empty state (memoized)
@@ -278,58 +278,62 @@ export const DiagnosticSummary: React.FC<DiagnosticSummaryProps> = ({ result }) 
   const [showFeedback, setShowFeedback] = useState(false);
   const agentDB = useMemo(() => AgentDB.getInstance(), []);
 
-  const handleFeedback = useCallback(async (feedback: {
-    diagnosis: string;
-    correctedDiagnosis?: string | undefined;
-    confidence: number;
-    notes: string;
-    timestamp: number;
-  }): Promise<void> => {
-    if (!result) return;
+  const handleFeedback = useCallback(
+    async (feedback: {
+      diagnosis: string;
+      correctedDiagnosis?: string | undefined;
+      confidence: number;
+      notes: string;
+      timestamp: number;
+    }): Promise<void> => {
+      if (!result) return;
 
-    const feedbackData: ClinicianFeedbackType = {
-      id: `feedback_${Math.random().toString(36).substring(2, 11)}`,
-      analysisId: result.id,
-      diagnosis: feedback.diagnosis,
-      correctedDiagnosis: feedback.correctedDiagnosis,
-      confidence: feedback.confidence,
-      notes: feedback.notes,
-      timestamp: feedback.timestamp,
-      fitzpatrickType: result.fitzpatrickType,
-      isCorrection:
-        Boolean(feedback.correctedDiagnosis) && feedback.correctedDiagnosis !== feedback.diagnosis,
-    };
+      const feedbackData: ClinicianFeedbackType = {
+        id: `feedback_${Math.random().toString(36).substring(2, 11)}`,
+        analysisId: result.id,
+        diagnosis: feedback.diagnosis,
+        correctedDiagnosis: feedback.correctedDiagnosis,
+        confidence: feedback.confidence,
+        notes: feedback.notes,
+        timestamp: feedback.timestamp,
+        fitzpatrickType: result.fitzpatrickType,
+        isCorrection:
+          Boolean(feedback.correctedDiagnosis) &&
+          feedback.correctedDiagnosis !== feedback.diagnosis,
+      };
 
-    try {
-      // Store in AgentDB for learning
-      await agentDB.storeClinicianFeedback(feedbackData);
-
-      Logger.info('DiagnosticSummary', 'Clinician feedback processed', {
-        feedbackId: feedbackData.id,
-        isCorrection: feedbackData.isCorrection,
-        fitzpatrick: feedbackData.fitzpatrickType,
-      });
-
-      // Optional: Also send to API if available
       try {
-        await fetch('/api/feedback', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(feedbackData),
-        });
-      } catch (apiError) {
-        Logger.warn('DiagnosticSummary', 'API feedback submission failed (non-critical)', {
-          error: apiError,
-        });
-      }
-    } catch (error) {
-      Logger.error('DiagnosticSummary', 'Failed to store feedback', { error });
-    }
+        // Store in AgentDB for learning
+        await agentDB.storeClinicianFeedback(feedbackData);
 
-    void setTimeout(() => {
-      setShowFeedback(false);
-    }, 2000);
-  }, [agentDB, result]);
+        Logger.info('DiagnosticSummary', 'Clinician feedback processed', {
+          feedbackId: feedbackData.id,
+          isCorrection: feedbackData.isCorrection,
+          fitzpatrick: feedbackData.fitzpatrickType,
+        });
+
+        // Optional: Also send to API if available
+        try {
+          await fetch('/api/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(feedbackData),
+          });
+        } catch (apiError) {
+          Logger.warn('DiagnosticSummary', 'API feedback submission failed (non-critical)', {
+            error: apiError,
+          });
+        }
+      } catch (error) {
+        Logger.error('DiagnosticSummary', 'Failed to store feedback', { error });
+      }
+
+      void setTimeout(() => {
+        setShowFeedback(false);
+      }, 2000);
+    },
+    [agentDB, result],
+  );
 
   const handleExport = useCallback(() => {
     if (!result) return;
@@ -370,11 +374,12 @@ export const DiagnosticSummary: React.FC<DiagnosticSummaryProps> = ({ result }) 
     URL.revokeObjectURL(url);
   }, [result]);
 
-  const containerClass = useMemo(() => 
-    `glass-panel p-6 rounded-2xl flex-1 transition-all duration-700 flex flex-col ${
-      result ? 'opacity-100 scale-100' : 'opacity-40 scale-95 pointer-events-none'
-    }`,
-    [result]
+  const containerClass = useMemo(
+    () =>
+      `glass-panel p-6 rounded-2xl flex-1 transition-all duration-700 flex flex-col ${
+        result ? 'opacity-100 scale-100' : 'opacity-40 scale-95 pointer-events-none'
+      }`,
+    [result],
   );
 
   return (

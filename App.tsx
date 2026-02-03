@@ -11,7 +11,9 @@ import type { AnalysisResult } from './types';
 
 // Lazy load heavy components for better initial load performance
 const AgentFlow = lazy(() => import('./components/AgentFlow'));
-const DiagnosticSummary = lazy(() => import('./components/DiagnosticSummary').then(m => ({ default: m.DiagnosticSummary })));
+const DiagnosticSummary = lazy(() =>
+  import('./components/DiagnosticSummary').then((m) => ({ default: m.DiagnosticSummary })),
+);
 const FairnessDashboard = lazy(() => import('./components/FairnessDashboard'));
 const FairnessReport = lazy(() => import('./components/FairnessReport'));
 

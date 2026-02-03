@@ -12,11 +12,13 @@
 Comprehensive disaster recovery (DR) and business continuity (BC) strategy for the Dermatology AI Orchestrator, ensuring minimal downtime and data loss during catastrophic events.
 
 **Recovery Objectives:**
+
 - **RTO (Recovery Time Objective):** < 4 hours
 - **RPO (Recovery Point Objective):** < 1 hour
 - **Availability SLA:** 99.9% (43.8 minutes downtime/month)
 
 **Disaster Scenarios Covered:**
+
 - Infrastructure failure (CDN, hosting platform)
 - Data corruption or loss
 - Security breach or ransomware
@@ -30,18 +32,19 @@ Comprehensive disaster recovery (DR) and business continuity (BC) strategy for t
 
 ### 2.1 Critical Services Classification
 
-| Service | Priority | RTO | RPO | Impact if Down |
-|:--------|:---------|:----|:----|:---------------|
-| **Image Analysis Pipeline** | P0 | 1 hour | 5 min | Critical - Core functionality unavailable |
-| **Web Application Frontend** | P0 | 2 hours | N/A | Critical - No user access |
-| **Fairness Dashboard** | P1 | 8 hours | 1 hour | High - Monitoring blind spot |
-| **Audit Trail** | P1 | 4 hours | 15 min | High - Compliance risk |
-| **AgentDB (Local)** | P0 | Immediate | 0 | Critical - Data loss |
-| **Gemini API** | P0 | 30 min | N/A | Critical - No skin tone detection |
+| Service                      | Priority | RTO       | RPO    | Impact if Down                            |
+| :--------------------------- | :------- | :-------- | :----- | :---------------------------------------- |
+| **Image Analysis Pipeline**  | P0       | 1 hour    | 5 min  | Critical - Core functionality unavailable |
+| **Web Application Frontend** | P0       | 2 hours   | N/A    | Critical - No user access                 |
+| **Fairness Dashboard**       | P1       | 8 hours   | 1 hour | High - Monitoring blind spot              |
+| **Audit Trail**              | P1       | 4 hours   | 15 min | High - Compliance risk                    |
+| **AgentDB (Local)**          | P0       | Immediate | 0      | Critical - Data loss                      |
+| **Gemini API**               | P0       | 30 min    | N/A    | Critical - No skin tone detection         |
 
 ### 2.2 Financial Impact
 
 **Revenue Loss Estimates:**
+
 - P0 Service Down: $1,000/hour (diagnostic delays, liability)
 - P1 Service Down: $100/hour (reduced monitoring)
 - Data Loss: $50,000 (regulatory fines, reputation)
@@ -54,78 +57,80 @@ Comprehensive disaster recovery (DR) and business continuity (BC) strategy for t
 ### 3.1 Data Backup Architecture
 
 **Client-Side Data (IndexedDB):**
+
 ```typescript
 // services/backup.ts
 export class BackupService {
   private readonly BACKUP_INTERVAL = 24 * 60 * 60 * 1000; // Daily
-  
+
   async createBackup(): Promise<BackupManifest> {
     const db = await openDB('dermatology-ai');
-    
+
     const backup = {
       version: '1.0',
       timestamp: Date.now(),
       data: {
         cases: await db.getAll('cases'),
         auditLog: await db.getAll('audit'),
-        preferences: await db.getAll('preferences')
-      }
+        preferences: await db.getAll('preferences'),
+      },
     };
-    
+
     // Encrypt backup
     const encrypted = await encryptBackup(backup);
-    
+
     // Store in multiple locations
     await Promise.all([
-      this.storeLocal(encrypted),           // Browser storage
-      this.storeCloud(encrypted),           // Optional cloud backup
-      this.storeExportable(encrypted)       // Downloadable file
+      this.storeLocal(encrypted), // Browser storage
+      this.storeCloud(encrypted), // Optional cloud backup
+      this.storeExportable(encrypted), // Downloadable file
     ]);
-    
+
     return {
       id: generateBackupId(),
       size: encrypted.length,
       timestamp: backup.timestamp,
-      location: ['local', 'cloud', 'export']
+      location: ['local', 'cloud', 'export'],
     };
   }
-  
+
   async restoreBackup(backupId: string): Promise<void> {
     const encrypted = await this.retrieveBackup(backupId);
     const backup = await decryptBackup(encrypted);
-    
+
     // Validate backup integrity
     if (!this.validateBackup(backup)) {
       throw new Error('Backup integrity check failed');
     }
-    
+
     const db = await openDB('dermatology-ai');
     const tx = db.transaction(['cases', 'audit', 'preferences'], 'readwrite');
-    
+
     // Restore data
     for (const [store, data] of Object.entries(backup.data)) {
       for (const record of data) {
         await tx.objectStore(store).put(record);
       }
     }
-    
+
     await tx.done;
   }
 }
 ```
 
 **Backup Schedule:**
+
 ```yaml
 schedule:
   full_backup:
     frequency: daily
-    time: "02:00 UTC"
+    time: '02:00 UTC'
     retention: 30 days
-    
+
   incremental_backup:
     frequency: hourly
     retention: 7 days
-    
+
   snapshot_backup:
     frequency: every_deployment
     retention: 10 versions
@@ -140,28 +145,29 @@ export const validateBackup = async (backup: Backup): Promise<ValidationReport> 
     () => verifyChecksum(backup),
     () => verifyEncryption(backup),
     () => verifyCompleteness(backup),
-    () => testRestore(backup)
+    () => testRestore(backup),
   ];
-  
-  const results = await Promise.all(checks.map(check => check()));
-  
+
+  const results = await Promise.all(checks.map((check) => check()));
+
   return {
-    valid: results.every(r => r.passed),
+    valid: results.every((r) => r.passed),
     checks: results,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
 };
 
 // Monthly backup restore drill
 export const scheduleBackupDrills = () => {
-  cron.schedule('0 3 1 * *', async () => { // 1st of month, 3am
+  cron.schedule('0 3 1 * *', async () => {
+    // 1st of month, 3am
     const latestBackup = await getLatestBackup();
     const testResult = await performTestRestore(latestBackup);
-    
+
     await notifyTeam({
       type: 'backup_drill',
       result: testResult,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   });
 };
@@ -200,20 +206,23 @@ curl -X POST $SLACK_WEBHOOK \
 ```
 
 **DNS Failover Configuration:**
+
 ```json
 {
-  "Changes": [{
-    "Action": "UPSERT",
-    "ResourceRecordSet": {
-      "Name": "app.dermatology-ai.app",
-      "Type": "A",
-      "AliasTarget": {
-        "HostedZoneId": "Z2FDTNDATAQYW2",
-        "DNSName": "d1234567890.cloudfront.net",
-        "EvaluateTargetHealth": true
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "app.dermatology-ai.app",
+        "Type": "A",
+        "AliasTarget": {
+          "HostedZoneId": "Z2FDTNDATAQYW2",
+          "DNSName": "d1234567890.cloudfront.net",
+          "EvaluateTargetHealth": true
+        }
       }
     }
-  }]
+  ]
 }
 ```
 
@@ -233,48 +242,48 @@ export const recoverFromCorruption = async (): Promise<RecoveryReport> => {
   } catch (error) {
     Logger.error('Database repair failed', error);
   }
-  
+
   // Restore from latest backup
   const latestBackup = await findLatestValidBackup();
   if (latestBackup) {
     await restoreBackup(latestBackup.id);
-    return { 
-      status: 'restored', 
+    return {
+      status: 'restored',
       action: 'backup_restore',
-      dataLoss: calculateDataLoss(latestBackup)
+      dataLoss: calculateDataLoss(latestBackup),
     };
   }
-  
+
   // Last resort: Reset to factory state
   await resetDatabase();
-  return { 
-    status: 'reset', 
+  return {
+    status: 'reset',
     action: 'factory_reset',
-    dataLoss: 'complete'
+    dataLoss: 'complete',
   };
 };
 
 const repairDatabase = async (): Promise<boolean> => {
   const db = await openDB('dermatology-ai');
-  
+
   // Check each object store
   for (const storeName of db.objectStoreNames) {
     const tx = db.transaction(storeName, 'readonly');
     const store = tx.objectStore(storeName);
-    
+
     try {
       // Attempt to read all records
       await store.getAll();
     } catch (error) {
       // Corruption detected in this store
       Logger.warn(`Corruption in ${storeName}, attempting repair`);
-      
+
       // Drop and recreate store
       await dropObjectStore(db, storeName);
       await createObjectStore(db, storeName);
     }
   }
-  
+
   return true;
 };
 ```
@@ -283,10 +292,11 @@ const repairDatabase = async (): Promise<boolean> => {
 
 **Incident Response Runbook:**
 
-```markdown
+````markdown
 # Security Breach Response
 
 ## Phase 1: Containment (0-30 minutes)
+
 1. **Isolate affected systems**
    - Take application offline
    - Block suspicious IPs at CDN level
@@ -303,6 +313,7 @@ const repairDatabase = async (): Promise<boolean> => {
    - Determine breach vector
 
 ## Phase 2: Eradication (30 min - 2 hours)
+
 1. **Remove threat**
    - Patch vulnerabilities
    - Remove malware/backdoors
@@ -314,12 +325,15 @@ const repairDatabase = async (): Promise<boolean> => {
    - Validate integrity of all systems
 
 ## Phase 3: Recovery (2-4 hours)
+
 1. **Restore from clean backup**
    ```bash
    ./scripts/restore-clean-backup.sh pre-breach-timestamp
    ```
+````
 
 2. **Redeploy application**
+
    ```bash
    npm run build
    ./scripts/deploy-production.sh
@@ -331,6 +345,7 @@ const repairDatabase = async (): Promise<boolean> => {
    - Verify encryption
 
 ## Phase 4: Notification (4-72 hours)
+
 1. **Internal notification**
    - Alert executive team
    - Notify legal counsel
@@ -346,11 +361,13 @@ const repairDatabase = async (): Promise<boolean> => {
    - File with DPA (if GDPR applies)
 
 ## Phase 5: Post-Incident (72 hours+)
+
 1. **Root cause analysis**
 2. **Update security controls**
 3. **Conduct lessons learned**
 4. **Update DR plan**
-```
+
+````
 
 ```typescript
 // services/securityIncident.ts
@@ -359,25 +376,25 @@ export const handleSecurityBreach = async (incident: SecurityIncident): Promise<
   await takeApplicationOffline();
   await blockSuspiciousIPs(incident.sourceIPs);
   await revokeAllAPIKeys();
-  
+
   // Phase 2: Evidence preservation
   await captureForensicData(incident);
-  
+
   // Phase 3: Impact assessment
   const impact = await assessBreachImpact(incident);
-  
+
   // Phase 4: Notification
   await notifySecurityTeam(incident, impact);
-  
+
   if (impact.severity === 'critical') {
     await notifyExecutives(incident, impact);
     await notifyRegulatoryBodies(incident, impact);
   }
-  
+
   // Phase 5: Recovery initiation
   await initiateRecoveryProcedure(incident);
 };
-```
+````
 
 ### 4.4 Third-Party API Failure Recovery
 
@@ -388,7 +405,7 @@ export const handleSecurityBreach = async (incident: SecurityIncident): Promise<
 export class APIFailoverService {
   private geminiAvailable = true;
   private fallbackQueue: AnalysisRequest[] = [];
-  
+
   async detectSkinTone(image: string): Promise<SkinToneResult> {
     // Try primary (Gemini API)
     if (this.geminiAvailable) {
@@ -400,26 +417,26 @@ export class APIFailoverService {
         this.scheduleRetry();
       }
     }
-    
+
     // Fallback 1: Cached results from similar images
     const cachedResult = await this.findSimilarCachedResult(image);
     if (cachedResult && cachedResult.confidence > 0.8) {
       return cachedResult;
     }
-    
+
     // Fallback 2: Client-side heuristic (lower accuracy)
     const heuristicResult = await this.clientSideDetection(image);
-    
+
     // Queue for reprocessing when API recovers
     this.fallbackQueue.push({ image, timestamp: Date.now() });
-    
+
     return {
       ...heuristicResult,
       fallback: true,
-      warning: 'Using fallback detection. Lower accuracy expected.'
+      warning: 'Using fallback detection. Lower accuracy expected.',
     };
   }
-  
+
   private scheduleRetry(): void {
     setTimeout(async () => {
       try {
@@ -456,11 +473,11 @@ deployments:
   - region: us-east-1
     status: active
     traffic_percentage: 50
-    
+
   - region: eu-west-1
     status: active
     traffic_percentage: 30
-    
+
   - region: ap-southeast-1
     status: active
     traffic_percentage: 20
@@ -471,10 +488,7 @@ deployments:
 ```typescript
 // services/circuitBreaker.ts (already exists, enhance)
 export class EnhancedCircuitBreaker extends CircuitBreaker {
-  async executeWithFailover<T>(
-    primary: () => Promise<T>,
-    fallback: () => Promise<T>
-  ): Promise<T> {
+  async executeWithFailover<T>(primary: () => Promise<T>, fallback: () => Promise<T>): Promise<T> {
     try {
       return await this.execute(primary);
     } catch (error) {
@@ -482,11 +496,8 @@ export class EnhancedCircuitBreaker extends CircuitBreaker {
       return await fallback();
     }
   }
-  
-  async executeWithRetry<T>(
-    fn: () => Promise<T>,
-    maxRetries = 3
-  ): Promise<T> {
+
+  async executeWithRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
     for (let i = 0; i < maxRetries; i++) {
       try {
         return await this.execute(fn);
@@ -497,10 +508,10 @@ export class EnhancedCircuitBreaker extends CircuitBreaker {
     }
     throw new Error('Max retries exceeded');
   }
-  
+
   private async backoff(attempt: number): Promise<void> {
     const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise((resolve) => setTimeout(resolve, delay));
   }
 }
 ```
@@ -519,19 +530,19 @@ export const monitorSystemHealth = async (): Promise<HealthStatus> => {
     checkDatabaseHealth(),
     checkAPIHealth(),
     checkStorageHealth(),
-    checkNetworkHealth()
+    checkNetworkHealth(),
   ]);
-  
-  const status = checks.every(c => c.healthy) ? 'healthy' : 'degraded';
-  
+
+  const status = checks.every((c) => c.healthy) ? 'healthy' : 'degraded';
+
   if (status === 'degraded') {
     await triggerAlert({
       severity: 'warning',
       message: 'System health degraded',
-      checks: checks.filter(c => !c.healthy)
+      checks: checks.filter((c) => !c.healthy),
     });
   }
-  
+
   return { status, checks, timestamp: Date.now() };
 };
 
@@ -558,7 +569,7 @@ alert_rules:
       - delay: 30m
         channels: [phone, email]
         recipients: [cto]
-  
+
   - name: high_error_rate
     condition: error_rate_5m > 5%
     duration: 5m
@@ -579,6 +590,7 @@ alert_rules:
 ### 7.1 Stakeholder Notification
 
 **Internal Communication:**
+
 ```typescript
 // services/communication.ts
 export const notifyStakeholders = async (incident: Incident): Promise<void> => {
@@ -586,28 +598,29 @@ export const notifyStakeholders = async (incident: Incident): Promise<void> => {
     engineering: ['engineer@example.com'],
     management: ['manager@example.com'],
     legal: ['legal@example.com'],
-    pr: ['pr@example.com']
+    pr: ['pr@example.com'],
   };
-  
+
   const message = formatIncidentMessage(incident);
-  
+
   // Immediate notification
   await Promise.all([
     sendSlackMessage('#incidents', message),
     sendEmail(stakeholders.engineering, message),
   ]);
-  
+
   // Escalate if critical
   if (incident.severity === 'critical') {
     await Promise.all([
       sendSMS(stakeholders.management, message),
-      triggerPagerDuty(stakeholders.engineering[0])
+      triggerPagerDuty(stakeholders.engineering[0]),
     ]);
   }
 };
 ```
 
 **External Communication (Status Page):**
+
 ```typescript
 // api/status-page.ts
 export const updateStatusPage = async (status: SystemStatus): Promise<void> => {
@@ -619,8 +632,8 @@ export const updateStatusPage = async (status: SystemStatus): Promise<void> => {
       status: status.incident.status,
       impact: status.incident.impact,
       message: status.incident.message,
-      components: status.affectedComponents
-    })
+      components: status.affectedComponents,
+    }),
   });
 };
 ```
@@ -638,6 +651,7 @@ We are experiencing [description of issue]. [Impact statement].
 **Status:** [Investigating / Identified / Monitoring / Resolved]
 
 **Impact:**
+
 - Affected Services: [list]
 - Affected Users: [number or percentage]
 - Started At: [timestamp]
@@ -649,10 +663,12 @@ We are experiencing [description of issue]. [Impact statement].
 [Expected time for next update]
 
 **Updates:**
+
 - [Timestamp] - [Update message]
 - [Timestamp] - [Update message]
 
 ---
+
 Status Page: https://status.dermatology-ai.app
 Contact: incidents@dermatology-ai.app
 ```
@@ -670,12 +686,12 @@ quarterly_drills:
     frequency: quarterly
     duration: 4 hours
     participants: [engineering, devops, management]
-    
+
   - name: Database Restore
     frequency: monthly
     duration: 1 hour
     participants: [devops]
-    
+
   - name: Failover Test
     frequency: monthly
     duration: 30 minutes
@@ -742,26 +758,18 @@ echo "✅ DR Drill Complete. Recovery time: ${RECOVERY_TIME}s"
 
 ```typescript
 // services/postIncident.ts
-export const conductPostIncidentReview = async (
-  incident: Incident
-): Promise<PIRReport> => {
+export const conductPostIncidentReview = async (incident: Incident): Promise<PIRReport> => {
   const timeline = await reconstructTimeline(incident);
   const rootCause = await performRootCauseAnalysis(incident);
   const actionItems = await identifyActionItems(incident);
-  
+
   return {
     incident,
     timeline,
     rootCause,
     actionItems,
-    lessonsLearned: [
-      'What went well',
-      'What could be improved',
-      'What we learned'
-    ],
-    preventionMeasures: [
-      'How to prevent recurrence'
-    ]
+    lessonsLearned: ['What went well', 'What could be improved', 'What we learned'],
+    preventionMeasures: ['How to prevent recurrence'],
   };
 };
 ```
@@ -772,18 +780,21 @@ export const conductPostIncidentReview = async (
 # DR Plan Review Schedule
 
 ## Monthly Reviews
+
 - Review and test backup procedures
 - Verify contact information
 - Update recovery procedures
 - Review monitoring alerts
 
 ## Quarterly Reviews
+
 - Full DR drill execution
 - Update RTO/RPO objectives
 - Review vendor SLAs
 - Update escalation procedures
 
 ## Annual Reviews
+
 - Complete DR plan overhaul
 - Third-party audit
 - Executive review and sign-off
@@ -796,14 +807,14 @@ export const conductPostIncidentReview = async (
 
 ### 10.1 Recovery Metrics
 
-| Metric | Target | Current | Status |
-|:-------|:-------|:--------|:-------|
-| **RTO** | < 4 hours | TBD | 🟡 Pending |
-| **RPO** | < 1 hour | TBD | 🟡 Pending |
-| **Backup Success Rate** | > 99% | TBD | 🟡 Pending |
-| **DR Drill Pass Rate** | 100% | TBD | 🟡 Pending |
-| **MTTR (Mean Time to Recovery)** | < 2 hours | TBD | 🟡 Pending |
-| **Availability** | 99.9% | TBD | 🟡 Pending |
+| Metric                           | Target    | Current | Status     |
+| :------------------------------- | :-------- | :------ | :--------- |
+| **RTO**                          | < 4 hours | TBD     | 🟡 Pending |
+| **RPO**                          | < 1 hour  | TBD     | 🟡 Pending |
+| **Backup Success Rate**          | > 99%     | TBD     | 🟡 Pending |
+| **DR Drill Pass Rate**           | 100%      | TBD     | 🟡 Pending |
+| **MTTR (Mean Time to Recovery)** | < 2 hours | TBD     | 🟡 Pending |
+| **Availability**                 | 99.9%     | TBD     | 🟡 Pending |
 
 ### 10.2 Business Continuity Metrics
 

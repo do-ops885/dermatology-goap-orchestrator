@@ -23,6 +23,7 @@ npm install -g @lhci/cli lighthouse
 ```
 
 **Tests:**
+
 - ✅ Bundle size (< 500 kB main)
 - ✅ Code splitting (8+ chunks)
 - ✅ Lighthouse audit (score > 90)
@@ -34,6 +35,7 @@ npm install -g @lhci/cli lighthouse
 ## Option 2: Quick Manual Tests (10 minutes)
 
 ### Step 1: Build & Check Size
+
 ```bash
 npm run build
 du -sh dist/assets/index-*.js
@@ -41,6 +43,7 @@ du -sh dist/assets/index-*.js
 ```
 
 ### Step 2: Test Lazy Loading
+
 ```bash
 npm run dev
 # Open http://localhost:5173
@@ -49,6 +52,7 @@ npm run dev
 ```
 
 ### Step 3: Measure Web Vitals
+
 ```bash
 # In browser console:
 # Copy/paste: scripts/measure-web-vitals.js
@@ -64,6 +68,7 @@ open scripts/test-react-performance.html
 ```
 
 **Tests:**
+
 - React.memo effectiveness
 - Hook memoization
 - Memory profiling
@@ -77,7 +82,7 @@ open scripts/test-react-performance.html
 ✅ **Lighthouse:** Score > 90  
 ✅ **Web Vitals:** All metrics "good"  
 ✅ **Memory:** Stable after analysis  
-✅ **Lazy Loading:** 4 chunks on-demand  
+✅ **Lazy Loading:** 4 chunks on-demand
 
 ---
 

@@ -31,14 +31,14 @@ docs/
 
 ### 2.2 Test Coverage
 
-| Category | Tests | Status |
-|:---------|:------|:-------|
-| **Bundle Size** | 5 checks | ✅ Automated |
-| **Code Splitting** | 3 checks | ✅ Automated |
-| **Lighthouse** | 6 metrics | ✅ Automated |
-| **React Performance** | 5 tests | ✅ Interactive |
-| **Web Vitals** | 6 metrics | ✅ Browser-based |
-| **Memory** | 3 tests | ✅ Manual guide |
+| Category              | Tests     | Status           |
+| :-------------------- | :-------- | :--------------- |
+| **Bundle Size**       | 5 checks  | ✅ Automated     |
+| **Code Splitting**    | 3 checks  | ✅ Automated     |
+| **Lighthouse**        | 6 metrics | ✅ Automated     |
+| **React Performance** | 5 tests   | ✅ Interactive   |
+| **Web Vitals**        | 6 metrics | ✅ Browser-based |
+| **Memory**            | 3 tests   | ✅ Manual guide  |
 
 **Total Test Coverage:** 28 tests across 6 categories
 
@@ -49,6 +49,7 @@ docs/
 ### 3.1 Automated Suite (`test-performance.sh`)
 
 **Execution:**
+
 ```bash
 ./scripts/test-performance.sh
 ```
@@ -86,6 +87,7 @@ docs/
    - Detailed recommendations
 
 **Output Format:**
+
 ```
 ✓ PASS: Test name
 ✗ FAIL: Test name
@@ -102,6 +104,7 @@ Results:
 ### 3.2 React Performance Tests (`test-react-performance.html`)
 
 **Access:**
+
 ```bash
 open scripts/test-react-performance.html
 # Or serve via HTTP:
@@ -111,30 +114,35 @@ npx serve scripts
 **Test Modules:**
 
 **Test 1: React.memo Effectiveness**
+
 - Simulates 100 rapid parent updates
 - Measures average update time
 - Provides DevTools analysis guide
 - **Expected:** < 1ms per update with memoization
 
 **Test 2: Lazy Loading Verification**
+
 - Manual verification checklist
 - Network tab observation guide
 - Lists expected lazy chunks
 - **Expected:** 4 chunks load on-demand
 
 **Test 3: useMemo & useCallback**
+
 - Demonstrates memoization benefit
 - Runs 1M iterations comparison
 - Shows percentage improvement
 - **Expected:** 60-90% improvement
 
 **Test 4: Component Render Count**
+
 - Opens app in new tab
 - React DevTools integration guide
 - Render highlighting instructions
 - **Expected:** Minimal unnecessary renders
 
 **Test 5: Memory Profiling**
+
 - Shows current memory usage
 - Heap snapshot guide
 - Leak detection steps
@@ -145,6 +153,7 @@ npx serve scripts
 ### 3.3 Web Vitals Measurement (`measure-web-vitals.js`)
 
 **Usage:**
+
 ```javascript
 // 1. Open app: http://localhost:5173
 // 2. Open DevTools Console (F12)
@@ -153,16 +162,17 @@ npx serve scripts
 
 **Metrics Tracked:**
 
-| Metric | Good | Needs Improvement | Poor |
-|:-------|:-----|:------------------|:-----|
-| **CLS** | < 0.1 | 0.1 - 0.25 | > 0.25 |
-| **FID** | < 100ms | 100 - 300ms | > 300ms |
-| **FCP** | < 1800ms | 1800 - 3000ms | > 3000ms |
-| **LCP** | < 2500ms | 2500 - 4000ms | > 4000ms |
-| **TTFB** | < 800ms | 800 - 1800ms | > 1800ms |
-| **INP** | < 200ms | 200 - 500ms | > 500ms |
+| Metric   | Good     | Needs Improvement | Poor     |
+| :------- | :------- | :---------------- | :------- |
+| **CLS**  | < 0.1    | 0.1 - 0.25        | > 0.25   |
+| **FID**  | < 100ms  | 100 - 300ms       | > 300ms  |
+| **FCP**  | < 1800ms | 1800 - 3000ms     | > 3000ms |
+| **LCP**  | < 2500ms | 2500 - 4000ms     | > 4000ms |
+| **TTFB** | < 800ms  | 800 - 1800ms      | > 1800ms |
+| **INP**  | < 200ms  | 200 - 500ms       | > 500ms  |
 
 **Features:**
+
 - ✅ Real-time metric logging
 - ✅ Color-coded ratings (good/needs improvement/poor)
 - ✅ Auto-export after 10 seconds
@@ -170,6 +180,7 @@ npx serve scripts
 - ✅ Summary report generation
 
 **Example Output:**
+
 ```
 🎯 Web Vitals Measurement Started
 
@@ -205,38 +216,46 @@ npm install -g @lhci/cli lighthouse
 ### 4.2 Recommended Testing Sequence
 
 **Step 1: Automated Tests (5 minutes)**
+
 ```bash
 ./scripts/test-performance.sh
 ```
+
 - Validates bundle size
 - Runs Lighthouse audit
 - Checks build artifacts
 
 **Step 2: React Performance (10 minutes)**
+
 ```bash
 open scripts/test-react-performance.html
 ```
+
 - Test memoization effectiveness
 - Verify lazy loading
 - Check render behavior
 
 **Step 3: Web Vitals (5 minutes)**
+
 ```bash
 npm run dev
 # Open http://localhost:5173
 # Run measure-web-vitals.js in console
 # Interact with app for 10 seconds
 ```
+
 - Collect real user metrics
 - Validate performance targets
 - Check for regressions
 
 **Step 4: Memory Profiling (10 minutes)**
+
 ```bash
 # DevTools → Memory tab
 # Take 3 heap snapshots with analysis in between
 # Check for leaks
 ```
+
 - Verify tensor cleanup
 - Check for detached DOM nodes
 - Validate memory returns to baseline
@@ -250,6 +269,7 @@ npm run dev
 ### 5.1 Bundle Size Targets
 
 **Main Bundle:**
+
 ```
 Before optimization:  ~850 kB
 After optimization:   ~500 kB
@@ -258,6 +278,7 @@ Status:               ✅ Within budget
 ```
 
 **Total Bundle:**
+
 ```
 Before optimization:  ~3.8 MB
 After optimization:   ~3.8 MB (but lazy loaded)
@@ -268,6 +289,7 @@ Status:               ✅ Within budget
 ### 5.2 Lighthouse Scores
 
 **Performance (target: 90+):**
+
 - First Contentful Paint: < 1.8s
 - Largest Contentful Paint: < 2.5s
 - Total Blocking Time: < 300ms
@@ -275,18 +297,21 @@ Status:               ✅ Within budget
 - Speed Index: < 3.4s
 
 **Accessibility (target: 95+):**
+
 - ARIA attributes correct
 - Color contrast ratios meet WCAG
 - Form labels present
 - Interactive elements accessible
 
 **Best Practices (target: 100):**
+
 - HTTPS enforced
 - Console errors: None
 - Browser errors: None
 - Secure dependencies
 
 **PWA (target: 90+):**
+
 - Manifest complete
 - Service worker registered
 - Installable
@@ -295,17 +320,20 @@ Status:               ✅ Within budget
 ### 5.3 React Performance
 
 **Memoization:**
+
 - Parent update time: < 1ms per update
 - Child re-renders: Only when props change
 - Unnecessary renders: < 10% of total
 
 **Lazy Loading:**
+
 - Initial chunks loaded: 5-6
 - Lazy chunks: 4
 - On-demand loading: Working
 - Fallback UI: Displayed during load
 
 **Hook Optimization:**
+
 - useMemo hit rate: > 90%
 - useCallback stability: 100%
 - Computation time: 60-90% reduction
@@ -313,12 +341,14 @@ Status:               ✅ Within budget
 ### 5.4 Memory Usage
 
 **JavaScript Heap:**
+
 - Initial: ~25 MB
 - During analysis: ~60 MB
 - After cleanup: ~30 MB
 - **Status:** ✅ Returns to baseline
 
 **TensorFlow.js:**
+
 - Before analysis: 0-5 tensors
 - During analysis: 15-25 tensors
 - After cleanup: 0-5 tensors
@@ -333,6 +363,7 @@ Status:               ✅ Within budget
 **Error:** `sh: vite: not found`
 
 **Solution:**
+
 ```bash
 npm install
 npm run build
@@ -343,11 +374,13 @@ npm run build
 **Error:** `Main bundle exceeds budget (612 KB > 500 KB)`
 
 **Diagnosis:**
+
 ```bash
 npm run bundle:analyze
 ```
 
 **Solutions:**
+
 - Check for large dependencies
 - Verify tree-shaking is working
 - Move large components to lazy loading
@@ -358,12 +391,14 @@ npm run bundle:analyze
 **Error:** `Lighthouse performance score: 67/100 (target: 90+)`
 
 **Common Issues:**
+
 1. **Large images** → Compress, use WebP
 2. **Render-blocking CSS** → Inline critical CSS
 3. **Unused JavaScript** → Check coverage tool
 4. **Slow server response** → Optimize backend/API
 
 **Detailed Report:**
+
 ```bash
 lighthouse http://localhost:4173 --view
 ```
@@ -373,15 +408,17 @@ lighthouse http://localhost:4173 --view
 **Error:** Heap size growing indefinitely
 
 **Diagnosis:**
+
 ```javascript
 // Check tensor count
-tf.memory().numTensors // Should stabilize
+tf.memory().numTensors; // Should stabilize
 
 // Check tensor pools
-tensorMemoryManager.getStats()
+tensorMemoryManager.getStats();
 ```
 
 **Solutions:**
+
 - Wrap operations in `tensorMemoryManager.tidy()`
 - Add cleanup in `useEffect` returns
 - Dispose models when done
@@ -394,18 +431,21 @@ tensorMemoryManager.getStats()
 ### 7.1 GitHub Actions Workflows
 
 **Bundle Size Check** (`.github/workflows/bundle-size.yml`):
+
 - Runs on every PR
 - Checks bundle size against budget
 - Comments PR with size breakdown
 - Fails if budget exceeded
 
 **Lighthouse CI** (`.github/workflows/lighthouse.yml`):
+
 - Runs on every PR
 - Audits performance, accessibility, PWA
 - Uploads artifacts
 - Fails if score < 90
 
 **View Results:**
+
 1. Open PR → "Checks" tab
 2. Click workflow name
 3. View logs and artifacts
@@ -414,6 +454,7 @@ tensorMemoryManager.getStats()
 ### 7.2 Pre-commit Hooks
 
 **Add to `.husky/pre-commit`:**
+
 ```bash
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
@@ -436,6 +477,7 @@ fi
 **Location:** `docs/performance-testing-guide.md`
 
 **Contents:**
+
 - Quick start instructions
 - Automated testing suite details
 - React performance testing
@@ -452,18 +494,21 @@ fi
 ### 8.2 Test Scripts
 
 **Automated:**
+
 - `scripts/test-performance.sh` (~250 lines)
 - Bash script with full test suite
 - Color-coded output
 - Pass/fail/warn reporting
 
 **Interactive:**
+
 - `scripts/test-react-performance.html` (~300 lines)
 - Self-contained HTML page
 - 5 interactive test modules
 - Visual result display
 
 **Browser-based:**
+
 - `scripts/measure-web-vitals.js` (~200 lines)
 - Console-based measurement
 - Real-time metric tracking
@@ -499,12 +544,14 @@ npm run dev
 ### 9.2 Post-Testing Actions
 
 **If all tests pass:**
+
 1. Document baseline metrics
 2. Commit performance improvements
 3. Deploy to staging
 4. Monitor production metrics
 
 **If tests fail:**
+
 1. Review Lighthouse report
 2. Check bundle analyzer
 3. Profile with React DevTools
@@ -513,12 +560,14 @@ npm run dev
 ### 9.3 Continuous Monitoring
 
 **Production:**
+
 - Setup Real User Monitoring (RUM)
 - Track Web Vitals via analytics
 - Monitor bundle size trends
 - Regular Lighthouse audits
 
 **Alerting:**
+
 - Performance score drops below 85
 - Bundle size increases > 10%
 - Memory leaks detected
@@ -541,16 +590,16 @@ npm run dev
 
 ### 10.2 Performance Targets
 
-| Metric | Target | Validation Method |
-|:-------|:-------|:------------------|
-| **Main Bundle** | < 500 kB | test-performance.sh |
-| **Total Bundle** | < 4 MB | test-performance.sh |
-| **Lighthouse Score** | > 90 | test-performance.sh |
-| **LCP** | < 2.5s | measure-web-vitals.js |
-| **FID** | < 100ms | measure-web-vitals.js |
-| **CLS** | < 0.1 | measure-web-vitals.js |
-| **Render Count** | Minimal | test-react-performance.html |
-| **Memory Leaks** | None | DevTools Memory tab |
+| Metric               | Target   | Validation Method           |
+| :------------------- | :------- | :-------------------------- |
+| **Main Bundle**      | < 500 kB | test-performance.sh         |
+| **Total Bundle**     | < 4 MB   | test-performance.sh         |
+| **Lighthouse Score** | > 90     | test-performance.sh         |
+| **LCP**              | < 2.5s   | measure-web-vitals.js       |
+| **FID**              | < 100ms  | measure-web-vitals.js       |
+| **CLS**              | < 0.1    | measure-web-vitals.js       |
+| **Render Count**     | Minimal  | test-react-performance.html |
+| **Memory Leaks**     | None     | DevTools Memory tab         |
 
 ---
 
@@ -559,6 +608,7 @@ npm run dev
 ### 11.1 Builds on Phase 1 (API Gateway)
 
 **Synergy:**
+
 - API caching + code splitting = faster load
 - Performance monitoring tracks API latency
 - Combined effect measured in Web Vitals
@@ -566,6 +616,7 @@ npm run dev
 ### 11.2 Prepares for Phase 3 (Deployment)
 
 **Production Readiness:**
+
 - CI performance checks prevent regressions
 - Lighthouse budget enforces quality
 - Monitoring ready for production insights
@@ -578,17 +629,20 @@ npm run dev
 ### 12.1 Deliverables
 
 ✅ **3 Test Scripts:**
+
 - Automated bash suite (250 lines)
 - Interactive HTML page (300 lines)
 - Browser measurement script (200 lines)
 
 ✅ **1 Comprehensive Guide:**
+
 - Testing documentation (500 lines)
 - Step-by-step instructions
 - Troubleshooting section
 - CI/CD integration guide
 
 ✅ **28 Tests:**
+
 - Bundle size (5)
 - Code splitting (3)
 - Lighthouse (6)
@@ -605,6 +659,7 @@ npm run dev
 ### 12.3 Next Phase
 
 **Options:**
+
 1. **Run tests now** - Validate optimizations locally
 2. **Deploy to staging** - Test in production-like environment
 3. **Continue to Phase 3** - Production deployment (Plan 25)
@@ -615,16 +670,19 @@ npm run dev
 ## 13. Related Documentation
 
 **Implementation:**
+
 - `plans/31_performance_optimization_implementation_summary.md`
 - `plans/24_performance_optimization_strategy.md`
 
 **Testing:**
+
 - `docs/performance-testing-guide.md` (Complete guide)
 - `scripts/test-performance.sh` (Automated tests)
 - `scripts/test-react-performance.html` (Interactive tests)
 - `scripts/measure-web-vitals.js` (Web Vitals measurement)
 
 **Previous Work:**
+
 - `plans/30_api_gateway_implementation_summary.md` (Phase 1)
 
 ---

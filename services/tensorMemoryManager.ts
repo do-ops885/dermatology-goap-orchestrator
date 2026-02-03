@@ -1,9 +1,9 @@
 /**
  * TensorFlow.js Memory Manager
- * 
+ *
  * Manages tensor lifecycle and memory cleanup to prevent memory leaks.
  * Implements tensor pooling for frequently used shapes.
- * 
+ *
  * @see plans/24_performance_optimization_strategy.md
  */
 
@@ -47,17 +47,17 @@ class TensorMemoryManager {
    */
   async tidyAsync<T>(fn: () => Promise<T>): Promise<T> {
     const startNumTensors = tf.memory().numTensors;
-    
+
     try {
       const result = await fn();
-      
+
       const endNumTensors = tf.memory().numTensors;
       const leaked = endNumTensors - startNumTensors;
-      
+
       if (leaked > 0) {
         Logger.warn('TensorMemoryManager', `Potential memory leak: ${leaked} tensors not disposed`);
       }
-      
+
       return result;
     } catch (error) {
       throw error;
@@ -72,8 +72,8 @@ class TensorMemoryManager {
     const pool = this.pools.get(key) || [];
 
     // Find available tensor in pool
-    const entry = pool.find(e => !e.inUse);
-    
+    const entry = pool.find((e) => !e.inUse);
+
     if (entry) {
       entry.inUse = true;
       entry.lastUsed = Date.now();
@@ -83,7 +83,7 @@ class TensorMemoryManager {
 
     // Create new tensor if pool is empty or all in use
     const tensor = tf.zeros(shape, dtype);
-    
+
     const newEntry: TensorPoolEntry = {
       tensor,
       inUse: true,
@@ -112,8 +112,8 @@ class TensorMemoryManager {
       return;
     }
 
-    const entry = pool.find(e => e.tensor === tensor);
-    
+    const entry = pool.find((e) => e.tensor === tensor);
+
     if (entry) {
       entry.inUse = false;
       entry.lastUsed = Date.now();
@@ -129,7 +129,7 @@ class TensorMemoryManager {
    */
   disposeAll(tensors: tf.Tensor[]): void {
     for (const tensor of tensors) {
-      if (tensor && tensor === null || tensor === undefined.isDisposed) {
+      if ((tensor && tensor === null) || tensor === undefined.isDisposed) {
         tensor.dispose();
       }
     }
@@ -177,7 +177,7 @@ class TensorMemoryManager {
 
     for (const [key, pool] of this.pools.entries()) {
       // Remove old unused tensors
-      const filtered = pool.filter(entry => {
+      const filtered = pool.filter((entry) => {
         const age = now - entry.lastUsed;
         const shouldKeep = entry.inUse || age < maxAge;
 
@@ -260,7 +260,7 @@ class TensorMemoryManager {
 
     for (const pool of this.pools.values()) {
       totalTensors += pool.length;
-      tensorsInUse += pool.filter(e => e.inUse).length;
+      tensorsInUse += pool.filter((e) => e.inUse).length;
     }
 
     return {
