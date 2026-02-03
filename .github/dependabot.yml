@@ -19,11 +19,6 @@ updates:
     reviewers:
       - 'do-ops885'
     versioning-strategy: increase
-    automerge: true
-    automerge-method: squash
-    ignore:
-      - dependency-type: direct
-        update-types: ['version-update:semver-major']
     groups:
       react-related:
         patterns:

@@ -1,0 +1,21 @@
+name: Dependabot Auto-Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: read
+
+jobs:
+  dependabot-automerge:
+    runs-on: ubuntu-latest
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    steps:
+      - name: Enable Auto-Merge
+        run: |
+          gh pr edit "${{ github.event.pull_request.number }}" --add-automerge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
