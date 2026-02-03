@@ -6,25 +6,6 @@ import { VisionSpecialist } from '../../services/vision';
 vi.mock('@tensorflow/tfjs', async () => {
   const actual = await vi.importActual('@tensorflow/tfjs');
 
-  const createMockTensor = () => ({
-    resizeNearestNeighbor: vi.fn().mockReturnThis(),
-    toFloat: vi.fn().mockReturnThis(),
-    div: vi.fn().mockReturnThis(),
-    expandDims: vi.fn().mockReturnThis(),
-    mean: vi.fn().mockReturnThis(),
-    sub: vi.fn().mockReturnThis(),
-    mul: vi.fn().mockReturnThis(),
-    square: vi.fn().mockReturnThis(),
-    add: vi.fn().mockReturnThis(),
-    neg: vi.fn().mockReturnThis(),
-    abs: vi.fn().mockReturnThis(),
-    relu: vi.fn().mockReturnThis(),
-    min: vi.fn().mockReturnThis(),
-    max: vi.fn().mockReturnThis(),
-    dispose: vi.fn(),
-    shape: [224, 224, 3],
-  });
-
   return {
     ...actual,
     ready: vi.fn().mockResolvedValue(undefined),
@@ -33,9 +14,7 @@ vi.mock('@tensorflow/tfjs', async () => {
     findBackend: vi.fn(),
     tidy: (fn: () => unknown): unknown => fn(),
     browser: {
-      fromPixels: vi.fn().mockImplementation(() => {
-        return createMockTensor();
-      }),
+      fromPixels: vi.fn(),
       toPixels: vi.fn(),
     },
     scalar: vi.fn().mockReturnValue({
@@ -48,8 +27,62 @@ vi.mock('@tensorflow/tfjs', async () => {
     },
     stack: vi.fn(),
     linspace: vi.fn().mockReturnValue([]),
-    meshgrid: vi.fn().mockReturnValue([createMockTensor(), createMockTensor()]),
-    exp: vi.fn().mockReturnValue(createMockTensor()),
+    meshgrid: vi.fn().mockReturnValue([
+      {
+        resizeNearestNeighbor: vi.fn().mockReturnThis(),
+        toFloat: vi.fn().mockReturnThis(),
+        div: vi.fn().mockReturnThis(),
+        expandDims: vi.fn().mockReturnThis(),
+        mean: vi.fn().mockReturnThis(),
+        sub: vi.fn().mockReturnThis(),
+        mul: vi.fn().mockReturnThis(),
+        square: vi.fn().mockReturnThis(),
+        add: vi.fn().mockReturnThis(),
+        neg: vi.fn().mockReturnThis(),
+        abs: vi.fn().mockReturnThis(),
+        relu: vi.fn().mockReturnThis(),
+        min: vi.fn().mockReturnThis(),
+        max: vi.fn().mockReturnThis(),
+        dispose: vi.fn(),
+        shape: [224, 224, 3],
+      },
+      {
+        resizeNearestNeighbor: vi.fn().mockReturnThis(),
+        toFloat: vi.fn().mockReturnThis(),
+        div: vi.fn().mockReturnThis(),
+        expandDims: vi.fn().mockReturnThis(),
+        mean: vi.fn().mockReturnThis(),
+        sub: vi.fn().mockReturnThis(),
+        mul: vi.fn().mockReturnThis(),
+        square: vi.fn().mockReturnThis(),
+        add: vi.fn().mockReturnThis(),
+        neg: vi.fn().mockReturnThis(),
+        abs: vi.fn().mockReturnThis(),
+        relu: vi.fn().mockReturnThis(),
+        min: vi.fn().mockReturnThis(),
+        max: vi.fn().mockReturnThis(),
+        dispose: vi.fn(),
+        shape: [224, 224, 3],
+      },
+    ]),
+    exp: vi.fn().mockReturnValue({
+      resizeNearestNeighbor: vi.fn().mockReturnThis(),
+      toFloat: vi.fn().mockReturnThis(),
+      div: vi.fn().mockReturnThis(),
+      expandDims: vi.fn().mockReturnThis(),
+      mean: vi.fn().mockReturnThis(),
+      sub: vi.fn().mockReturnThis(),
+      mul: vi.fn().mockReturnThis(),
+      square: vi.fn().mockReturnThis(),
+      add: vi.fn().mockReturnThis(),
+      neg: vi.fn().mockReturnThis(),
+      abs: vi.fn().mockReturnThis(),
+      relu: vi.fn().mockReturnThis(),
+      min: vi.fn().mockReturnThis(),
+      max: vi.fn().mockReturnThis(),
+      dispose: vi.fn(),
+      shape: [224, 224, 3],
+    }),
   };
 });
 
@@ -57,6 +90,26 @@ interface MockGraphModel {
   predict: ReturnType<typeof vi.fn>;
   dispose: ReturnType<typeof vi.fn>;
 }
+
+// Helper function to create a mock tensor
+const createMockTensor = () => ({
+  resizeNearestNeighbor: vi.fn().mockReturnThis(),
+  toFloat: vi.fn().mockReturnThis(),
+  div: vi.fn().mockReturnThis(),
+  expandDims: vi.fn().mockReturnThis(),
+  mean: vi.fn().mockReturnThis(),
+  sub: vi.fn().mockReturnThis(),
+  mul: vi.fn().mockReturnThis(),
+  square: vi.fn().mockReturnThis(),
+  add: vi.fn().mockReturnThis(),
+  neg: vi.fn().mockReturnThis(),
+  abs: vi.fn().mockReturnThis(),
+  relu: vi.fn().mockReturnThis(),
+  min: vi.fn().mockReturnThis(),
+  max: vi.fn().mockReturnThis(),
+  dispose: vi.fn(),
+  shape: [224, 224, 3],
+});
 
 describe('VisionSpecialist - Dispose', () => {
   let vision: VisionSpecialist;
@@ -66,6 +119,10 @@ describe('VisionSpecialist - Dispose', () => {
     vision = VisionSpecialist.getInstance();
     vi.clearAllMocks();
     vision.dispose();
+    // Re-set up mock implementations after clearAllMocks
+    (tf.browser.fromPixels as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      return createMockTensor();
+    });
     (tf.findBackend as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
     (tf.setBackend as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
     (tf.loadGraphModel as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
@@ -118,6 +175,10 @@ describe('VisionSpecialist - Classification Edge Cases', () => {
     vision = VisionSpecialist.getInstance();
     vi.clearAllMocks();
     vision.dispose();
+    // Re-set up mock implementations after clearAllMocks
+    (tf.browser.fromPixels as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      return createMockTensor();
+    });
     (tf.findBackend as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
     (tf.setBackend as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
     (tf.loadGraphModel as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({

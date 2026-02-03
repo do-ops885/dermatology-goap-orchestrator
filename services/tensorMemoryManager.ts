@@ -37,7 +37,7 @@ class TensorMemoryManager {
   /**
    * Execute function with automatic tensor cleanup
    */
-  tidy(fn: () => unknown): unknown {
+  tidy<T extends tf.TensorContainer>(fn: () => T): T {
     return tf.tidy(fn);
   }
 
@@ -282,7 +282,7 @@ class TensorMemoryManager {
 
 export const tensorMemoryManager = TensorMemoryManager.getInstance();
 
-export const withTensorCleanup = (fn: () => unknown): unknown => {
+export const withTensorCleanup = (fn: () => tf.TensorContainer): tf.TensorContainer => {
   return tensorMemoryManager.tidy(fn);
 };
 

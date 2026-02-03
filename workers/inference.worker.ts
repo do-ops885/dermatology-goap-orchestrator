@@ -9,6 +9,8 @@
 
 import * as tf from '@tensorflow/tfjs';
 
+const ERROR_IMAGE_DATA_REQUIRED = 'ImageData required';
+
 interface InferenceRequest {
   type: 'classify' | 'preprocess' | 'saliency';
   data: {
@@ -24,6 +26,11 @@ interface InferenceResponse {
   id: string;
   result?: unknown;
   error?: string;
+}
+
+interface InitMessage {
+  type: 'init';
+  modelURL: string;
 }
 
 // Initialize TensorFlow.js
@@ -123,17 +130,17 @@ self.onmessage = async (event: MessageEvent<InferenceRequest>) => {
 
     switch (type) {
       case 'classify':
-        if (data.imageData === undefined) throw new Error('ImageData required');
+        if (data.imageData === undefined) throw new Error(ERROR_IMAGE_DATA_REQUIRED);
         result = await classify(data.imageData);
         break;
 
       case 'preprocess':
-        if (data.imageData === undefined) throw new Error('ImageData required');
+        if (data.imageData === undefined) throw new Error(ERROR_IMAGE_DATA_REQUIRED);
         result = preprocessImage(data.imageData).arraySync();
         break;
 
       case 'saliency':
-        if (data.imageData === undefined) throw new Error('ImageData required');
+        if (data.imageData === undefined) throw new Error(ERROR_IMAGE_DATA_REQUIRED);
         result = await generateSaliency(data.imageData);
         break;
 
@@ -160,14 +167,20 @@ self.onmessage = async (event: MessageEvent<InferenceRequest>) => {
 };
 
 // Handle initialization messages
-self.addEventListener('message', (event) => {
-  if (event.data.type === 'init') {
-    const modelURL = event.data.modelURL;
-    if (modelURL) {
-      void loadModel(modelURL);
+self.addEventListener(
+  'message',
+  (event: MessageEvent<InitMessage | InferenceRequest | InferenceResponse>) => {
+    const data = event.data;
+    if (
+      'type' in data &&
+      data.type === 'init' &&
+      'modelURL' in data &&
+      data.modelURL !== undefined
+    ) {
+      void loadModel(data.modelURL);
     }
-  }
-});
+  },
+);
 
 // Cleanup on termination
 self.addEventListener('beforeunload', () => {

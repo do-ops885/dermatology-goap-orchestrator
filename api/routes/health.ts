@@ -2,6 +2,8 @@
  * Health Check Routes
  */
 
+declare const process: { uptime?: () => number } | undefined;
+
 import { Hono } from 'hono';
 
 import { getMetrics } from '../middleware/metrics';
@@ -13,7 +15,7 @@ health.get('/', (c) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
-    uptime: process.uptime?.() || 0,
+    uptime: process?.uptime?.() ?? 0,
   });
 });
 

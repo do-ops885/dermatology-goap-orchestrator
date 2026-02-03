@@ -17,7 +17,6 @@ import { logger } from 'hono/logger';
 import { errorHandler } from './middleware/errorHandler';
 import { metricsMiddleware } from './middleware/metrics';
 import { rateLimiter } from './middleware/rateLimiter';
-
 // Route handlers
 import geminiRoutes from './routes/gemini';
 import healthRoutes from './routes/health';
@@ -30,7 +29,7 @@ app.use(
   '*',
   cors({
     origin:
-      process.env.NODE_ENV === 'production'
+      (typeof process !== 'undefined' && process.env?.NODE_ENV) === 'production'
         ? ['https://app.dermatology-ai.app', 'https://dermatology-ai.app']
         : '*',
     allowMethods: ['GET', 'POST', 'OPTIONS'],

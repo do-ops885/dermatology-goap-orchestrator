@@ -113,7 +113,17 @@ class InferenceWorkerPool {
    * Handle worker message
    */
   private handleWorkerMessage(worker: Worker, event: MessageEvent): void {
-    const { type, id, result, error } = event.data;
+    const {
+      type,
+      id,
+      result,
+      error,
+    }: { type: string; id: string; result?: unknown; error?: unknown } = event.data as {
+      type: string;
+      id: string;
+      result?: unknown;
+      error?: unknown;
+    };
 
     if (type === 'model_loaded') {
       Logger.info('InferenceWorkerPool', 'Worker model loaded');
@@ -132,7 +142,7 @@ class InferenceWorkerPool {
     if (type === 'success') {
       task.resolve(result);
     } else {
-      task.reject(new Error(error ?? 'Worker task failed'));
+      task.reject(new Error(typeof error === 'string' ? error : 'Worker task failed'));
     }
 
     // Process next task
