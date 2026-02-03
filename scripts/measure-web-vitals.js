@@ -12,8 +12,8 @@
  */
 
 (function() {
-    console.log('🎯 Web Vitals Measurement Started');
-    console.log('Interact with the app to collect metrics...\n');
+    console.warn('🎯 Web Vitals Measurement Started');
+    console.warn('Interact with the app to collect metrics...\n');
 
     const metrics = {};
     const thresholds = {
@@ -43,12 +43,12 @@
 
     function logMetric(metric) {
         metrics[metric.name] = metric;
-        console.log(formatMetric(metric));
+        console.warn(formatMetric(metric));
     }
 
     // Try to use web-vitals library if loaded
     if (typeof webVitals !== 'undefined') {
-        console.log('Using web-vitals library\n');
+        console.warn('Using web-vitals library\n');
         
         webVitals.onCLS(logMetric);
         webVitals.onFID(logMetric);
@@ -58,11 +58,11 @@
         
         try {
             webVitals.onINP(logMetric);
-        } catch (e) {
+        } catch {
             console.warn('INP not available');
         }
     } else {
-        console.log('web-vitals library not found, using PerformanceObserver\n');
+        console.warn('web-vitals library not found, using PerformanceObserver\n');
         
         // Fallback to PerformanceObserver
         if ('PerformanceObserver' in window) {
@@ -74,7 +74,7 @@
                     logMetric({ name: 'LCP', value: lastEntry.renderTime || lastEntry.loadTime });
                 });
                 lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
-            } catch (e) {}
+            } catch {
 
             // FID
             try {
@@ -85,7 +85,7 @@
                     });
                 });
                 fidObserver.observe({ entryTypes: ['first-input'] });
-            } catch (e) {}
+            } catch {
 
             // CLS
             try {
@@ -99,7 +99,7 @@
                     }
                 });
                 clsObserver.observe({ entryTypes: ['layout-shift'] });
-            } catch (e) {}
+            } catch {
 
             // Navigation timing
             window.addEventListener('load', () => {
@@ -117,7 +117,7 @@
 
     function trackCustom(name, value) {
         customMetrics.push({ name, value, timestamp: Date.now() });
-        console.log(`📊 Custom: ${name} = ${value}ms`);
+        console.warn(`📊 Custom: ${name} = ${value}ms`);
     }
 
     // Expose global functions
@@ -126,17 +126,17 @@
         getCustomMetrics: () => customMetrics,
         trackCustom,
         exportReport: () => {
-            console.log('\n📈 Web Vitals Report');
-            console.log('===================');
+            console.warn('\n📈 Web Vitals Report');
+            console.warn('===================');
             Object.values(metrics).forEach(metric => {
-                console.log(formatMetric(metric));
+                console.warn(formatMetric(metric));
             });
             
             if (customMetrics.length > 0) {
-                console.log('\n📊 Custom Metrics');
-                console.log('=================');
+                console.warn('\n📊 Custom Metrics');
+                console.warn('=================');
                 customMetrics.forEach(m => {
-                    console.log(`${m.name}: ${m.value}ms`);
+                    console.warn(`${m.name}: ${m.value}ms`);
                 });
             }
             
@@ -146,11 +146,11 @@
             const needsImprovement = ratings.filter(r => r === 'needs-improvement').length;
             const poor = ratings.filter(r => r === 'poor').length;
             
-            console.log('\n📋 Summary');
-            console.log('==========');
-            console.log(`✅ Good: ${good}`);
-            console.log(`⚠️ Needs Improvement: ${needsImprovement}`);
-            console.log(`❌ Poor: ${poor}`);
+            console.warn('\n📋 Summary');
+            console.warn('==========');
+            console.warn(`✅ Good: ${good}`);
+            console.warn(`⚠️ Needs Improvement: ${needsImprovement}`);
+            console.warn(`❌ Poor: ${poor}`);
             
             return {
                 metrics,
@@ -162,10 +162,10 @@
 
     // Auto-export after 10 seconds
     setTimeout(() => {
-        console.log('\n⏰ 10 seconds elapsed, exporting report...\n');
+        console.warn('\n⏰ 10 seconds elapsed, exporting report...\n');
         window.webVitalsMeasurement.exportReport();
     }, 10000);
 
-    console.log('\n💡 Use window.webVitalsMeasurement.exportReport() to see full report');
-    console.log('💡 Use window.webVitalsMeasurement.trackCustom(name, value) for custom metrics\n');
+    console.warn('\n💡 Use window.webVitalsMeasurement.exportReport() to see full report');
+    console.warn('💡 Use window.webVitalsMeasurement.trackCustom(name, value) for custom metrics\n');
 })();

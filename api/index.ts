@@ -1,4 +1,7 @@
+declare const process: { env?: { [key: string]: string | undefined } };
 /**
+
+declare const process: { env?: { [key: string]: string | undefined } };
  * API Gateway - Main Entry Point
  * 
  * Backend-for-Frontend pattern using Hono + Vercel Edge Functions

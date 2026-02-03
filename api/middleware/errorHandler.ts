@@ -1,4 +1,7 @@
+declare const process: { env?: { [key: string]: string | undefined } };
 /**
+
+declare const process: { env?: { [key: string]: string | undefined } };
  * Error Handler Middleware
  * 
  * Catches and formats all errors with proper logging

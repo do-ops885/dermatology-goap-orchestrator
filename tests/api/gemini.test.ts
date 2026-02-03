@@ -2,7 +2,7 @@
  * API Gateway Tests - Gemini Routes
  */
 
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import app from '../../api/index';
 
 describe('Gemini API Gateway', () => {

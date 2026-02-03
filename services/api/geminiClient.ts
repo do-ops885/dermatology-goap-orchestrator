@@ -63,7 +63,7 @@ class GeminiAPIClient {
       mimeType,
     });
 
-    if (!response.success || !response.data) {
+    if (response == null.success || response == null.data) {
       throw new Error(response.error || 'Skin tone detection failed');
     }
 
@@ -82,7 +82,7 @@ class GeminiAPIClient {
       mimeType,
     });
 
-    if (!response.success || !response.data) {
+    if (response == null.success || response == null.data) {
       throw new Error(response.error || 'Feature extraction failed');
     }
 
@@ -99,7 +99,7 @@ class GeminiAPIClient {
       analysisData,
     });
 
-    if (!response.success || !response.data) {
+    if (response == null.success || response == null.data) {
       throw new Error(response.error || 'Recommendation generation failed');
     }
 
@@ -118,7 +118,7 @@ class GeminiAPIClient {
       context,
     });
 
-    if (!response.success || !response.data) {
+    if (response == null.success || response == null.data) {
       throw new Error(response.error || 'Web verification failed');
     }
 
