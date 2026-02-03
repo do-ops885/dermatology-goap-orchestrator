@@ -59,18 +59,18 @@ export class GeminiService {
 
     // Check cache
     const cached = this.getFromCache<SkinToneResult>(cacheKey);
-    if (cached) {
+    if (cached !== null) {
       console.warn('[GeminiService] Cache hit for skin tone detection');
       return cached;
     }
 
     const prompt = `Analyze the skin in this image for clinical classification.
-OUTPUT JSON ONLY: { 
-  "fitzpatrick_type": "I" | "II" | "III" | "IV" | "V" | "VI", 
-  "monk_scale": "string", 
-  "ita_estimate": number, 
-  "skin_tone_confidence": number (0.0-1.0), 
-  "reasoning": "string" 
+OUTPUT JSON ONLY: {
+  "fitzpatrick_type": "I" | "II" | "III" | "IV" | "V" | "VI",
+  "monk_scale": "string",
+  "ita_estimate": number,
+  "skin_tone_confidence": number (0.0-1.0),
+  "reasoning": "string"
 }`;
 
     const result = await this.retryWithBackoff(async () => {
@@ -100,7 +100,7 @@ OUTPUT JSON ONLY: {
     const cacheKey = `features:${this.hashString(imageBase64.substring(0, 100))}`;
 
     const cached = this.getFromCache<FeatureExtractionResult>(cacheKey);
-    if (cached) {
+    if (cached !== null) {
       console.warn('[GeminiService] Cache hit for feature extraction');
       return cached;
     }
@@ -140,7 +140,7 @@ OUTPUT JSON ONLY: {
     const cacheKey = `recommendation:${this.hashString(JSON.stringify(analysisData))}`;
 
     const cached = this.getFromCache<RecommendationResult>(cacheKey);
-    if (cached) {
+    if (cached !== null) {
       console.warn('[GeminiService] Cache hit for recommendation');
       return cached;
     }
@@ -181,7 +181,7 @@ OUTPUT JSON ONLY: {
     const cached = this.getFromCache<{ verified: boolean; confidence: number; reasoning: string }>(
       cacheKey,
     );
-    if (cached) {
+    if (cached !== null) {
       console.warn('[GeminiService] Cache hit for web verification');
       return cached;
     }
@@ -266,7 +266,7 @@ OUTPUT JSON ONLY: {
   private getFromCache<T>(key: string): T | null {
     const cached = this.cache.get(key) as CachedResponse<T> | undefined;
 
-    if (!cached) return null;
+    if (cached === undefined) return null;
 
     // Check if expired
     if (Date.now() - cached.timestamp > cached.ttl) {
@@ -334,9 +334,9 @@ OUTPUT JSON ONLY: {
 let geminiServiceInstance: GeminiService | null = null;
 
 export const getGeminiService = (): GeminiService => {
-  if (!geminiServiceInstance) {
+  if (geminiServiceInstance === null) {
     const apiKey = globalThis.process?.env?.GEMINI_API_KEY;
-    if (!apiKey) {
+    if (apiKey === undefined || apiKey === null) {
       throw new Error('GEMINI_API_KEY environment variable is not set');
     }
     geminiServiceInstance = new GeminiService(apiKey);

@@ -7,7 +7,9 @@
  * @see plans/24_performance_optimization_strategy.md
  */
 
-import { lazy, Suspense, ComponentType, ReactNode } from 'react';
+import { lazy, Suspense } from 'react';
+
+import type { ComponentType, ReactNode } from 'react';
 
 // Lazy load heavy components
 export const LazyDiagnosticSummary = lazy(() =>
@@ -20,7 +22,7 @@ export const LazyFairnessReport = lazy(() => import('./FairnessReport'));
 
 export const LazyAgentFlow = lazy(() =>
   import('./AgentFlow').then((module) => ({
-    default: module.MemoizedAgentFlow || module.AgentFlow,
+    default: module.MemoizedAgentFlow ?? module.AgentFlow,
   })),
 );
 
@@ -40,23 +42,23 @@ const LoadingFallback = ({ message = 'Loading...' }: { message?: string }) => (
   </div>
 );
 
-// Wrapper component with suspense
+// Wrapper component with suspense - use simpler types to avoid conversion warnings
 export const LazyWrapper = ({
-  component: Component,
+  component,
   fallback,
   ...props
 }: {
-  component: ComponentType<any>;
+  component: unknown;
   fallback?: ReactNode;
-  [key: string]: any;
+  [key: string]: unknown;
 }) => (
-  <Suspense fallback={fallback || <LoadingFallback />}>
+  <Suspense fallback={fallback ?? <LoadingFallback />}>
     <Component {...props} />
   </Suspense>
 );
 
 // Export individual wrapped components for convenience
-export const DiagnosticSummaryLazy = (props: any) => (
+export const DiagnosticSummaryLazy = (props: Record<string, unknown>) => (
   <LazyWrapper
     component={LazyDiagnosticSummary}
     fallback={<LoadingFallback message="Loading analysis..." />}
@@ -64,7 +66,7 @@ export const DiagnosticSummaryLazy = (props: any) => (
   />
 );
 
-export const FairnessDashboardLazy = (props: any) => (
+export const FairnessDashboardLazy = (props: Record<string, unknown>) => (
   <LazyWrapper
     component={LazyFairnessDashboard}
     fallback={<LoadingFallback message="Loading fairness metrics..." />}
@@ -72,7 +74,7 @@ export const FairnessDashboardLazy = (props: any) => (
   />
 );
 
-export const FairnessReportLazy = (props: any) => (
+export const FairnessReportLazy = (props: Record<string, unknown>) => (
   <LazyWrapper
     component={LazyFairnessReport}
     fallback={<LoadingFallback message="Loading report..." />}
@@ -80,7 +82,7 @@ export const FairnessReportLazy = (props: any) => (
   />
 );
 
-export const AgentFlowLazy = (props: any) => (
+export const AgentFlowLazy = (props: Record<string, unknown>) => (
   <LazyWrapper
     component={LazyAgentFlow}
     fallback={<LoadingFallback message="Loading agent flow..." />}
@@ -88,7 +90,7 @@ export const AgentFlowLazy = (props: any) => (
   />
 );
 
-export const TraceTimelineLazy = (props: any) => (
+export const TraceTimelineLazy = (props: Record<string, unknown>) => (
   <LazyWrapper
     component={LazyTraceTimeline}
     fallback={<LoadingFallback message="Loading timeline..." />}

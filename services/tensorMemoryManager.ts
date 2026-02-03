@@ -8,6 +8,7 @@
  */
 
 import * as tf from '@tensorflow/tfjs';
+
 import { Logger } from './logger';
 
 interface TensorPoolEntry {
@@ -29,39 +30,33 @@ class TensorMemoryManager {
   }
 
   static getInstance(): TensorMemoryManager {
-    if (!TensorMemoryManager.instance) {
-      TensorMemoryManager.instance = new TensorMemoryManager();
-    }
+    TensorMemoryManager.instance ??= new TensorMemoryManager();
     return TensorMemoryManager.instance;
   }
 
   /**
    * Execute function with automatic tensor cleanup
    */
-  tidy<T>(fn: () => T): T {
+  tidy(fn: () => unknown): unknown {
     return tf.tidy(fn);
   }
 
   /**
    * Execute async function with automatic tensor cleanup
    */
-  async tidyAsync<T>(fn: () => Promise<T>): Promise<T> {
+  async tidyAsync(fn: () => Promise<unknown>): Promise<unknown> {
     const startNumTensors = tf.memory().numTensors;
 
-    try {
-      const result = await fn();
+    const result = await fn();
 
-      const endNumTensors = tf.memory().numTensors;
-      const leaked = endNumTensors - startNumTensors;
+    const endNumTensors = tf.memory().numTensors;
+    const leaked = endNumTensors - startNumTensors;
 
-      if (leaked > 0) {
-        Logger.warn('TensorMemoryManager', `Potential memory leak: ${leaked} tensors not disposed`);
-      }
-
-      return result;
-    } catch (error) {
-      throw error;
+    if (leaked > 0) {
+      Logger.warn('TensorMemoryManager', `Potential memory leak: ${leaked} tensors not disposed`);
     }
+
+    return result;
   }
 
   /**
@@ -69,9 +64,8 @@ class TensorMemoryManager {
    */
   acquire(shape: number[], dtype: tf.DataType = 'float32'): tf.Tensor {
     const key = this.getPoolKey(shape, dtype);
-    const pool = this.pools.get(key) || [];
+    const pool = this.pools.get(key) ?? [];
 
-    // Find available tensor in pool
     const entry = pool.find((e) => !e.inUse);
 
     if (entry) {
@@ -81,7 +75,6 @@ class TensorMemoryManager {
       return entry.tensor;
     }
 
-    // Create new tensor if pool is empty or all in use
     const tensor = tf.zeros(shape, dtype);
 
     const newEntry: TensorPoolEntry = {
@@ -107,7 +100,6 @@ class TensorMemoryManager {
     const pool = this.pools.get(key);
 
     if (pool === undefined) {
-      // Not from pool, dispose immediately
       tensor.dispose();
       return;
     }
@@ -119,7 +111,6 @@ class TensorMemoryManager {
       entry.lastUsed = Date.now();
       Logger.info('TensorMemoryManager', 'Tensor returned to pool', { shape, dtype });
     } else {
-      // Not from this pool, dispose
       tensor.dispose();
     }
   }
@@ -129,7 +120,7 @@ class TensorMemoryManager {
    */
   disposeAll(tensors: tf.Tensor[]): void {
     for (const tensor of tensors) {
-      if ((tensor && tensor === null) || tensor === undefined.isDisposed) {
+      if (tensor !== null && tensor !== undefined && !tensor.isDisposed) {
         tensor.dispose();
       }
     }
@@ -157,7 +148,7 @@ class TensorMemoryManager {
    * Clear all pools
    */
   clearAllPools(): void {
-    for (const [key, pool] of this.pools.entries()) {
+    for (const [, pool] of this.pools.entries()) {
       for (const entry of pool) {
         if (!entry.tensor.isDisposed) {
           entry.tensor.dispose();
@@ -175,21 +166,19 @@ class TensorMemoryManager {
     const now = Date.now();
     const maxAge = 5 * 60 * 1000; // 5 minutes
 
-    for (const [key, pool] of this.pools.entries()) {
-      // Remove old unused tensors
+    for (const [poolKey, pool] of this.pools.entries()) {
       const filtered = pool.filter((entry) => {
         const age = now - entry.lastUsed;
         const shouldKeep = entry.inUse || age < maxAge;
 
         if (!shouldKeep && !entry.tensor.isDisposed) {
           entry.tensor.dispose();
-          Logger.info('TensorMemoryManager', 'Disposed old tensor', { key, age });
+          Logger.info('TensorMemoryManager', 'Disposed old tensor', { age });
         }
 
         return shouldKeep;
       });
 
-      // Limit pool size
       if (filtered.length > this.MAX_POOL_SIZE) {
         const excess = filtered.splice(this.MAX_POOL_SIZE);
         for (const entry of excess) {
@@ -200,9 +189,9 @@ class TensorMemoryManager {
       }
 
       if (filtered.length > 0) {
-        this.pools.set(key, filtered);
+        this.pools.set(poolKey, filtered);
       } else {
-        this.pools.delete(key);
+        this.pools.delete(poolKey);
       }
     }
 
@@ -213,7 +202,7 @@ class TensorMemoryManager {
    * Start cleanup timer
    */
   private startCleanupTimer(): void {
-    if (this.cleanupTimer) return;
+    if (this.cleanupTimer !== null) return;
 
     this.cleanupTimer = window.setInterval(() => {
       this.cleanup();
@@ -224,7 +213,7 @@ class TensorMemoryManager {
    * Stop cleanup timer
    */
   private stopCleanupTimer(): void {
-    if (this.cleanupTimer) {
+    if (this.cleanupTimer !== null) {
       window.clearInterval(this.cleanupTimer);
       this.cleanupTimer = null;
     }
@@ -238,7 +227,6 @@ class TensorMemoryManager {
     Logger.info('TensorMemoryManager', 'Memory usage', {
       numTensors: memory.numTensors,
       numBytes: memory.numBytes,
-      numBytesInGPU: memory.numBytesInGPU || 0,
       unreliable: memory.unreliable,
     });
   }
@@ -292,14 +280,12 @@ class TensorMemoryManager {
   }
 }
 
-// Export singleton
 export const tensorMemoryManager = TensorMemoryManager.getInstance();
 
-// Helper functions
-export const withTensorCleanup = <T>(fn: () => T): T => {
+export const withTensorCleanup = (fn: () => unknown): unknown => {
   return tensorMemoryManager.tidy(fn);
 };
 
-export const withAsyncTensorCleanup = async <T>(fn: () => Promise<T>): Promise<T> => {
+export const withAsyncTensorCleanup = async (fn: () => Promise<unknown>): Promise<unknown> => {
   return await tensorMemoryManager.tidyAsync(fn);
 };

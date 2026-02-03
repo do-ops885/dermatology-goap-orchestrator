@@ -2,7 +2,7 @@
  * Inference Worker Pool
  *
  * Manages a pool of Web Workers for ML inference to maximize throughput
- * while keeping the main thread responsive.
+ * while keeping main thread responsive.
  *
  * @see plans/24_performance_optimization_strategy.md
  */
@@ -12,18 +12,18 @@ import { Logger } from './logger';
 interface WorkerTask {
   id: string;
   type: 'classify' | 'preprocess' | 'saliency';
-  data: any;
-  resolve: (result: any) => void;
-  reject: (error: Error) => void;
+  data: unknown;
+  resolve: (_result: unknown) => void;
+  reject: (_error: Error) => void;
 }
 
 class InferenceWorkerPool {
-  private static instance: InferenceWorkerPool;
+  private static instance: InferenceWorkerPool | null = null;
   private workers: Worker[] = [];
   private availableWorkers: Worker[] = [];
   private taskQueue: WorkerTask[] = [];
   private pendingTasks = new Map<string, WorkerTask>();
-  private readonly maxWorkers = navigator.hardwareConcurrency || 4;
+  private readonly maxWorkers = navigator.hardwareConcurrency ?? 4;
   private initialized = false;
 
   private constructor() {
@@ -31,9 +31,7 @@ class InferenceWorkerPool {
   }
 
   static getInstance(): InferenceWorkerPool {
-    if (!InferenceWorkerPool.instance) {
-      InferenceWorkerPool.instance = new InferenceWorkerPool();
-    }
+    InferenceWorkerPool.instance ??= new InferenceWorkerPool();
     return InferenceWorkerPool.instance;
   }
 
@@ -74,7 +72,7 @@ class InferenceWorkerPool {
   /**
    * Execute inference task
    */
-  async execute<T>(type: 'classify' | 'preprocess' | 'saliency', data: any): Promise<T> {
+  async execute<T>(type: 'classify' | 'preprocess' | 'saliency', data: unknown): Promise<T> {
     if (!this.initialized) {
       throw new Error('Worker pool not initialized');
     }
@@ -84,7 +82,7 @@ class InferenceWorkerPool {
         id: `task_${Math.random().toString(36).substring(2, 11)}`,
         type,
         data,
-        resolve,
+        resolve: (value: unknown) => resolve(value as T),
         reject,
       };
 
@@ -134,7 +132,7 @@ class InferenceWorkerPool {
     if (type === 'success') {
       task.resolve(result);
     } else {
-      task.reject(new Error(error || 'Worker task failed'));
+      task.reject(new Error(error ?? 'Worker task failed'));
     }
 
     // Process next task

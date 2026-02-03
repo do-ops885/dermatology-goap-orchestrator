@@ -12,13 +12,16 @@ import type { Context, Next } from 'hono';
 interface RateLimitOptions {
   max: number; // Maximum requests per window
   window: string; // Time window (e.g., '15m', '1h')
-  keyGenerator?: (c: Context) => string;
+  keyGenerator?: (_c: Context) => string;
 }
 
 interface RateLimitRecord {
   count: number;
   resetAt: number;
 }
+
+const DEFAULT_MAX = 100;
+const ANONYMOUS_IDENTIFIER = 'anonymous';
 
 // In-memory store (use Redis in production)
 const store = new Map<string, RateLimitRecord>();
@@ -38,7 +41,7 @@ setInterval(
 
 const parseWindow = (window: string): number => {
   const match = window.match(/^(\d+)(m|h|d)$/);
-  if (!match) throw new Error(`Invalid window format: ${window}`);
+  if (match == null) throw new Error(`Invalid window format: ${window}`);
 
   const [, amount, unit] = match;
   const multipliers = { m: 60, h: 3600, d: 86400 };
@@ -47,55 +50,59 @@ const parseWindow = (window: string): number => {
 
 export const rateLimiter = (options: RateLimitOptions) => {
   const windowMs = parseWindow(options.window);
+  const max = options.max ?? DEFAULT_MAX;
+
+  const RATE_LIMIT_HEADER = 'X-RateLimit-Limit';
+  const RATE_LIMIT_REMAINING = 'X-RateLimit-Remaining';
+  const RATE_LIMIT_RESET = 'X-RateLimit-Reset';
 
   return async (c: Context, next: Next) => {
-    const identifier = options.keyGenerator
+    const headerResult = options.keyGenerator
       ? options.keyGenerator(c)
-      : c.req.header('X-Forwarded-For') || 'anonymous';
+      : c.req.header('X-Forwarded-For');
+
+    const identifier = headerResult ?? ANONYMOUS_IDENTIFIER;
 
     const now = Date.now();
     const record = store.get(identifier);
 
-    // Initialize or reset if window expired
-    if (!record || record.resetAt < now) {
+    if (record === null || record === undefined || record.resetAt < now) {
       store.set(identifier, {
         count: 1,
         resetAt: now + windowMs,
       });
 
-      c.header('X-RateLimit-Limit', options.max.toString());
-      c.header('X-RateLimit-Remaining', (options.max - 1).toString());
-      c.header('X-RateLimit-Reset', new Date(now + windowMs).toISOString());
+      c.header(RATE_LIMIT_HEADER, max.toString());
+      c.header(RATE_LIMIT_REMAINING, (max - 1).toString());
+      c.header(RATE_LIMIT_RESET, new Date(now + windowMs).toISOString());
 
       return next();
     }
 
-    // Check if limit exceeded
-    if (record.count >= options.max) {
+    if (record.count >= max) {
       const retryAfter = Math.ceil((record.resetAt - now) / 1000);
 
-      c.header('X-RateLimit-Limit', options.max.toString());
-      c.header('X-RateLimit-Remaining', '0');
-      c.header('X-RateLimit-Reset', new Date(record.resetAt).toISOString());
+      c.header(RATE_LIMIT_HEADER, max.toString());
+      c.header(RATE_LIMIT_REMAINING, '0');
+      c.header(RATE_LIMIT_RESET, new Date(record.resetAt).toISOString());
       c.header('Retry-After', retryAfter.toString());
 
       return c.json(
         {
           error: 'Rate limit exceeded',
-          message: `Maximum ${options.max} requests per ${options.window}`,
+          message: `Maximum ${max} requests per ${options.window}`,
           retryAfter: retryAfter,
         },
         429,
       );
     }
 
-    // Increment counter
     record.count++;
     store.set(identifier, record);
 
-    c.header('X-RateLimit-Limit', options.max.toString());
-    c.header('X-RateLimit-Remaining', (options.max - record.count).toString());
-    c.header('X-RateLimit-Reset', new Date(record.resetAt).toISOString());
+    c.header(RATE_LIMIT_HEADER, max.toString());
+    c.header(RATE_LIMIT_REMAINING, (max - record.count).toString());
+    c.header(RATE_LIMIT_RESET, new Date(record.resetAt).toISOString());
 
     return next();
   };

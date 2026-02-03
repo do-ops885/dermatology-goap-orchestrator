@@ -5,6 +5,7 @@
  */
 
 import { Hono } from 'hono';
+
 import { getGeminiService } from '../services/geminiService';
 
 const gemini = new Hono();
@@ -20,7 +21,7 @@ gemini.post('/skin-tone', async (c) => {
       mimeType: string;
     }>();
 
-    if (!body.imageBase64 || !body.mimeType) {
+    if (body.imageBase64 === undefined || body.mimeType === undefined) {
       return c.json(
         {
           success: false,
@@ -60,7 +61,7 @@ gemini.post('/extract-features', async (c) => {
       mimeType: string;
     }>();
 
-    if (!body.imageBase64 || !body.mimeType) {
+    if (body.imageBase64 === undefined || body.mimeType === undefined) {
       return c.json(
         {
           success: false,
@@ -99,7 +100,7 @@ gemini.post('/recommendation', async (c) => {
       analysisData: Record<string, unknown>;
     }>();
 
-    if (!body.analysisData) {
+    if (body.analysisData === undefined) {
       return c.json(
         {
           success: false,
@@ -139,7 +140,7 @@ gemini.post('/verify', async (c) => {
       context: string;
     }>();
 
-    if (!body.query || !body.context) {
+    if (body.query === undefined || body.context === undefined) {
       return c.json(
         {
           success: false,
