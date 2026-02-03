@@ -13,8 +13,8 @@ This checklist lists concrete edits and tests to make `goap-agent` the canonical
 - [x] Add `services/goap/agent.ts` to house agent orchestrator (145 LOC).
 - [x] Update `hooks/useClinicalAnalysis.ts` to use executor pattern with `services/executors/`.
 - [x] Add telemetry hooks to `services/logger.ts` used by `GoapAgent`.
-- [ ] Implement event bus for agent communication
-- [ ] Define structured error types and propagation mechanism
+- [x] Implement event bus for agent communication (`services/eventBus.ts`)
+- [x] Define structured error types and propagation mechanism (`services/errors.ts`)
 - [ ] Add agent health check endpoints/methods
 - [ ] Implement circuit breaker pattern for external services
 
