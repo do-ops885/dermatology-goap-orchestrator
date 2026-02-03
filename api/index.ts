@@ -1,27 +1,27 @@
-declare const process: { env?: { [key: string]: string | undefined } };
 /**
-
-declare const process: { env?: { [key: string]: string | undefined } };
  * API Gateway - Main Entry Point
- * 
+ *
  * Backend-for-Frontend pattern using Hono + Vercel Edge Functions
  * Handles all external API calls (Gemini, Search) with rate limiting,
  * caching, and retry logic.
- * 
+ *
  * @see plans/26_api_gateway_integration_strategy.md
  */
+
+declare const process: { env?: { [key: string]: string | undefined } };
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import { rateLimiter } from './middleware/rateLimiter';
+
 import { errorHandler } from './middleware/errorHandler';
 import { metricsMiddleware } from './middleware/metrics';
+import { rateLimiter } from './middleware/rateLimiter';
 
 // Route handlers
 import geminiRoutes from './routes/gemini';
-import searchRoutes from './routes/search';
 import healthRoutes from './routes/health';
+import searchRoutes from './routes/search';
 
 const app = new Hono();
 
@@ -53,9 +53,9 @@ app.use(
     window: '15m',
     keyGenerator: (c) => {
       return (
-        c.req.header('X-User-ID') ||
-        c.req.header('X-Forwarded-For') ||
-        c.req.header('CF-Connecting-IP') ||
+        c.req.header('X-User-ID') ??
+        c.req.header('X-Forwarded-For') ??
+        c.req.header('CF-Connecting-IP') ??
         'anonymous'
       );
     },

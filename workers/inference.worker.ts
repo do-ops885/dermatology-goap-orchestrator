@@ -22,7 +22,7 @@ interface InferenceRequest {
 interface InferenceResponse {
   type: 'success' | 'error';
   id: string;
-  result?: any;
+  result?: unknown;
   error?: string;
 }
 
@@ -33,7 +33,7 @@ let model: tf.LayersModel | null = null;
  * Load ML model
  */
 async function loadModel(modelURL: string): Promise<void> {
-  if (model) return;
+  if (model !== null) return;
 
   try {
     model = await tf.loadLayersModel(modelURL);
@@ -68,8 +68,8 @@ function preprocessImage(imageData: ImageData): tf.Tensor {
 /**
  * Run classification inference
  */
-async function classify(imageData: ImageData): Promise<any> {
-  if (!model) {
+async function classify(imageData: ImageData): Promise<unknown> {
+  if (model === null) {
     throw new Error('Model not loaded');
   }
 
@@ -79,12 +79,10 @@ async function classify(imageData: ImageData): Promise<any> {
 
     // Get top predictions
     const values = predictions.dataSync();
-    const topK = Array.from(values)
+    return Array.from(values)
       .map((value, index) => ({ value, index }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);
-
-    return topK;
   });
 }
 
@@ -92,7 +90,7 @@ async function classify(imageData: ImageData): Promise<any> {
  * Generate saliency map
  */
 async function generateSaliency(imageData: ImageData): Promise<number[][]> {
-  if (!model) {
+  if (model === null) {
     throw new Error('Model not loaded');
   }
 
@@ -110,9 +108,7 @@ async function generateSaliency(imageData: ImageData): Promise<number[][]> {
       .abs(gradients as tf.Tensor)
       .mean(-1)
       .squeeze();
-    const values = saliency.arraySync() as number[][];
-
-    return values;
+    return saliency.arraySync() as number[][];
   });
 }
 
@@ -127,17 +123,17 @@ self.onmessage = async (event: MessageEvent<InferenceRequest>) => {
 
     switch (type) {
       case 'classify':
-        if (!data.imageData) throw new Error('ImageData required');
+        if (data.imageData === undefined) throw new Error('ImageData required');
         result = await classify(data.imageData);
         break;
 
       case 'preprocess':
-        if (!data.imageData) throw new Error('ImageData required');
+        if (data.imageData === undefined) throw new Error('ImageData required');
         result = preprocessImage(data.imageData).arraySync();
         break;
 
       case 'saliency':
-        if (!data.imageData) throw new Error('ImageData required');
+        if (data.imageData === undefined) throw new Error('ImageData required');
         result = await generateSaliency(data.imageData);
         break;
 
@@ -175,7 +171,7 @@ self.addEventListener('message', (event) => {
 
 // Cleanup on termination
 self.addEventListener('beforeunload', () => {
-  if (model) {
+  if (model !== null) {
     model.dispose();
   }
   tf.disposeVariables();

@@ -8,6 +8,7 @@
  */
 
 import { onCLS, onFID, onFCP, onLCP, onTTFB, onINP, type Metric } from 'web-vitals';
+
 import { Logger } from './logger';
 
 interface PerformanceMetrics {

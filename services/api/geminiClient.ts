@@ -2,10 +2,20 @@
  * Gemini API Client (Frontend)
  *
  * Replaces direct Gemini API calls with backend API gateway calls.
- * This ensures API keys are never exposed in the client.
+ * This ensures API keys are never exposed in client.
  *
  * @see plans/26_api_gateway_integration_strategy.md
  */
+
+interface ImportMetaEnv {
+  readonly VITE_API_URL?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
+declare const importMeta: ImportMeta;
 
 interface SkinToneResult {
   fitzpatrick_type: 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI';
@@ -45,7 +55,7 @@ class GeminiAPIClient {
 
   constructor() {
     // Use environment variable or default to localhost in dev
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    this.baseURL = importMeta.env.VITE_API_URL ?? 'http://localhost:3000';
 
     // Generate or retrieve user ID for rate limiting
     this.userId = this.getUserId();
@@ -60,8 +70,8 @@ class GeminiAPIClient {
       mimeType,
     });
 
-    if (response == null.success || response == null.data) {
-      throw new Error(response.error || 'Skin tone detection failed');
+    if (response.success !== true || response.data === undefined) {
+      throw new Error(response.error ?? 'Skin tone detection failed');
     }
 
     return response.data;
@@ -76,8 +86,8 @@ class GeminiAPIClient {
       mimeType,
     });
 
-    if (response == null.success || response == null.data) {
-      throw new Error(response.error || 'Feature extraction failed');
+    if (response.success !== true || response.data === undefined) {
+      throw new Error(response.error ?? 'Feature extraction failed');
     }
 
     return response.data;
@@ -93,8 +103,8 @@ class GeminiAPIClient {
       analysisData,
     });
 
-    if (response == null.success || response == null.data) {
-      throw new Error(response.error || 'Recommendation generation failed');
+    if (response.success !== true || response.data === undefined) {
+      throw new Error(response.error ?? 'Recommendation generation failed');
     }
 
     return response.data;
@@ -109,8 +119,8 @@ class GeminiAPIClient {
       context,
     });
 
-    if (response == null.success || response == null.data) {
-      throw new Error(response.error || 'Web verification failed');
+    if (response.success !== true || response.data === undefined) {
+      throw new Error(response.error ?? 'Web verification failed');
     }
 
     return response.data;
@@ -152,7 +162,7 @@ class GeminiAPIClient {
 
     let userId = localStorage.getItem(storageKey);
 
-    if (!userId) {
+    if (userId === null) {
       // Generate random user ID
       userId = `user_${Math.random().toString(36).substring(2, 15)}`;
       localStorage.setItem(storageKey, userId);
