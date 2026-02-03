@@ -12,7 +12,7 @@ import {
   KeyRound,
   MessageSquareHeart,
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo, memo } from 'react';
 
 import AgentDB from '../services/agentDB';
 import { Logger } from '../services/logger';
@@ -25,8 +25,8 @@ interface DiagnosticSummaryProps {
   result: AnalysisResult | null;
 }
 
-// Helper: Security badge component
-const SecurityBadge: React.FC<{ encrypted?: boolean | undefined }> = ({ encrypted }) => {
+// Helper: Security badge component (memoized)
+const SecurityBadge = memo<{ encrypted?: boolean | undefined }>(({ encrypted }) => {
   if (encrypted === true) {
     return (
       <div
@@ -38,10 +38,11 @@ const SecurityBadge: React.FC<{ encrypted?: boolean | undefined }> = ({ encrypte
     );
   }
   return <Lock className="w-4 h-4 text-terracotta-600" />;
-};
+});
+SecurityBadge.displayName = 'SecurityBadge';
 
-// Helper: Classification card
-const ClassificationCard: React.FC<{ result: AnalysisResult }> = ({ result }) => {
+// Helper: Classification card (memoized)
+const ClassificationCard = memo<{ result: AnalysisResult }>(({ result }) => {
   const confidence = result.lesions[0]?.confidence ?? 0;
   const isLowConfidence = confidence < 0.65;
 
@@ -73,10 +74,11 @@ const ClassificationCard: React.FC<{ result: AnalysisResult }> = ({ result }) =>
       </div>
     </div>
   );
-};
+});
+ClassificationCard.displayName = 'ClassificationCard';
 
-// Helper: Fairness card
-const FairnessCard: React.FC<{ result: AnalysisResult }> = ({ result }) => {
+// Helper: Fairness card (memoized)
+const FairnessCard = memo<{ result: AnalysisResult }>(({ result }) => {
   const fairness = (result as unknown as { fairness?: number }).fairness;
   const fairnessDisplay = fairness !== undefined ? (fairness * 100).toFixed(0) : '92';
 
@@ -91,10 +93,11 @@ const FairnessCard: React.FC<{ result: AnalysisResult }> = ({ result }) => {
       </span>
     </div>
   );
-};
+});
+FairnessCard.displayName = 'FairnessCard';
 
-// Helper: Differential diagnosis section
-const DifferentialDiagnosis: React.FC<{ result: AnalysisResult }> = ({ result }) => {
+// Helper: Differential diagnosis section (memoized)
+const DifferentialDiagnosis = memo<{ result: AnalysisResult }>(({ result }) => {
   const differential = (result as unknown as { differential_diagnosis?: string[] })
     .differential_diagnosis;
 
@@ -114,10 +117,11 @@ const DifferentialDiagnosis: React.FC<{ result: AnalysisResult }> = ({ result })
       </ul>
     </div>
   );
-};
+});
+DifferentialDiagnosis.displayName = 'DifferentialDiagnosis';
 
-// Helper: Agent reasoning section
-const AgentReasoning: React.FC<{ result: AnalysisResult }> = ({ result }) => {
+// Helper: Agent reasoning section (memoized)
+const AgentReasoning = memo<{ result: AnalysisResult }>(({ result }) => {
   const resultWithRisk = result as unknown as {
     riskAssessment?: string;
     reasoning?: string;
@@ -139,10 +143,11 @@ const AgentReasoning: React.FC<{ result: AnalysisResult }> = ({ result }) => {
       )}
     </div>
   );
-};
+});
+AgentReasoning.displayName = 'AgentReasoning';
 
-// Helper: Similar cases section
-const SimilarCases: React.FC<{ result: AnalysisResult }> = ({ result }) => {
+// Helper: Similar cases section (memoized)
+const SimilarCases = memo<{ result: AnalysisResult }>(({ result }) => {
   const similarCases = (
     result as unknown as {
       similarCases?: Array<{
@@ -183,10 +188,11 @@ const SimilarCases: React.FC<{ result: AnalysisResult }> = ({ result }) => {
       </div>
     </div>
   );
-};
+});
+SimilarCases.displayName = 'SimilarCases';
 
-// Helper: Web verification section
-const WebVerification: React.FC<{ verification: AnalysisResult['webVerification'] }> = ({
+// Helper: Web verification section (memoized)
+const WebVerification = memo<{ verification: AnalysisResult['webVerification'] }>(({
   verification,
 }) => {
   if (!verification) return null;
@@ -221,10 +227,11 @@ const WebVerification: React.FC<{ verification: AnalysisResult['webVerification'
       </div>
     </div>
   );
-};
+});
+WebVerification.displayName = 'WebVerification';
 
-// Helper: Recommendation section
-const RecommendationSection: React.FC<{ recommendations: string[] }> = ({ recommendations }) => (
+// Helper: Recommendation section (memoized)
+const RecommendationSection = memo<{ recommendations: string[] }>(({ recommendations }) => (
   <div className="flex-1 p-4 bg-stone-50 rounded-2xl border border-stone-100">
     <span className="text-[10px] text-stone-400 uppercase font-bold tracking-widest block mb-3">
       Recommendation
@@ -237,10 +244,11 @@ const RecommendationSection: React.FC<{ recommendations: string[] }> = ({ recomm
       "
     </p>
   </div>
-);
+));
+RecommendationSection.displayName = 'RecommendationSection';
 
-// Helper: Security footer
-const SecurityFooter: React.FC<{ securityContext: AnalysisResult['securityContext'] }> = ({
+// Helper: Security footer (memoized)
+const SecurityFooter = memo<{ securityContext: AnalysisResult['securityContext'] }>(({
   securityContext,
 }) => {
   if (!securityContext) return null;
@@ -254,21 +262,23 @@ const SecurityFooter: React.FC<{ securityContext: AnalysisResult['securityContex
       <div>IV: {securityContext.iv.slice(0, 4).join('')}...</div>
     </div>
   );
-};
+});
+SecurityFooter.displayName = 'SecurityFooter';
 
-// Helper: Empty state
-const EmptyState: React.FC = () => (
+// Helper: Empty state (memoized)
+const EmptyState = memo(() => (
   <div className="flex-1 flex flex-col items-center justify-center text-stone-300 gap-2">
     <Gauge className="w-8 h-8 opacity-20" />
     <span className="text-sm font-medium">Orchestrator idle</span>
   </div>
-);
+));
+EmptyState.displayName = 'EmptyState';
 
 export const DiagnosticSummary: React.FC<DiagnosticSummaryProps> = ({ result }) => {
   const [showFeedback, setShowFeedback] = useState(false);
-  const agentDB = AgentDB.getInstance();
+  const agentDB = useMemo(() => AgentDB.getInstance(), []);
 
-  const handleFeedback = async (feedback: {
+  const handleFeedback = useCallback(async (feedback: {
     diagnosis: string;
     correctedDiagnosis?: string | undefined;
     confidence: number;
@@ -319,9 +329,9 @@ export const DiagnosticSummary: React.FC<DiagnosticSummaryProps> = ({ result }) 
     void setTimeout(() => {
       setShowFeedback(false);
     }, 2000);
-  };
+  }, [agentDB, result]);
 
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     if (!result) return;
 
     // Create a secure-looking export payload
@@ -358,11 +368,14 @@ export const DiagnosticSummary: React.FC<DiagnosticSummaryProps> = ({ result }) 
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  };
+  }, [result]);
 
-  const containerClass = `glass-panel p-6 rounded-2xl flex-1 transition-all duration-700 flex flex-col ${
-    result ? 'opacity-100 scale-100' : 'opacity-40 scale-95 pointer-events-none'
-  }`;
+  const containerClass = useMemo(() => 
+    `glass-panel p-6 rounded-2xl flex-1 transition-all duration-700 flex flex-col ${
+      result ? 'opacity-100 scale-100' : 'opacity-40 scale-95 pointer-events-none'
+    }`,
+    [result]
+  );
 
   return (
     <div className={containerClass}>
