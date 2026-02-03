@@ -20,11 +20,11 @@ export const errorHandler = () => {
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
       });
-      
+
       // Determine status code
       let status = 500;
       let message = 'Internal server error';
-      
+
       if (error instanceof Error) {
         if (error.message.includes('rate limit')) {
           status = 429;
@@ -40,14 +40,18 @@ export const errorHandler = () => {
           message = 'Bad request';
         }
       }
-      
-      return c.json({
-        success: false,
-        error: message,
-        details: process.env.NODE_ENV === 'development' && error instanceof Error
-          ? error.message
-          : undefined,
-      }, status);
+
+      return c.json(
+        {
+          success: false,
+          error: message,
+          details:
+            process.env.NODE_ENV === 'development' && error instanceof Error
+              ? error.message
+              : undefined,
+        },
+        status,
+      );
     }
   };
 };

@@ -1,9 +1,9 @@
 /**
  * Performance Monitoring Service
- * 
+ *
  * Tracks Web Vitals and custom performance metrics.
  * Integrates with existing reportWebVitals.ts
- * 
+ *
  * @see plans/24_performance_optimization_strategy.md
  */
 
@@ -50,7 +50,7 @@ class PerformanceMonitor {
   private initializeWebVitals(): void {
     const handleMetric = (metric: Metric) => {
       this.metrics[metric.name as keyof PerformanceMetrics] = metric;
-      
+
       // Log metric
       Logger.info('PerformanceMonitor', `${metric.name} recorded`, {
         value: metric.value,
@@ -60,7 +60,7 @@ class PerformanceMonitor {
 
       // Send to analytics (if available)
       this.sendToAnalytics(metric);
-      
+
       // Check against thresholds
       this.checkThresholds(metric);
     };
@@ -71,7 +71,7 @@ class PerformanceMonitor {
     onFCP(handleMetric);
     onLCP(handleMetric);
     onTTFB(handleMetric);
-    
+
     // INP is newer, may not be available in all browsers
     try {
       onINP(handleMetric);
@@ -94,7 +94,7 @@ class PerformanceMonitor {
         for (const entry of list.getEntries()) {
           if (entry.entryType === 'resource') {
             const resourceEntry = entry as PerformanceResourceTiming;
-            
+
             // Track slow resources (> 1s)
             if (resourceEntry.duration > 1000) {
               Logger.warn('PerformanceMonitor', 'Slow resource detected', {
@@ -140,9 +140,10 @@ class PerformanceMonitor {
    */
   trackComponentRender(componentName: string, duration: number): void {
     this.trackCustomMetric('component_render', duration, { component: componentName });
-    
+
     // Warn if render takes too long
-    if (duration > 16) { // More than 1 frame at 60fps
+    if (duration > 16) {
+      // More than 1 frame at 60fps
       Logger.warn('PerformanceMonitor', `Slow render detected: ${componentName}`, { duration });
     }
   }
@@ -162,7 +163,7 @@ class PerformanceMonitor {
    */
   trackInference(model: string, duration: number): void {
     this.trackCustomMetric('ml_inference', duration, { model });
-    
+
     if (duration > 5000) {
       Logger.warn('PerformanceMonitor', `Slow inference: ${model}`, { duration });
     }
@@ -196,15 +197,16 @@ class PerformanceMonitor {
       avgInferenceTime: number;
     };
   } {
-    const componentRenders = this.customMetrics.filter(m => m.name === 'component_render');
-    const apiCalls = this.customMetrics.filter(m => m.name === 'api_call');
-    const inferences = this.customMetrics.filter(m => m.name === 'ml_inference');
+    const componentRenders = this.customMetrics.filter((m) => m.name === 'component_render');
+    const apiCalls = this.customMetrics.filter((m) => m.name === 'api_call');
+    const inferences = this.customMetrics.filter((m) => m.name === 'ml_inference');
 
     return {
       webVitals: this.getMetrics(),
       customMetrics: {
         componentRenders: componentRenders.length,
-        avgRenderTime: componentRenders.reduce((sum, m) => sum + m.value, 0) / componentRenders.length || 0,
+        avgRenderTime:
+          componentRenders.reduce((sum, m) => sum + m.value, 0) / componentRenders.length || 0,
         apiCalls: apiCalls.length,
         avgAPITime: apiCalls.reduce((sum, m) => sum + m.value, 0) / apiCalls.length || 0,
         inferences: inferences.length,
@@ -270,12 +272,16 @@ class PerformanceMonitor {
    * Export metrics for debugging
    */
   exportMetrics(): string {
-    return JSON.stringify({
-      webVitals: this.metrics,
-      customMetrics: this.customMetrics,
-      summary: this.getSummary(),
-      timestamp: new Date().toISOString(),
-    }, null, 2);
+    return JSON.stringify(
+      {
+        webVitals: this.metrics,
+        customMetrics: this.customMetrics,
+        summary: this.getSummary(),
+        timestamp: new Date().toISOString(),
+      },
+      null,
+      2,
+    );
   }
 
   /**
@@ -304,7 +310,7 @@ export const performanceMonitor = PerformanceMonitor.getInstance();
 export const measureAsync = async <T>(
   name: string,
   fn: () => Promise<T>,
-  tags?: Record<string, string>
+  tags?: Record<string, string>,
 ): Promise<T> => {
   const start = performance.now();
   try {
@@ -320,11 +326,7 @@ export const measureAsync = async <T>(
 };
 
 // Helper function to measure sync operations
-export const measureSync = <T>(
-  name: string,
-  fn: () => T,
-  tags?: Record<string, string>
-): T => {
+export const measureSync = <T>(name: string, fn: () => T, tags?: Record<string, string>): T => {
   const start = performance.now();
   try {
     const result = fn();
@@ -341,7 +343,7 @@ export const measureSync = <T>(
 // React hook for performance tracking
 export const usePerformanceTracking = (componentName: string) => {
   const start = performance.now();
-  
+
   return () => {
     const duration = performance.now() - start;
     performanceMonitor.trackComponentRender(componentName, duration);

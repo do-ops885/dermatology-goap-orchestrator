@@ -10,6 +10,7 @@
 The API Gateway migrates Gemini API calls from client-side to server-side, addressing the critical security issue of exposed API keys. It provides rate limiting, caching, retry logic, and centralized monitoring.
 
 **Key Benefits:**
+
 - ✅ **Security:** API keys never exposed to client
 - ✅ **Rate Limiting:** 100 requests per 15 minutes per user
 - ✅ **Caching:** 24-hour cache for repeated requests (80%+ hit rate expected)
@@ -131,6 +132,7 @@ curl http://localhost:3000/health
 ```
 
 Response:
+
 ```json
 {
   "status": "healthy",
@@ -157,6 +159,7 @@ curl -X POST http://localhost:3000/api/gemini/skin-tone \
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -187,15 +190,12 @@ curl -X POST http://localhost:3000/api/gemini/extract-features \
 ```
 
 Response:
+
 ```json
 {
   "success": true,
   "data": {
-    "features": [
-      "asymmetric borders",
-      "irregular pigmentation",
-      "diameter > 6mm"
-    ],
+    "features": ["asymmetric borders", "irregular pigmentation", "diameter > 6mm"],
     "description": "Lesion exhibits multiple concerning features",
     "clinical_notes": "Recommend biopsy for definitive diagnosis"
   }
@@ -222,6 +222,7 @@ curl -X POST http://localhost:3000/api/gemini/recommendation \
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -238,15 +239,18 @@ Response:
 ## Rate Limiting
 
 **Limits:**
+
 - 100 requests per 15 minutes per user
 - Rate limit headers included in all responses
 
 **Headers:**
+
 - `X-RateLimit-Limit`: Maximum requests allowed
 - `X-RateLimit-Remaining`: Requests remaining in window
 - `X-RateLimit-Reset`: Timestamp when limit resets
 
 **Example:**
+
 ```
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 42
@@ -254,6 +258,7 @@ X-RateLimit-Reset: 2026-02-03T14:15:00.000Z
 ```
 
 **429 Response:**
+
 ```json
 {
   "error": "Rate limit exceeded",
@@ -267,16 +272,19 @@ X-RateLimit-Reset: 2026-02-03T14:15:00.000Z
 ## Caching
 
 **Strategy:**
+
 - In-memory cache (development)
 - Redis cache (production - future)
 - 24-hour TTL for all responses
 
 **Cache Keys:**
+
 - Based on request content hash
 - Same image = same cache key
 - Automatic cache invalidation after TTL
 
 **Cache Headers:**
+
 - Responses are cached server-side
 - No client-side caching headers (privacy)
 
@@ -293,6 +301,7 @@ curl http://localhost:3000/health/metrics
 ```
 
 Response:
+
 ```json
 {
   "status": "healthy",
@@ -314,16 +323,13 @@ curl http://localhost:3000/api/gemini/cache-stats
 ```
 
 Response:
+
 ```json
 {
   "success": true,
   "data": {
     "size": 127,
-    "entries": [
-      "skin-tone:abc123",
-      "features:def456",
-      "recommendation:ghi789"
-    ]
+    "entries": ["skin-tone:abc123", "features:def456", "recommendation:ghi789"]
   }
 }
 ```
@@ -363,6 +369,7 @@ done
 ### Replace Direct Gemini Calls
 
 **Before (Direct API call - INSECURE):**
+
 ```typescript
 import { GoogleGenAI } from '@google/genai';
 
@@ -371,6 +378,7 @@ const response = await ai.models.generateContent({ ... });
 ```
 
 **After (API Gateway - SECURE):**
+
 ```typescript
 import { geminiClient } from '../services/api/geminiClient';
 
@@ -380,6 +388,7 @@ const result = await geminiClient.detectSkinTone(imageBase64, mimeType); // ✅ 
 ### Update Executor Files
 
 Files to update:
+
 - `services/executors/skinToneDetectionExecutor.ts`
 - `services/executors/featureExtractionExecutor.ts`
 - `services/executors/recommendationExecutor.ts`
@@ -458,14 +467,17 @@ echo $VITE_API_URL
 ## Performance Expectations
 
 **Without Caching:**
+
 - Average response time: 800-1200ms
 - Gemini API latency: 600-1000ms
 
 **With Caching (80% hit rate):**
+
 - Average response time: 200-400ms
 - Cache hit latency: 50-100ms
 
 **Rate Limiting Overhead:**
+
 - < 5ms per request
 
 ---

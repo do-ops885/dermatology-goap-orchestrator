@@ -9,7 +9,7 @@ on:
 jobs:
   bundle-size:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -39,18 +39,18 @@ jobs:
           # Get bundle sizes
           MAIN_SIZE=$(find dist/assets -name 'index-*.js' -exec du -h {} \; | awk '{print $1}')
           VENDOR_SIZE=$(find dist/assets -name 'vendor-*.js' -exec du -sh {} \; | awk '{s+=$1} END {print s}')
-          
+
           echo "📦 Bundle Sizes:"
           echo "Main: $MAIN_SIZE"
           echo "Vendor: $VENDOR_SIZE"
-          
+
           # Check against budget (500 kB for main)
           MAIN_SIZE_BYTES=$(find dist/assets -name 'index-*.js' -exec du -b {} \; | awk '{print $1}')
           if [ "$MAIN_SIZE_BYTES" -gt 512000 ]; then
             echo "❌ Main bundle exceeds 500 kB budget"
             exit 1
           fi
-          
+
           echo "✅ Bundle size within budget"
 
       - name: Comment PR
@@ -66,9 +66,9 @@ jobs:
                 const stats = fs.statSync(`dist/assets/${f}`);
                 return `- ${f}: ${(stats.size / 1024).toFixed(2)} kB`;
               });
-            
+
             const comment = `## 📦 Bundle Size Report\n\n${sizes.join('\n')}`;
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

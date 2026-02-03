@@ -13,7 +13,7 @@ Comprehensive production deployment strategy for the Dermatology AI Orchestrator
 
 **Deployment Model:** Progressive delivery with blue-green deployment and feature flags  
 **Target Environments:** Staging → Canary → Production  
-**Rollback Time:** < 5 minutes  
+**Rollback Time:** < 5 minutes
 
 ---
 
@@ -24,6 +24,7 @@ Comprehensive production deployment strategy for the Dermatology AI Orchestrator
 **Recommended Platform:** Vercel / Netlify (Edge-optimized static hosting)
 
 **Rationale:**
+
 - Native support for React/Vite applications
 - Global CDN with edge caching
 - Automatic HTTPS and SSL certificates
@@ -41,13 +42,13 @@ Staging:
   url: https://staging.dermatology-ai.app
   purpose: Pre-production validation
   traffic: Internal QA team only
-  
+
 Canary:
   url: https://app.dermatology-ai.app
   purpose: Gradual rollout (5% traffic)
   traffic: 5% of production users
   monitoring: Enhanced metrics collection
-  
+
 Production:
   url: https://app.dermatology-ai.app
   purpose: Full production deployment
@@ -61,7 +62,7 @@ Production:
 # infrastructure/main.tf
 terraform {
   required_version = ">= 1.0"
-  
+
   backend "s3" {
     bucket = "dermatology-ai-terraform-state"
     key    = "production/terraform.tfstate"
@@ -77,14 +78,14 @@ provider "aws" {
 # S3 bucket for static assets
 resource "aws_s3_bucket" "app_bucket" {
   bucket = "dermatology-ai-production"
-  
+
   versioning {
     enabled = true
   }
-  
+
   lifecycle_rule {
     enabled = true
-    
+
     noncurrent_version_expiration {
       days = 30
     }
@@ -97,48 +98,48 @@ resource "aws_cloudfront_distribution" "cdn" {
   is_ipv6_enabled     = true
   default_root_object = "index.html"
   price_class         = "PriceClass_All"
-  
+
   origin {
     domain_name = aws_s3_bucket.app_bucket.bucket_regional_domain_name
     origin_id   = "S3-${aws_s3_bucket.app_bucket.id}"
-    
+
     s3_origin_config {
       origin_access_identity = aws_cloudfront_origin_access_identity.oai.cloudfront_access_identity_path
     }
   }
-  
+
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-${aws_s3_bucket.app_bucket.id}"
-    
+
     forwarded_values {
       query_string = false
       cookies {
         forward = "none"
       }
     }
-    
+
     viewer_protocol_policy = "redirect-to-https"
     min_ttl                = 0
     default_ttl            = 3600
     max_ttl                = 86400
     compress               = true
   }
-  
+
   # Custom error responses
   custom_error_response {
     error_code         = 404
     response_code      = 200
     response_page_path = "/index.html"
   }
-  
+
   restrictions {
     geo_restriction {
       restriction_type = "none"
     }
   }
-  
+
   viewer_certificate {
     acm_certificate_arn      = aws_acm_certificate.cert.arn
     ssl_support_method       = "sni-only"
@@ -176,7 +177,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Check Version Bump
         run: |
           git fetch --tags
@@ -186,54 +187,54 @@ jobs:
             echo "❌ Version not bumped"
             exit 1
           fi
-      
+
       - name: Validate Changelog
         run: |
           if ! grep -q "$CURRENT_VERSION" CHANGELOG.md; then
             echo "❌ Changelog not updated"
             exit 1
           fi
-      
+
       - name: Security Scan
         run: |
           npm audit --audit-level=high
           npx snyk test --severity-threshold=high
-  
+
   build-and-test:
     needs: pre-deployment-checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install Dependencies
         run: npm ci
-      
+
       - name: Run Quality Gate
         run: npm run quality-gate
-      
+
       - name: Build Production Bundle
         run: npm run build
         env:
           NODE_ENV: production
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
-      
+
       - name: Run E2E Tests
         run: npx playwright test
-      
+
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: production-build
           path: dist/
           retention-days: 30
-  
+
   deploy-staging:
     needs: build-and-test
     runs-on: ubuntu-latest
@@ -244,7 +245,7 @@ jobs:
         with:
           name: production-build
           path: dist/
-      
+
       - name: Deploy to Staging
         uses: amondnet/vercel-action@v25
         with:
@@ -253,11 +254,11 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: ./dist
           alias-domains: staging.dermatology-ai.app
-      
+
       - name: Run Smoke Tests
         run: |
           npm run test:smoke -- --url=https://staging.dermatology-ai.app
-  
+
   deploy-canary:
     needs: deploy-staging
     runs-on: ubuntu-latest
@@ -269,7 +270,7 @@ jobs:
         with:
           name: production-build
           path: dist/
-      
+
       - name: Deploy Canary (5% Traffic)
         uses: amondnet/vercel-action@v25
         with:
@@ -278,16 +279,16 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: ./dist
           alias-domains: canary.dermatology-ai.app
-      
+
       - name: Configure Traffic Split
         run: |
           # Route 5% of traffic to canary
           vercel alias set canary.dermatology-ai.app --traffic=5
-      
+
       - name: Monitor Canary Health
         run: |
           npm run monitor:canary -- --duration=15m --threshold=99.5
-  
+
   deploy-production:
     needs: deploy-canary
     runs-on: ubuntu-latest
@@ -299,7 +300,7 @@ jobs:
         with:
           name: production-build
           path: dist/
-      
+
       - name: Create GitHub Release
         uses: actions/create-release@v1
         env:
@@ -309,7 +310,7 @@ jobs:
           release_name: Release v${{ needs.build-and-test.outputs.version }}
           draft: false
           prerelease: false
-      
+
       - name: Deploy to Production
         uses: amondnet/vercel-action@v25
         with:
@@ -318,14 +319,14 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: ./dist
           production: true
-      
+
       - name: Warm Cache
         run: |
           # Preload critical resources on CDN
           curl -X POST https://api.vercel.com/v1/purge \
             -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
             -d '{"urls": ["/", "/assets/main.js", "/assets/vendor-react.js"]}'
-      
+
       - name: Notify Deployment Success
         uses: 8398a7/action-slack@v3
         with:
@@ -404,23 +405,23 @@ jobs:
           # Query monitoring service
           ERROR_RATE=$(curl -s "https://api.monitoring.com/metrics?query=error_rate_5m" | jq -r '.value')
           echo "error_rate=$ERROR_RATE" >> $GITHUB_OUTPUT
-          
+
           if (( $(echo "$ERROR_RATE > 5.0" | bc -l) )); then
             echo "❌ Error rate too high: $ERROR_RATE%"
             exit 1
           fi
-      
+
       - name: Check Response Time
         id: response_time
         run: |
           P95_LATENCY=$(curl -s "https://api.monitoring.com/metrics?query=p95_latency" | jq -r '.value')
           echo "p95_latency=$P95_LATENCY" >> $GITHUB_OUTPUT
-          
+
           if (( $(echo "$P95_LATENCY > 3000" | bc -l) )); then
             echo "❌ P95 latency too high: ${P95_LATENCY}ms"
             exit 1
           fi
-      
+
       - name: Trigger Rollback
         if: failure()
         uses: actions/github-script@v7
@@ -485,33 +486,33 @@ curl -X POST "$SLACK_WEBHOOK" \
 // services/featureFlags.ts
 export class FeatureFlagService {
   private flags = new Map<string, boolean>();
-  
+
   async initialize(): Promise<void> {
     // Fetch flags from remote config
     const response = await fetch('/api/feature-flags');
     const flags = await response.json();
-    
+
     Object.entries(flags).forEach(([key, value]) => {
       this.flags.set(key, value as boolean);
     });
   }
-  
+
   isEnabled(flag: string): boolean {
     return this.flags.get(flag) ?? false;
   }
-  
+
   // Progressive rollout
   isEnabledForUser(flag: string, userId: string): boolean {
     const rolloutPercentage = this.getRolloutPercentage(flag);
     const hash = this.hashUserId(userId);
     return hash <= rolloutPercentage;
   }
-  
+
   private getRolloutPercentage(flag: string): number {
     const config = this.flags.get(`${flag}_rollout`);
     return config ? Number(config) : 0;
   }
-  
+
   private hashUserId(userId: string): number {
     // Simple hash function (0-100)
     let hash = 0;
@@ -528,7 +529,7 @@ const featureFlags = new FeatureFlagService();
 
 export const DiagnosticSummary = () => {
   const showNewUI = featureFlags.isEnabled('new_diagnostic_ui');
-  
+
   return showNewUI ? <NewDiagnosticSummary /> : <LegacyDiagnosticSummary />;
 };
 ```
@@ -608,11 +609,11 @@ export const healthCheck = async (): Promise<HealthStatus> => {
     checkDatabase(),
     checkAPIConnectivity(),
     checkMLModels(),
-    checkStorage()
+    checkStorage(),
   ]);
-  
-  const status = checks.every(c => c.healthy) ? 'healthy' : 'degraded';
-  
+
+  const status = checks.every((c) => c.healthy) ? 'healthy' : 'degraded';
+
   return {
     status,
     timestamp: new Date().toISOString(),
@@ -621,8 +622,8 @@ export const healthCheck = async (): Promise<HealthStatus> => {
       database: checks[0],
       api: checks[1],
       models: checks[2],
-      storage: checks[3]
-    }
+      storage: checks[3],
+    },
   };
 };
 ```
@@ -636,17 +637,17 @@ alerts:
     condition: error_rate_5m > 5
     severity: critical
     channels: [slack, pagerduty]
-    
+
   - name: high_latency
     condition: p95_latency > 3000
     severity: warning
     channels: [slack]
-    
+
   - name: low_availability
     condition: uptime_percentage < 99.9
     severity: critical
     channels: [slack, pagerduty, email]
-    
+
   - name: deployment_failed
     condition: deployment_status == 'failed'
     severity: critical
@@ -668,26 +669,28 @@ test.describe('Production Smoke Tests', () => {
     await page.goto('https://app.dermatology-ai.app');
     await expect(page).toHaveTitle(/Dermatology AI/);
   });
-  
+
   test('Critical user flow works', async ({ page }) => {
     await page.goto('https://app.dermatology-ai.app');
-    
+
     // Upload image
     await page.setInputFiles('input[type="file"]', 'test-fixtures/sample.jpg');
-    
+
     // Wait for analysis
-    await expect(page.locator('[data-testid="diagnostic-summary"]'))
-      .toBeVisible({ timeout: 30000 });
-    
+    await expect(page.locator('[data-testid="diagnostic-summary"]')).toBeVisible({
+      timeout: 30000,
+    });
+
     // Verify results displayed
-    await expect(page.locator('[data-testid="diagnosis-result"]'))
-      .toContainText(/melanoma|benign/i);
+    await expect(page.locator('[data-testid="diagnosis-result"]')).toContainText(
+      /melanoma|benign/i,
+    );
   });
-  
+
   test('PWA manifest available', async ({ page }) => {
     const response = await page.goto('https://app.dermatology-ai.app/manifest.json');
     expect(response?.status()).toBe(200);
-    
+
     const manifest = await response?.json();
     expect(manifest.name).toBe('Dermatology AI Orchestrator');
   });
@@ -739,6 +742,7 @@ echo "✅ Performance checks passed"
 ### 9.1 Deployment Checklist
 
 **Pre-Deployment:**
+
 - [ ] Version bumped in package.json
 - [ ] CHANGELOG.md updated
 - [ ] All tests passing on main branch
@@ -749,6 +753,7 @@ echo "✅ Performance checks passed"
 - [ ] Stakeholders notified
 
 **During Deployment:**
+
 - [ ] Monitor deployment logs
 - [ ] Watch error rates in real-time
 - [ ] Verify health checks passing
@@ -756,6 +761,7 @@ echo "✅ Performance checks passed"
 - [ ] Validate version deployed correctly
 
 **Post-Deployment:**
+
 - [ ] Run smoke tests
 - [ ] Verify Web Vitals metrics
 - [ ] Check error tracking dashboard
@@ -770,18 +776,21 @@ echo "✅ Performance checks passed"
 # Incident Response Playbook
 
 ## Severity Levels
+
 - **P0 (Critical)**: Complete service outage
 - **P1 (High)**: Major feature broken, affecting >50% users
 - **P2 (Medium)**: Minor feature broken, workaround available
 - **P3 (Low)**: Cosmetic issue, no functional impact
 
 ## Response Times
+
 - P0: Immediate response, 15-minute rollback SLA
 - P1: Response within 30 minutes
 - P2: Response within 4 hours
 - P3: Response within 24 hours
 
 ## Escalation Path
+
 1. On-call engineer notified
 2. Team lead notified (P0/P1)
 3. Engineering manager notified (P0)
@@ -794,20 +803,20 @@ echo "✅ Performance checks passed"
 
 ### 10.1 Deployment Metrics
 
-| Metric | Target | Current | Status |
-|:-------|:-------|:--------|:-------|
-| **Deployment Frequency** | Daily | TBD | 🟡 Pending |
-| **Lead Time** | < 1 hour | TBD | 🟡 Pending |
-| **MTTR** | < 15 min | TBD | 🟡 Pending |
-| **Change Failure Rate** | < 5% | TBD | 🟡 Pending |
-| **Deployment Success Rate** | > 95% | TBD | 🟡 Pending |
+| Metric                      | Target   | Current | Status     |
+| :-------------------------- | :------- | :------ | :--------- |
+| **Deployment Frequency**    | Daily    | TBD     | 🟡 Pending |
+| **Lead Time**               | < 1 hour | TBD     | 🟡 Pending |
+| **MTTR**                    | < 15 min | TBD     | 🟡 Pending |
+| **Change Failure Rate**     | < 5%     | TBD     | 🟡 Pending |
+| **Deployment Success Rate** | > 95%    | TBD     | 🟡 Pending |
 
 ### 10.2 Production SLA
 
 ```yaml
 sla:
-  uptime: 99.9%  # ~43 minutes downtime/month
-  response_time: 
+  uptime: 99.9% # ~43 minutes downtime/month
+  response_time:
     p50: < 1000ms
     p95: < 2500ms
     p99: < 5000ms

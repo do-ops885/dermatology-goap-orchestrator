@@ -1,6 +1,6 @@
 /**
  * Gemini API Routes
- * 
+ *
  * Handles all Gemini API requests from the frontend
  */
 
@@ -21,10 +21,13 @@ gemini.post('/skin-tone', async (c) => {
     }>();
 
     if (!body.imageBase64 || !body.mimeType) {
-      return c.json({
-        success: false,
-        error: 'Missing required fields: imageBase64, mimeType',
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          error: 'Missing required fields: imageBase64, mimeType',
+        },
+        400,
+      );
     }
 
     const service = getGeminiService();
@@ -36,10 +39,13 @@ gemini.post('/skin-tone', async (c) => {
     });
   } catch (error) {
     console.error('[Gemini API] Skin tone detection failed', error);
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Skin tone detection failed',
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Skin tone detection failed',
+      },
+      500,
+    );
   }
 });
 
@@ -55,10 +61,13 @@ gemini.post('/extract-features', async (c) => {
     }>();
 
     if (!body.imageBase64 || !body.mimeType) {
-      return c.json({
-        success: false,
-        error: 'Missing required fields: imageBase64, mimeType',
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          error: 'Missing required fields: imageBase64, mimeType',
+        },
+        400,
+      );
     }
 
     const service = getGeminiService();
@@ -70,10 +79,13 @@ gemini.post('/extract-features', async (c) => {
     });
   } catch (error) {
     console.error('[Gemini API] Feature extraction failed', error);
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Feature extraction failed',
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Feature extraction failed',
+      },
+      500,
+    );
   }
 });
 
@@ -88,10 +100,13 @@ gemini.post('/recommendation', async (c) => {
     }>();
 
     if (!body.analysisData) {
-      return c.json({
-        success: false,
-        error: 'Missing required field: analysisData',
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          error: 'Missing required field: analysisData',
+        },
+        400,
+      );
     }
 
     const service = getGeminiService();
@@ -103,10 +118,13 @@ gemini.post('/recommendation', async (c) => {
     });
   } catch (error) {
     console.error('[Gemini API] Recommendation generation failed', error);
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Recommendation generation failed',
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Recommendation generation failed',
+      },
+      500,
+    );
   }
 });
 
@@ -122,10 +140,13 @@ gemini.post('/verify', async (c) => {
     }>();
 
     if (!body.query || !body.context) {
-      return c.json({
-        success: false,
-        error: 'Missing required fields: query, context',
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          error: 'Missing required fields: query, context',
+        },
+        400,
+      );
     }
 
     const service = getGeminiService();
@@ -137,10 +158,13 @@ gemini.post('/verify', async (c) => {
     });
   } catch (error) {
     console.error('[Gemini API] Web verification failed', error);
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Web verification failed',
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Web verification failed',
+      },
+      500,
+    );
   }
 });
 
@@ -159,10 +183,13 @@ gemini.get('/cache-stats', (c) => {
     });
   } catch (error) {
     console.error('[Gemini API] Cache stats failed', error);
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to get cache stats',
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get cache stats',
+      },
+      500,
+    );
   }
 });
 
@@ -181,10 +208,13 @@ gemini.post('/cache-clear', (c) => {
     });
   } catch (error) {
     console.error('[Gemini API] Cache clear failed', error);
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to clear cache',
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to clear cache',
+      },
+      500,
+    );
   }
 });
 
