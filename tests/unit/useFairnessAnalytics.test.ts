@@ -3,7 +3,7 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 
 import { useFairnessAnalytics } from '../../hooks/useFairnessAnalytics';
 
-vi.mock('../../services/agentDB', () => {
+const { mockGetAllPatterns } = vi.hoisted(() => {
   const mockPatterns = [
     {
       id: 'pattern-1',
@@ -16,18 +16,20 @@ vi.mock('../../services/agentDB', () => {
   ];
 
   const mockGetAllPatterns = vi.fn().mockResolvedValue(mockPatterns);
-  const mockDbInstance = {
-    getAllPatterns: mockGetAllPatterns,
-  };
 
-  const getSingletonInstance = vi.fn().mockReturnValue(mockDbInstance);
-
-  return {
-    default: {
-      getInstance: getSingletonInstance,
-    },
-  };
+  return { mockGetAllPatterns };
 });
+
+vi.mock('../../services/agentDB', () => ({
+  default: {
+    getInstance: vi.fn().mockImplementation(() => ({
+      getAllPatterns: mockGetAllPatterns,
+    })),
+  },
+  createDatabase: vi.fn(),
+  ReasoningBank: vi.fn(),
+  EmbeddingService: vi.fn(),
+}));
 
 beforeEach(() => {
   vi.stubGlobal('navigator', {
@@ -93,18 +95,20 @@ describe('useFairnessAnalytics - runBatchAnalytics', () => {
       await result.current.runBatchAnalytics();
     });
 
+    console.log('Loading state after runBatchAnalytics:', result.current.loading);
+    console.log('mockGetAllPatterns calls:', mockGetAllPatterns.mock.calls.length);
+    console.log('mockGetAllPatterns:', mockGetAllPatterns);
     expect(result.current.loading).toBe(true);
   });
 
   it('should call agentDB.getAllPatterns when runBatchAnalytics is called', async () => {
-    const agentDB = await import('../../services/agentDB');
     const { result } = renderHook(() => useFairnessAnalytics());
 
     await act(async () => {
       await result.current.runBatchAnalytics();
     });
 
-    expect(agentDB.default.getInstance().getAllPatterns).toHaveBeenCalled();
+    expect(mockGetAllPatterns).toHaveBeenCalled();
   });
 
   it('should post message to service worker with patterns', async () => {
@@ -346,8 +350,7 @@ describe('useFairnessAnalytics - Cleanup', () => {
 
 describe('useFairnessAnalytics - Edge Cases', () => {
   it('should handle empty patterns from agentDB', async () => {
-    const agentDB = await import('../../services/agentDB');
-    agentDB.default.getInstance().getAllPatterns = vi.fn().mockResolvedValue([]);
+    mockGetAllPatterns.mockResolvedValueOnce([]);
 
     const { result } = renderHook(() => useFairnessAnalytics());
 
@@ -359,8 +362,7 @@ describe('useFairnessAnalytics - Edge Cases', () => {
   });
 
   it('should handle agentDB getAllPatterns rejection', async () => {
-    const agentDB = await import('../../services/agentDB');
-    agentDB.default.getInstance().getAllPatterns = vi.fn().mockRejectedValue(new Error('DB error'));
+    mockGetAllPatterns.mockRejectedValueOnce(new Error('DB error'));
 
     const { result } = renderHook(() => useFairnessAnalytics());
 

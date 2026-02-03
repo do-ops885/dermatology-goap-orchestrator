@@ -38,13 +38,13 @@ declare module 'axe-core' {
   }
 
   function run(
-    context?: AxeContext,
-    options?: AxeOptions,
-    callback?: (error: Error | null, results: AxeResults) => void,
+    _context?: AxeContext,
+    _options?: AxeOptions,
+    _callback?: (_error: Error | null, _results: AxeResults) => void,
   ): Promise<AxeResults>;
 
   function run(
-    options?: AxeOptions,
-    callback?: (error: Error | null, results: AxeResults) => void,
+    _options?: AxeOptions,
+    _callback?: (_error: Error | null, _results: AxeResults) => void,
   ): Promise<AxeResults>;
 }

@@ -7,9 +7,9 @@
  * @see plans/24_performance_optimization_strategy.md
  */
 
-import { lazy, Suspense } from 'react';
+import React, { lazy, Suspense } from 'react';
 
-import type { ComponentType, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 // Lazy load heavy components
 export const LazyDiagnosticSummary = lazy(() =>
@@ -53,7 +53,8 @@ export const LazyWrapper = ({
   [key: string]: unknown;
 }) => (
   <Suspense fallback={fallback ?? <LoadingFallback />}>
-    <Component {...props} />
+    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+    <>{React.createElement(component as any, props)}</>
   </Suspense>
 );
 

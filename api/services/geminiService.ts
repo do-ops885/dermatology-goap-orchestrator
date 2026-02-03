@@ -12,6 +12,8 @@
 
 import { GoogleGenAI } from '@google/genai';
 
+const GEMINI_MODEL = 'gemini-3-flash-preview';
+
 interface CachedResponse<T> {
   data: T;
   timestamp: number;
@@ -75,7 +77,7 @@ OUTPUT JSON ONLY: {
 
     const result = await this.retryWithBackoff(async () => {
       const response = await this.client.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: GEMINI_MODEL,
         contents: [
           {
             parts: [{ inlineData: { mimeType, data: imageBase64 } }, { text: prompt }],
@@ -114,7 +116,7 @@ OUTPUT JSON ONLY: {
 
     const result = await this.retryWithBackoff(async () => {
       const response = await this.client.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: GEMINI_MODEL,
         contents: [
           {
             parts: [{ inlineData: { mimeType, data: imageBase64 } }, { text: prompt }],
@@ -156,7 +158,7 @@ OUTPUT JSON ONLY: {
 
     const result = await this.retryWithBackoff(async () => {
       const response = await this.client.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: GEMINI_MODEL,
         contents: [{ parts: [{ text: prompt }] }],
         config: { responseMimeType: 'application/json' },
       });
@@ -198,7 +200,7 @@ OUTPUT JSON ONLY: {
 
     const result = await this.retryWithBackoff(async () => {
       const response = await this.client.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: GEMINI_MODEL,
         contents: [{ parts: [{ text: prompt }] }],
         config: { responseMimeType: 'application/json' },
       });

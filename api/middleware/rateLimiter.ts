@@ -43,9 +43,14 @@ const parseWindow = (window: string): number => {
   const match = window.match(/^(\d+)(m|h|d)$/);
   if (match == null) throw new Error(`Invalid window format: ${window}`);
 
-  const [, amount, unit] = match;
+  const amount = match[1];
+  const unit = match[2];
+  if (amount === undefined || unit === undefined)
+    throw new Error(`Invalid window format: ${window}`);
+
   const multipliers = { m: 60, h: 3600, d: 86400 };
-  return parseInt(amount) * multipliers[unit as keyof typeof multipliers] * 1000;
+  const unitKey: 'm' | 'h' | 'd' = unit as 'm' | 'h' | 'd';
+  return parseInt(amount) * multipliers[unitKey] * 1000;
 };
 
 export const rateLimiter = (options: RateLimitOptions) => {

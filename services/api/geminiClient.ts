@@ -146,7 +146,7 @@ class GeminiAPIClient {
         throw new Error(`Rate limit exceeded. Please try again in ${retryAfter} seconds.`);
       }
 
-      const data = await response.json();
+      const data: unknown = await response.json();
       return data as APIResponse<T>;
     } catch (error) {
       console.error('[GeminiClient] Request failed', { endpoint, error });
@@ -189,10 +189,15 @@ export class MockGoogleGenAI {
       config?: { responseMimeType?: string };
     }) => {
       // Extract image and text from params
-      const imagePart = params.contents[0]?.parts.find((p) => p.inlineData);
-      const textPart = params.contents[0]?.parts.find((p) => p.text);
+      const imagePart = params.contents[0]?.parts.find((p) => p.inlineData !== undefined);
+      const textPart = params.contents[0]?.parts.find((p) => p.text !== undefined);
 
-      if (!imagePart?.inlineData || !textPart?.text) {
+      if (
+        imagePart === undefined ||
+        imagePart.inlineData === undefined ||
+        textPart === undefined ||
+        textPart.text === undefined
+      ) {
         throw new Error('Invalid request format');
       }
 

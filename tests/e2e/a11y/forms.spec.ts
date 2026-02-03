@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 import { axe } from './test-utils';
 
-import type { Result as AxeResult } from 'axe-core';
+import type { AxeResults } from 'axe-core';
 
 test.describe('Accessibility - Forms', () => {
   test('File input has proper label', async ({ page }) => {
@@ -14,7 +14,9 @@ test.describe('Accessibility - Forms', () => {
       include: 'input[type="file"]',
     });
 
-    expect(results.violations.filter((v: AxeResult) => v.id === 'label')).toEqual([]);
+    expect(results.violations.filter((v: AxeResults['violations'][0]) => v.id === 'label')).toEqual(
+      [],
+    );
   });
 
   test('Feedback form is accessible', async ({ page }) => {
@@ -38,6 +40,8 @@ test.describe('Accessibility - Forms', () => {
       include: 'input[type="range"]',
     });
 
-    expect(results.violations.filter((v: AxeResult) => v.id === 'slider')).toEqual([]);
+    expect(
+      results.violations.filter((v: AxeResults['violations'][0]) => v.id === 'slider'),
+    ).toEqual([]);
   });
 });

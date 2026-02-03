@@ -2,7 +2,7 @@
  * API Gateway Tests - Gemini Routes
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 import app from '../../api/index';
 
@@ -127,22 +127,24 @@ describe('Gemini API Gateway', () => {
 
   describe('Rate Limiting', () => {
     it('should enforce rate limits', async () => {
-      const requests: Promise<Response>[] = [];
+      const requests: Array<Promise<Response>> = [];
 
       // Make 101 requests (limit is 100 per 15 minutes)
       for (let i = 0; i < 101; i++) {
         requests.push(
-          app.request('/api/gemini/skin-tone', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-User-ID': 'test-rate-limit-user',
-            },
-            body: JSON.stringify({
-              imageBase64: 'test',
-              mimeType: 'image/png',
+          Promise.resolve(
+            app.request('/api/gemini/skin-tone', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-User-ID': 'test-rate-limit-user',
+              },
+              body: JSON.stringify({
+                imageBase64: 'test',
+                mimeType: 'image/png',
+              }),
             }),
-          }),
+          ),
         );
       }
 
@@ -150,6 +152,9 @@ describe('Gemini API Gateway', () => {
 
       // Last request should be rate limited
       const lastResponse = responses[responses.length - 1];
+      if (lastResponse === undefined) {
+        throw new Error('No responses received');
+      }
       expect(lastResponse.status).toBe(429);
 
       const data = await lastResponse.json();
@@ -192,8 +197,6 @@ describe('Gemini API Gateway', () => {
         }),
       });
 
-      const time1 = parseInt(res1.headers.get('X-Response-Time') || '0');
-
       // Second request (should be faster due to caching)
       const res2 = await app.request('/api/gemini/skin-tone', {
         method: 'POST',
@@ -207,9 +210,7 @@ describe('Gemini API Gateway', () => {
         }),
       });
 
-      const time2 = parseInt(res2.headers.get('X-Response-Time') || '0');
-
-      // Note: In real testing, time2 should be significantly less than time1
+      // Note: In real testing, res2 should be significantly faster than res1
       // but we can't assert this in unit tests without actual API calls
       expect(res1.status).toBe(200);
       expect(res2.status).toBe(200);

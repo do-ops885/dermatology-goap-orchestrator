@@ -7,7 +7,7 @@
  * @see plans/24_performance_optimization_strategy.md
  */
 
-import { onCLS, onFID, onFCP, onLCP, onTTFB, onINP, type Metric } from 'web-vitals';
+import { onCLS, onFCP, onLCP, onTTFB, onINP, type Metric } from 'web-vitals';
 
 import { Logger } from './logger';
 
@@ -39,43 +39,43 @@ class PerformanceMonitor {
   }
 
   static getInstance(): PerformanceMonitor {
-    if (!PerformanceMonitor.instance) {
-      PerformanceMonitor.instance = new PerformanceMonitor();
-    }
+    PerformanceMonitor.instance ??= new PerformanceMonitor();
     return PerformanceMonitor.instance;
   }
+
+  /**
+   * Handle metric recording
+   */
+  private handleMetric = (metric: Metric): void => {
+    this.metrics[metric.name as keyof PerformanceMetrics] = metric;
+
+    // Log metric
+    Logger.info('PerformanceMonitor', `${metric.name} recorded`, {
+      value: metric.value,
+      rating: metric.rating,
+      delta: metric.delta,
+    });
+
+    // Send to analytics (if available)
+    this.sendToAnalytics(metric);
+
+    // Check against thresholds
+    this.checkThresholds(metric);
+  };
 
   /**
    * Initialize Web Vitals monitoring
    */
   private initializeWebVitals(): void {
-    const handleMetric = (metric: Metric) => {
-      this.metrics[metric.name as keyof PerformanceMetrics] = metric;
-
-      // Log metric
-      Logger.info('PerformanceMonitor', `${metric.name} recorded`, {
-        value: metric.value,
-        rating: metric.rating,
-        delta: metric.delta,
-      });
-
-      // Send to analytics (if available)
-      this.sendToAnalytics(metric);
-
-      // Check against thresholds
-      this.checkThresholds(metric);
-    };
-
     // Register all Web Vitals
-    onCLS(handleMetric);
-    onFID(handleMetric);
-    onFCP(handleMetric);
-    onLCP(handleMetric);
-    onTTFB(handleMetric);
+    onCLS(this.handleMetric);
+    onFCP(this.handleMetric);
+    onLCP(this.handleMetric);
+    onTTFB(this.handleMetric);
 
     // INP is newer, may not be available in all browsers
     try {
-      onINP(handleMetric);
+      onINP(this.handleMetric);
     } catch {
       Logger.warn('PerformanceMonitor', 'INP metric not available');
     }
@@ -123,7 +123,7 @@ class PerformanceMonitor {
       name,
       value,
       timestamp: Date.now(),
-      tags,
+      ...(tags !== undefined && { tags }),
     };
 
     this.customMetrics.push(metric);
@@ -244,9 +244,8 @@ class PerformanceMonitor {
    * Check metric against thresholds
    */
   private checkThresholds(metric: Metric): void {
-    const thresholds = {
+    const thresholds: Record<string, { good: number; poor: number }> = {
       CLS: { good: 0.1, poor: 0.25 },
-      FID: { good: 100, poor: 300 },
       FCP: { good: 1800, poor: 3000 },
       LCP: { good: 2500, poor: 4000 },
       TTFB: { good: 800, poor: 1800 },
@@ -254,7 +253,9 @@ class PerformanceMonitor {
     };
 
     const threshold = thresholds[metric.name as keyof typeof thresholds];
-    if (!threshold) return;
+    if (threshold === undefined) {
+      return;
+    }
 
     if (metric.value > threshold.poor) {
       Logger.error('PerformanceMonitor', `Poor ${metric.name} detected`, {

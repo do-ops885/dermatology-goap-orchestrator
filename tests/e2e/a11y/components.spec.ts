@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 import { axe } from './test-utils';
 
-import type { Result as AxeResult } from 'axe-core';
+import type { AxeResults } from 'axe-core';
 
 test.describe('Accessibility - Components', () => {
   test('AnalysisIntake component is accessible', async ({ page }) => {
@@ -44,7 +44,9 @@ test.describe('Accessibility - Components', () => {
       include: 'main',
     });
 
-    expect(results.violations.filter((v: AxeResult) => v.impact === 'critical')).toEqual([]);
+    expect(
+      results.violations.filter((v: AxeResults['violations'][0]) => v.impact === 'critical'),
+    ).toEqual([]);
   });
 
   test('FairnessDashboard has proper chart accessibility', async ({ page }) => {
@@ -57,7 +59,9 @@ test.describe('Accessibility - Components', () => {
       include: '[data-testid="fairness-dashboard"]',
     });
 
-    expect(results.violations.filter((v: AxeResult) => v.id === 'aria-chart')).toEqual([]);
+    expect(
+      results.violations.filter((v: AxeResults['violations'][0]) => v.id === 'aria-chart'),
+    ).toEqual([]);
   });
 
   test('ErrorBoundary catches and displays errors accessibly', async ({ page }) => {
@@ -82,6 +86,8 @@ test.describe('Accessibility - Components', () => {
       include: '[data-testid="patient-safety"]',
     });
 
-    expect(results.violations.filter((v: AxeResult) => v.id === 'aria-live-region')).toEqual([]);
+    expect(
+      results.violations.filter((v: AxeResults['violations'][0]) => v.id === 'aria-live-region'),
+    ).toEqual([]);
   });
 });
