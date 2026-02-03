@@ -1,12 +1,12 @@
 /**
  * Gemini Service Abstraction
- * 
+ *
  * Handles all Google Gemini API interactions with:
  * - Response caching
  * - Retry logic with exponential backoff
  * - Error handling
  * - Request/response logging
- * 
+ *
  * @see plans/26_api_gateway_integration_strategy.md
  */
 
@@ -54,12 +54,9 @@ export class GeminiService {
   /**
    * Detect skin tone using Gemini Vision API
    */
-  async detectSkinTone(
-    imageBase64: string,
-    mimeType: string
-  ): Promise<SkinToneResult> {
+  async detectSkinTone(imageBase64: string, mimeType: string): Promise<SkinToneResult> {
     const cacheKey = `skin-tone:${this.hashString(imageBase64.substring(0, 100))}`;
-    
+
     // Check cache
     const cached = this.getFromCache<SkinToneResult>(cacheKey);
     if (cached) {
@@ -81,10 +78,7 @@ OUTPUT JSON ONLY: {
         model: 'gemini-3-flash-preview',
         contents: [
           {
-            parts: [
-              { inlineData: { mimeType, data: imageBase64 } },
-              { text: prompt },
-            ],
+            parts: [{ inlineData: { mimeType, data: imageBase64 } }, { text: prompt }],
           },
         ],
         config: { responseMimeType: 'application/json' },
@@ -95,19 +89,16 @@ OUTPUT JSON ONLY: {
 
     // Cache result
     this.setCache(cacheKey, result, this.CACHE_TTL);
-    
+
     return result;
   }
 
   /**
    * Extract features from image using Gemini Vision API
    */
-  async extractFeatures(
-    imageBase64: string,
-    mimeType: string
-  ): Promise<FeatureExtractionResult> {
+  async extractFeatures(imageBase64: string, mimeType: string): Promise<FeatureExtractionResult> {
     const cacheKey = `features:${this.hashString(imageBase64.substring(0, 100))}`;
-    
+
     const cached = this.getFromCache<FeatureExtractionResult>(cacheKey);
     if (cached) {
       console.warn('[GeminiService] Cache hit for feature extraction');
@@ -126,10 +117,7 @@ OUTPUT JSON ONLY: {
         model: 'gemini-3-flash-preview',
         contents: [
           {
-            parts: [
-              { inlineData: { mimeType, data: imageBase64 } },
-              { text: prompt },
-            ],
+            parts: [{ inlineData: { mimeType, data: imageBase64 } }, { text: prompt }],
           },
         ],
         config: { responseMimeType: 'application/json' },
@@ -139,7 +127,7 @@ OUTPUT JSON ONLY: {
     });
 
     this.setCache(cacheKey, result, this.CACHE_TTL);
-    
+
     return result;
   }
 
@@ -147,10 +135,10 @@ OUTPUT JSON ONLY: {
    * Generate clinical recommendations
    */
   async generateRecommendation(
-    analysisData: Record<string, unknown>
+    analysisData: Record<string, unknown>,
   ): Promise<RecommendationResult> {
     const cacheKey = `recommendation:${this.hashString(JSON.stringify(analysisData))}`;
-    
+
     const cached = this.getFromCache<RecommendationResult>(cacheKey);
     if (cached) {
       console.warn('[GeminiService] Cache hit for recommendation');
@@ -177,7 +165,7 @@ OUTPUT JSON ONLY: {
     });
 
     this.setCache(cacheKey, result, this.CACHE_TTL);
-    
+
     return result;
   }
 
@@ -186,11 +174,13 @@ OUTPUT JSON ONLY: {
    */
   async verifyWebContent(
     query: string,
-    context: string
+    context: string,
   ): Promise<{ verified: boolean; confidence: number; reasoning: string }> {
     const cacheKey = `verify:${this.hashString(query + context)}`;
-    
-    const cached = this.getFromCache<{ verified: boolean; confidence: number; reasoning: string }>(cacheKey);
+
+    const cached = this.getFromCache<{ verified: boolean; confidence: number; reasoning: string }>(
+      cacheKey,
+    );
     if (cached) {
       console.warn('[GeminiService] Cache hit for web verification');
       return cached;
@@ -213,27 +203,26 @@ OUTPUT JSON ONLY: {
         config: { responseMimeType: 'application/json' },
       });
 
-      return this.parseJSON<{ verified: boolean; confidence: number; reasoning: string }>(response.text);
+      return this.parseJSON<{ verified: boolean; confidence: number; reasoning: string }>(
+        response.text,
+      );
     });
 
     this.setCache(cacheKey, result, this.CACHE_TTL);
-    
+
     return result;
   }
 
   /**
    * Retry logic with exponential backoff
    */
-  private async retryWithBackoff<T>(
-    fn: () => Promise<T>,
-    retries = this.MAX_RETRIES
-  ): Promise<T> {
+  private async retryWithBackoff<T>(fn: () => Promise<T>, retries = this.MAX_RETRIES): Promise<T> {
     for (let attempt = 0; attempt < retries; attempt++) {
       try {
         return await fn();
       } catch (error) {
         const isLastAttempt = attempt === retries - 1;
-        
+
         if (isLastAttempt) {
           console.error('[GeminiService] Max retries exceeded', error);
           throw error;
@@ -241,12 +230,15 @@ OUTPUT JSON ONLY: {
 
         // Exponential backoff: 1s, 2s, 4s
         const delay = Math.pow(2, attempt) * 1000;
-        console.warn(`[GeminiService] Attempt ${attempt + 1} failed, retrying in ${delay}ms`, error);
-        
-        await new Promise(resolve => setTimeout(resolve, delay));
+        console.warn(
+          `[GeminiService] Attempt ${attempt + 1} failed, retrying in ${delay}ms`,
+          error,
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
-    
+
     throw new Error('Max retries exceeded');
   }
 
@@ -273,15 +265,15 @@ OUTPUT JSON ONLY: {
    */
   private getFromCache<T>(key: string): T | null {
     const cached = this.cache.get(key) as CachedResponse<T> | undefined;
-    
+
     if (!cached) return null;
-    
+
     // Check if expired
     if (Date.now() - cached.timestamp > cached.ttl) {
       this.cache.delete(key);
       return null;
     }
-    
+
     return cached.data;
   }
 
@@ -313,7 +305,7 @@ OUTPUT JSON ONLY: {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return hash.toString(36);
