@@ -1,37 +1,33 @@
 /**
  * Lazy-loaded components for code splitting
- * 
+ *
  * These components are loaded on-demand to reduce initial bundle size.
  * Each component is split into its own chunk.
- * 
+ *
  * @see plans/24_performance_optimization_strategy.md
  */
 
 import { lazy, Suspense, ComponentType, ReactNode } from 'react';
 
 // Lazy load heavy components
-export const LazyDiagnosticSummary = lazy(() => 
-  import('./DiagnosticSummary').then(module => ({ default: module.DiagnosticSummary }))
+export const LazyDiagnosticSummary = lazy(() =>
+  import('./DiagnosticSummary').then((module) => ({ default: module.DiagnosticSummary })),
 );
 
-export const LazyFairnessDashboard = lazy(() => 
-  import('./FairnessDashboard')
+export const LazyFairnessDashboard = lazy(() => import('./FairnessDashboard'));
+
+export const LazyFairnessReport = lazy(() => import('./FairnessReport'));
+
+export const LazyAgentFlow = lazy(() =>
+  import('./AgentFlow').then((module) => ({
+    default: module.MemoizedAgentFlow || module.AgentFlow,
+  })),
 );
 
-export const LazyFairnessReport = lazy(() => 
-  import('./FairnessReport')
-);
+export const LazyTraceTimeline = lazy(() => import('./TraceTimeline'));
 
-export const LazyAgentFlow = lazy(() => 
-  import('./AgentFlow').then(module => ({ default: module.MemoizedAgentFlow || module.AgentFlow }))
-);
-
-export const LazyTraceTimeline = lazy(() => 
-  import('./TraceTimeline')
-);
-
-export const LazyClinicianFeedback = lazy(() => 
-  import('./ClinicianFeedback').then(module => ({ default: module.ClinicianFeedback }))
+export const LazyClinicianFeedback = lazy(() =>
+  import('./ClinicianFeedback').then((module) => ({ default: module.ClinicianFeedback })),
 );
 
 // Loading fallback component
@@ -45,11 +41,11 @@ const LoadingFallback = ({ message = 'Loading...' }: { message?: string }) => (
 );
 
 // Wrapper component with suspense
-export const LazyWrapper = ({ 
-  component: Component, 
+export const LazyWrapper = ({
+  component: Component,
   fallback,
-  ...props 
-}: { 
+  ...props
+}: {
   component: ComponentType<any>;
   fallback?: ReactNode;
   [key: string]: any;
@@ -61,21 +57,41 @@ export const LazyWrapper = ({
 
 // Export individual wrapped components for convenience
 export const DiagnosticSummaryLazy = (props: any) => (
-  <LazyWrapper component={LazyDiagnosticSummary} fallback={<LoadingFallback message="Loading analysis..." />} {...props} />
+  <LazyWrapper
+    component={LazyDiagnosticSummary}
+    fallback={<LoadingFallback message="Loading analysis..." />}
+    {...props}
+  />
 );
 
 export const FairnessDashboardLazy = (props: any) => (
-  <LazyWrapper component={LazyFairnessDashboard} fallback={<LoadingFallback message="Loading fairness metrics..." />} {...props} />
+  <LazyWrapper
+    component={LazyFairnessDashboard}
+    fallback={<LoadingFallback message="Loading fairness metrics..." />}
+    {...props}
+  />
 );
 
 export const FairnessReportLazy = (props: any) => (
-  <LazyWrapper component={LazyFairnessReport} fallback={<LoadingFallback message="Loading report..." />} {...props} />
+  <LazyWrapper
+    component={LazyFairnessReport}
+    fallback={<LoadingFallback message="Loading report..." />}
+    {...props}
+  />
 );
 
 export const AgentFlowLazy = (props: any) => (
-  <LazyWrapper component={LazyAgentFlow} fallback={<LoadingFallback message="Loading agent flow..." />} {...props} />
+  <LazyWrapper
+    component={LazyAgentFlow}
+    fallback={<LoadingFallback message="Loading agent flow..." />}
+    {...props}
+  />
 );
 
 export const TraceTimelineLazy = (props: any) => (
-  <LazyWrapper component={LazyTraceTimeline} fallback={<LoadingFallback message="Loading timeline..." />} {...props} />
+  <LazyWrapper
+    component={LazyTraceTimeline}
+    fallback={<LoadingFallback message="Loading timeline..." />}
+    {...props}
+  />
 );
