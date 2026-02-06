@@ -156,7 +156,9 @@ describe('Header', () => {
 
       expect(screen.getByText(/audit ledger: active/i)).toBeVisible();
 
-      window.dispatchEvent(new Event('offline'));
+      act(() => {
+        window.dispatchEvent(new Event('offline'));
+      });
     });
 
     it('should handle offline-to-online transition', () => {
@@ -167,7 +169,9 @@ describe('Header', () => {
 
       renderWithTheme();
 
-      window.dispatchEvent(new Event('online'));
+      act(() => {
+        window.dispatchEvent(new Event('online'));
+      });
     });
   });
 
