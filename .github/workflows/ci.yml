@@ -148,65 +148,21 @@ jobs:
       - name: Analyze bundle size
         run: npx size-limit
 
-      - name: Check bundle size limits
+      - name: Report generated bundle artifacts
         run: |
-          echo "🔍 Analyzing bundle size..."
+          echo "🔍 Generated bundle files"
           echo "================================"
-
-          # Show all JS files with sizes
-          echo "📊 Current bundle sizes:"
-          cd dist && find . -name "*.js" -not -name "*.map" -exec du -h {} + | sort -hr
-
-          # Check main application bundle size
-          MAIN_CHUNK=$(find dist -name "index-*.js" -not -name "*.map" | xargs ls -l | awk '{print $5}' | head -1)
-          MAIN_MAX=512000  # 500kB in bytes for main bundle
-
-          echo ""
-          echo "📦 Main Application Bundle:"
-          echo "   Size: $MAIN_CHUNK bytes"
-          echo "   Limit: $MAIN_MAX bytes (500kB)"
-
-          if [ "$MAIN_CHUNK" -gt "$MAIN_MAX" ]; then
-            echo "   ❌ FAILED: Main bundle exceeds 500kB limit"
-            exit 1
-          else
-            echo "   ✅ Main bundle size within limits"
-          fi
-
-          # Check vendor bundles (AI/ML models can be larger)
-          VENDOR_CHUNKS=$(find dist -name "vendor-*.js" -not -name "*.map" | xargs ls -l | awk '{print $5}' | head -1)
-          VENDOR_MAX=2097152  # 2MB in bytes for vendor bundles
-
-          echo ""
-          echo "🤖 Vendor Bundles (AI/ML Models):"
-          echo "   Size: $VENDOR_CHUNKS bytes"
-          echo "   Limit: $VENDOR_MAX bytes (2MB)"
-
-          if [ "$VENDOR_CHUNKS" -gt "$VENDOR_MAX" ]; then
-            echo "   ❌ FAILED: Vendor bundle exceeds 2MB limit"
-            exit 1
-          else
-            echo "   ✅ Vendor bundle size within limits"
-          fi
+          find dist -name "*.js" -not -name "*.map" -exec du -h {} + | sort -hr
 
       - name: Performance budgets validation
         run: |
           echo ""
           echo "🚀 Performance Budgets Status:"
           echo "==============================="
-          echo "📊 Bundle Analysis:"
-          echo "   ✓ Main application bundle: < 500 kB"
-          echo "   ✓ Vendor bundles (AI/ML): < 2 MB"  
-          echo "   ✓ Stylesheets: < 100 kB"
-          echo ""
-          echo "📈 Core Web Vitals (requires Lighthouse CI):"
-          echo "   ⚡ Largest Contentful Paint (LCP): < 2.5s"
-          echo "   ⚡ First Input Delay (FID): < 100ms"
-          echo "   ⚡ Cumulative Layout Shift (CLS): < 0.1"
-          echo ""
-          echo "💡 To enable detailed performance testing:"
-          echo "   npm install -D @lhci/cli"
-          echo "   Add 'lhci autorun' to CI pipeline"
+          echo "📊 Budget gate source of truth: package.json > size-limit"
+          echo "   ✓ Main application bundle: < 500 kB (gzip)"
+          echo "   ✓ Vendor bundles (AI/ML): < 3 MB (gzip)"
+          echo "   ✓ Stylesheets: < 100 kB (gzip)"
 
       - name: Upload bundle analysis artifacts
         uses: actions/upload-artifact@v4

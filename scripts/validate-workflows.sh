@@ -50,7 +50,7 @@ for workflow in "${WORKFLOW_FILES[@]}"; do
     # Check 1: YAML syntax
     echo -e "${BLUE}  [1/5] YAML syntax...${NC}"
     TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
-    if timeout 5 python3 -c "import yaml; yaml.safe_load(open('$workflow'))" 2>/dev/null; then
+    if timeout 10 npx prettier --check "$workflow" >/dev/null 2>&1; then
         echo -e "    ${GREEN}✓ Valid YAML${NC}"
     else
         echo -e "    ${RED}✗ Invalid YAML${NC}"
@@ -60,16 +60,7 @@ for workflow in "${WORKFLOW_FILES[@]}"; do
     # Check 2: Required top-level keys
     echo -e "${BLUE}  [2/5] Required keys...${NC}"
     TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
-    if timeout 5 python3 -c "
-import yaml
-wf = yaml.safe_load(open('$workflow'))
-# 'on' key is parsed as boolean True by YAML
-has_name = 'name' in wf
-has_on = 'on' in wf or True in wf
-has_jobs = 'jobs' in wf
-if not (has_name and has_on and has_jobs):
-    raise ValueError('Missing required keys')
-" 2>/dev/null; then
+    if grep -Eq '^name:' "$workflow" && grep -Eq '^on:' "$workflow" && grep -Eq '^jobs:' "$workflow"; then
         echo -e "    ${GREEN}✓ All required keys present${NC}"
     else
         echo -e "    ${RED}✗ Missing required keys${NC}"
@@ -79,7 +70,7 @@ if not (has_name and has_on and has_jobs):
     # Check 3: Permissions section
     echo -e "${BLUE}  [3/5] Permissions...${NC}"
     TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
-    if timeout 5 python3 -c "import yaml; yaml.safe_load(open('$workflow')).get('permissions')" 2>/dev/null; then
+    if grep -Eq '^permissions:' "$workflow"; then
         echo -e "    ${GREEN}✓ Permissions defined${NC}"
     else
         echo -e "    ${YELLOW}⚠ No permissions section (using default)${NC}"
