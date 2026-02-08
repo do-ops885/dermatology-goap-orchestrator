@@ -34,6 +34,7 @@ jobs:
         run: npm run lighthouse:ci
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          CI: true
 
       - name: Upload Lighthouse results
         if: always()

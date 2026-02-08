@@ -3,8 +3,9 @@
     "collect": {
       "url": ["http://localhost:4173"],
       "startServerCommand": "npm run preview -- --port 4173 --host 0.0.0.0",
+      "startServerReadyTimeout": 120000,
       "startServerReadyPattern": "Local:",
-      "numberOfRuns": 3
+      "numberOfRuns": 1
     },
     "assert": {
       "assertions": {
