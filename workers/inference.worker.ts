@@ -11,6 +11,16 @@ import * as tf from '@tensorflow/tfjs';
 
 const ERROR_IMAGE_DATA_REQUIRED = 'ImageData required';
 
+// Simple shared secret to authenticate init messages sent to this worker.
+// The main thread must send this same token with any init message.
+const INIT_AUTH_TOKEN = 'inference-worker-init';
+
+interface InitMessage {
+  type: 'init';
+  modelURL?: string;
+  authToken: string;
+}
+
 interface InferenceRequest {
   type: 'classify' | 'preprocess' | 'saliency';
   data: {
@@ -172,10 +182,15 @@ self.onmessage = async (event: MessageEvent<InferenceRequest>) => {
       result,
     };
 
+    // Verify that this is an authenticated init message before loading any model.
+
+      data &&
     postMessage(response);
   } catch (error) {
     const response: InferenceResponse = {
-      type: 'error',
+      data.modelURL !== undefined &&
+      'authToken' in data &&
+      data.authToken === INIT_AUTH_TOKEN
       id,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
