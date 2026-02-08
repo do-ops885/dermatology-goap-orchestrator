@@ -1,17 +1,28 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, lazy, Suspense } from 'react';
 
-import AgentFlow from './components/AgentFlow';
 import { AnalysisIntake } from './components/AnalysisIntake';
-import { DiagnosticSummary } from './components/DiagnosticSummary';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import FairnessDashboard from './components/FairnessDashboard';
-import FairnessReport from './components/FairnessReport';
 import { Header } from './components/Header';
 import { PatientSafetyState } from './components/PatientSafetyState';
 import { ThemeProvider } from './context/ThemeContext';
 import { useClinicalAnalysis } from './hooks/useClinicalAnalysis';
 
 import type { AnalysisResult } from './types';
+
+// Lazy load heavy components for better initial load performance
+const AgentFlow = lazy(() => import('./components/AgentFlow'));
+const DiagnosticSummary = lazy(() =>
+  import('./components/DiagnosticSummary').then((m) => ({ default: m.DiagnosticSummary })),
+);
+const FairnessDashboard = lazy(() => import('./components/FairnessDashboard'));
+const FairnessReport = lazy(() => import('./components/FairnessReport'));
+
+// Loading fallback
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center p-8">
+    <div className="w-6 h-6 border-4 border-terracotta-200 border-t-terracotta-600 rounded-full animate-spin" />
+  </div>
+);
 
 export default function App() {
   const [showFairnessReport, setShowFairnessReport] = useState(false);
@@ -46,11 +57,13 @@ export default function App() {
     <ThemeProvider>
       <div className="min-h-screen p-4 md:p-8 flex flex-col gap-8 transition-colors duration-300">
         {showFairnessReport && (
-          <FairnessReport
-            onClose={() => {
-              setShowFairnessReport(false);
-            }}
-          />
+          <Suspense fallback={<LoadingFallback />}>
+            <FairnessReport
+              onClose={() => {
+                setShowFairnessReport(false);
+              }}
+            />
+          </Suspense>
         )}
 
         <ErrorBoundary componentName="Header">
@@ -78,17 +91,21 @@ export default function App() {
               />
             </ErrorBoundary>
             <ErrorBoundary componentName="Fairness Dashboard">
-              <FairnessDashboard
-                onOpenReport={() => {
-                  setShowFairnessReport(true);
-                }}
-              />
+              <Suspense fallback={<LoadingFallback />}>
+                <FairnessDashboard
+                  onOpenReport={() => {
+                    setShowFairnessReport(true);
+                  }}
+                />
+              </Suspense>
             </ErrorBoundary>
           </div>
 
           <div className="lg:col-span-4 h-full">
             <ErrorBoundary componentName="Agent Flow Orchestrator">
-              <AgentFlow trace={trace} currentAgent={currentAgent} ref={agentFlowRef} />
+              <Suspense fallback={<LoadingFallback />}>
+                <AgentFlow trace={trace} currentAgent={currentAgent} ref={agentFlowRef} />
+              </Suspense>
             </ErrorBoundary>
           </div>
 
@@ -97,7 +114,9 @@ export default function App() {
               <PatientSafetyState worldState={worldState} />
             </ErrorBoundary>
             <ErrorBoundary componentName="Diagnostic Summary">
-              <DiagnosticSummary result={result as AnalysisResult | null} />
+              <Suspense fallback={<LoadingFallback />}>
+                <DiagnosticSummary result={result as AnalysisResult | null} />
+              </Suspense>
             </ErrorBoundary>
           </div>
         </main>

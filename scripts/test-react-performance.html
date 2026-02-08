@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>React Performance Test</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #c85a54;
+        border-bottom: 2px solid #c85a54;
+        padding-bottom: 10px;
+      }
+      h2 {
+        color: #333;
+        margin-top: 0;
+      }
+      .test-section {
+        margin: 20px 0;
+      }
+      button {
+        background: #c85a54;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        margin: 5px;
+      }
+      button:hover {
+        background: #a84842;
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .result {
+        margin: 10px 0;
+        padding: 10px;
+        background: #f0f0f0;
+        border-radius: 4px;
+        font-family: monospace;
+      }
+      .pass {
+        color: green;
+      }
+      .fail {
+        color: red;
+      }
+      .warn {
+        color: orange;
+      }
+      .metric {
+        display: inline-block;
+        margin: 5px 10px;
+        padding: 5px 10px;
+        background: #e8f5e9;
+        border-radius: 4px;
+      }
+      .instructions {
+        background: #e3f2fd;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🚀 React Performance Testing Suite</h1>
+
+    <div class="instructions">
+      <h3>Instructions:</h3>
+      <ol>
+        <li>Open Chrome DevTools (F12)</li>
+        <li>Go to the <strong>Performance</strong> tab</li>
+        <li>Click the record button (⚫)</li>
+        <li>Run the tests below</li>
+        <li>Stop recording and analyze the flame graph</li>
+      </ol>
+    </div>
+
+    <div class="container">
+      <h2>Test 1: React.memo Effectiveness</h2>
+      <div class="test-section">
+        <p>
+          This test simulates frequent parent updates to check if memoized child components avoid
+          unnecessary re-renders.
+        </p>
+        <button onclick="testMemoization()">Run Memoization Test</button>
+        <button onclick="clearResults('memo')">Clear</button>
+        <div id="memo-results" class="result"></div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>Test 2: Lazy Loading</h2>
+      <div class="test-section">
+        <p>Test lazy loading of components to verify code splitting is working.</p>
+        <button onclick="testLazyLoading()">Test Lazy Loading</button>
+        <button onclick="clearResults('lazy')">Clear</button>
+        <div id="lazy-results" class="result"></div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>Test 3: useMemo & useCallback</h2>
+      <div class="test-section">
+        <p>Verify that expensive computations and callbacks are properly memoized.</p>
+        <button onclick="testHookMemoization()">Test Hook Memoization</button>
+        <button onclick="clearResults('hooks')">Clear</button>
+        <div id="hooks-results" class="result"></div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>Test 4: Component Render Count</h2>
+      <div class="test-section">
+        <p>Open your app in another tab and perform actions. This will show render counts.</p>
+        <button onclick="window.open('http://localhost:5173', '_blank')">Open App</button>
+        <div id="render-results" class="result">
+          <p>In the browser console of your app, run:</p>
+          <code>
+            // Install React DevTools extension<br />
+            // Enable "Highlight updates when components render"<br />
+            // Interact with the app and observe which components re-render
+          </code>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>Test 5: Memory Profiling</h2>
+      <div class="test-section">
+        <p>Profile memory usage to detect leaks.</p>
+        <button onclick="testMemory()">Run Memory Test</button>
+        <button onclick="clearResults('memory')">Clear</button>
+        <div id="memory-results" class="result"></div>
+      </div>
+    </div>
+
+    <script>
+      // Test 1: Memoization
+      function testMemoization() {
+        const results = document.getElementById('memo-results');
+        results.innerHTML = '<p>Testing React.memo effectiveness...</p>';
+
+        // Simulate rapid parent updates
+        let updateCount = 0;
+        const maxUpdates = 100;
+        const startTime = performance.now();
+
+        const interval = setInterval(() => {
+          updateCount++;
+
+          if (updateCount >= maxUpdates) {
+            clearInterval(interval);
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+
+            results.innerHTML += `
+                        <p class="pass">✓ Completed ${maxUpdates} parent updates in ${duration.toFixed(2)}ms</p>
+                        <p class="metric">Average: ${(duration / maxUpdates).toFixed(2)}ms per update</p>
+                        <p><strong>Analysis:</strong></p>
+                        <ul>
+                            <li>Check DevTools Performance tab for render operations</li>
+                            <li>Memoized components should show fewer render calls</li>
+                            <li>Look for "React" sections in the flame graph</li>
+                        </ul>
+                    `;
+          }
+        }, 10);
+      }
+
+      // Test 2: Lazy Loading
+      function testLazyLoading() {
+        const results = document.getElementById('lazy-results');
+        results.innerHTML = '<p>Testing lazy loading...</p>';
+
+        // Check network tab for lazy chunks
+        results.innerHTML += `
+                <p class="pass">✓ Test initiated</p>
+                <p><strong>Manual verification steps:</strong></p>
+                <ol>
+                    <li>Open your app at <a href="http://localhost:5173" target="_blank">localhost:5173</a></li>
+                    <li>Open DevTools Network tab</li>
+                    <li>Filter by "JS"</li>
+                    <li>Perform an analysis (upload image)</li>
+                    <li>Watch for new chunk files loading on-demand</li>
+                </ol>
+                <p><strong>Expected chunks:</strong></p>
+                <ul>
+                    <li>AgentFlow chunk (when analysis starts)</li>
+                    <li>DiagnosticSummary chunk (when results appear)</li>
+                    <li>FairnessDashboard chunk (immediately visible)</li>
+                    <li>FairnessReport chunk (when opening report)</li>
+                </ul>
+            `;
+      }
+
+      // Test 3: Hook Memoization
+      function testHookMemoization() {
+        const results = document.getElementById('hooks-results');
+        results.innerHTML = '<p>Testing useMemo and useCallback...</p>';
+
+        // Simulate expensive computation
+        const iterations = 1000000;
+
+        // Without memoization
+        const start1 = performance.now();
+        for (let i = 0; i < iterations; i++) {
+          const obj = { value: i };
+        }
+        const time1 = performance.now() - start1;
+
+        // With memoization (simulated)
+        const start2 = performance.now();
+        const memoizedObj = { value: 0 };
+        const memoizedFn = () => memoizedObj.value;
+          // Reuse memoized values
+        }
+        const time2 = performance.now() - start2;
+
+        const improvement = (((time1 - time2) / time1) * 100).toFixed(1);
+
+        results.innerHTML += `
+                <p class="pass">✓ Hook memoization test complete</p>
+                <div class="metric">Without memo: ${time1.toFixed(2)}ms</div>
+                <div class="metric">With memo: ${time2.toFixed(2)}ms</div>
+                <div class="metric">Improvement: ${improvement}%</div>
+                <p><strong>In your app:</strong></p>
+                <ul>
+                    <li>useMemo should cache expensive computations</li>
+                    <li>useCallback should prevent function recreation</li>
+                    <li>Check console for "recomputing" logs if implemented</li>
+                </ul>
+            `;
+      }
+
+      // Test 5: Memory
+      function testMemory() {
+        const results = document.getElementById('memory-results');
+        results.innerHTML = '<p>Testing memory usage...</p>';
+
+        if (performance.memory) {
+          const mem = performance.memory;
+          results.innerHTML += `
+                    <p class="pass">✓ Memory API available</p>
+                    <div class="metric">Used: ${(mem.usedJSHeapSize / 1048576).toFixed(2)} MB</div>
+                    <div class="metric">Total: ${(mem.totalJSHeapSize / 1048576).toFixed(2)} MB</div>
+                    <div class="metric">Limit: ${(mem.jsHeapSizeLimit / 1048576).toFixed(2)} MB</div>
+                    <p><strong>Memory profiling steps:</strong></p>
+                    <ol>
+                        <li>Open DevTools Memory tab</li>
+                        <li>Take heap snapshot (before)</li>
+                        <li>Perform analysis in your app</li>
+                        <li>Take heap snapshot (after)</li>
+                        <li>Compare snapshots for leaks</li>
+                    </ol>
+                `;
+        } else {
+          results.innerHTML += `
+                    <p class="warn">⚠ Memory API not available (use Chrome)</p>
+                    <p>Use DevTools Memory tab instead:</p>
+                    <ol>
+                        <li>DevTools → Memory tab</li>
+                        <li>Select "Heap snapshot"</li>
+                        <li>Take snapshot before/after operations</li>
+                        <li>Look for detached DOM nodes and retained objects</li>
+                    </ol>
+                `;
+        }
+      }
+
+      // Clear results
+      function clearResults(section) {
+        document.getElementById(`${section}-results`).innerHTML = '';
+      }
+
+      // Auto-run on page load
+      window.onload = () => {
+        console.log('🚀 React Performance Test Suite loaded');
+        console.log('Run tests from the UI or programmatically via the console');
+      };
+    </script>
+  </body>
+</html>

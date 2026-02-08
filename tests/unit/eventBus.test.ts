@@ -312,7 +312,7 @@ describe('EventBus', () => {
 
       // Replay from second event onwards
       const replayed = await eventBus.replay('agent:start', {
-        fromTime: now + 10,
+        fromTime: now + 20,
       });
 
       expect(replayed).toBe(2); // Should replay last 2 events

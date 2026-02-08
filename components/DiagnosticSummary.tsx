@@ -12,7 +12,7 @@ import {
   KeyRound,
   MessageSquareHeart,
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo, memo } from 'react';
 
 import AgentDB from '../services/agentDB';
 import { Logger } from '../services/logger';
@@ -25,8 +25,8 @@ interface DiagnosticSummaryProps {
   result: AnalysisResult | null;
 }
 
-// Helper: Security badge component
-const SecurityBadge: React.FC<{ encrypted?: boolean | undefined }> = ({ encrypted }) => {
+// Helper: Security badge component (memoized)
+const SecurityBadge = memo<{ encrypted?: boolean | undefined }>(({ encrypted }) => {
   if (encrypted === true) {
     return (
       <div
@@ -38,10 +38,11 @@ const SecurityBadge: React.FC<{ encrypted?: boolean | undefined }> = ({ encrypte
     );
   }
   return <Lock className="w-4 h-4 text-terracotta-600" />;
-};
+});
+SecurityBadge.displayName = 'SecurityBadge';
 
-// Helper: Classification card
-const ClassificationCard: React.FC<{ result: AnalysisResult }> = ({ result }) => {
+// Helper: Classification card (memoized)
+const ClassificationCard = memo<{ result: AnalysisResult }>(({ result }) => {
   const confidence = result.lesions[0]?.confidence ?? 0;
   const isLowConfidence = confidence < 0.65;
 
@@ -73,10 +74,11 @@ const ClassificationCard: React.FC<{ result: AnalysisResult }> = ({ result }) =>
       </div>
     </div>
   );
-};
+});
+ClassificationCard.displayName = 'ClassificationCard';
 
-// Helper: Fairness card
-const FairnessCard: React.FC<{ result: AnalysisResult }> = ({ result }) => {
+// Helper: Fairness card (memoized)
+const FairnessCard = memo<{ result: AnalysisResult }>(({ result }) => {
   const fairness = (result as unknown as { fairness?: number }).fairness;
   const fairnessDisplay = fairness !== undefined ? (fairness * 100).toFixed(0) : '92';
 
@@ -91,10 +93,11 @@ const FairnessCard: React.FC<{ result: AnalysisResult }> = ({ result }) => {
       </span>
     </div>
   );
-};
+});
+FairnessCard.displayName = 'FairnessCard';
 
-// Helper: Differential diagnosis section
-const DifferentialDiagnosis: React.FC<{ result: AnalysisResult }> = ({ result }) => {
+// Helper: Differential diagnosis section (memoized)
+const DifferentialDiagnosis = memo<{ result: AnalysisResult }>(({ result }) => {
   const differential = (result as unknown as { differential_diagnosis?: string[] })
     .differential_diagnosis;
 
@@ -114,10 +117,11 @@ const DifferentialDiagnosis: React.FC<{ result: AnalysisResult }> = ({ result })
       </ul>
     </div>
   );
-};
+});
+DifferentialDiagnosis.displayName = 'DifferentialDiagnosis';
 
-// Helper: Agent reasoning section
-const AgentReasoning: React.FC<{ result: AnalysisResult }> = ({ result }) => {
+// Helper: Agent reasoning section (memoized)
+const AgentReasoning = memo<{ result: AnalysisResult }>(({ result }) => {
   const resultWithRisk = result as unknown as {
     riskAssessment?: string;
     reasoning?: string;
@@ -139,10 +143,11 @@ const AgentReasoning: React.FC<{ result: AnalysisResult }> = ({ result }) => {
       )}
     </div>
   );
-};
+});
+AgentReasoning.displayName = 'AgentReasoning';
 
-// Helper: Similar cases section
-const SimilarCases: React.FC<{ result: AnalysisResult }> = ({ result }) => {
+// Helper: Similar cases section (memoized)
+const SimilarCases = memo<{ result: AnalysisResult }>(({ result }) => {
   const similarCases = (
     result as unknown as {
       similarCases?: Array<{
@@ -183,48 +188,50 @@ const SimilarCases: React.FC<{ result: AnalysisResult }> = ({ result }) => {
       </div>
     </div>
   );
-};
+});
+SimilarCases.displayName = 'SimilarCases';
 
-// Helper: Web verification section
-const WebVerification: React.FC<{ verification: AnalysisResult['webVerification'] }> = ({
-  verification,
-}) => {
-  if (!verification) return null;
+// Helper: Web verification section (memoized)
+const WebVerification = memo<{ verification: AnalysisResult['webVerification'] }>(
+  ({ verification }) => {
+    if (!verification) return null;
 
-  return (
-    <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
-      <span className="text-[10px] text-blue-800 uppercase font-bold tracking-widest block mb-2 flex items-center gap-1">
-        <Globe className="w-3 h-3" /> Web Verification (Gemini Grounding)
-      </span>
-      {verification.sources.length > 0 ? (
-        <div className="space-y-1.5 mb-2">
-          {verification.sources.map((source, i: number) => (
-            <a
-              key={i}
-              href={source.uri}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 p-1.5 hover:bg-blue-100/50 rounded-lg group transition-colors"
-            >
-              <ExternalLink className="w-3 h-3 text-blue-400 group-hover:text-blue-600" />
-              <span className="text-[10px] text-blue-700 truncate underline decoration-blue-200 group-hover:decoration-blue-400">
-                {source.title}
-              </span>
-            </a>
-          ))}
+    return (
+      <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
+        <span className="text-[10px] text-blue-800 uppercase font-bold tracking-widest block mb-2 flex items-center gap-1">
+          <Globe className="w-3 h-3" /> Web Verification (Gemini Grounding)
+        </span>
+        {verification.sources.length > 0 ? (
+          <div className="space-y-1.5 mb-2">
+            {verification.sources.map((source, i: number) => (
+              <a
+                key={i}
+                href={source.uri}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 p-1.5 hover:bg-blue-100/50 rounded-lg group transition-colors"
+              >
+                <ExternalLink className="w-3 h-3 text-blue-400 group-hover:text-blue-600" />
+                <span className="text-[10px] text-blue-700 truncate underline decoration-blue-200 group-hover:decoration-blue-400">
+                  {source.title}
+                </span>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="text-[10px] text-blue-400 italic mb-2">No direct guidelines found.</div>
+        )}
+        <div className="text-[10px] text-blue-900/70 italic border-l-2 border-blue-200 pl-2">
+          "{verification.summary.substring(0, 150)}..."
         </div>
-      ) : (
-        <div className="text-[10px] text-blue-400 italic mb-2">No direct guidelines found.</div>
-      )}
-      <div className="text-[10px] text-blue-900/70 italic border-l-2 border-blue-200 pl-2">
-        "{verification.summary.substring(0, 150)}..."
       </div>
-    </div>
-  );
-};
+    );
+  },
+);
+WebVerification.displayName = 'WebVerification';
 
-// Helper: Recommendation section
-const RecommendationSection: React.FC<{ recommendations: string[] }> = ({ recommendations }) => (
+// Helper: Recommendation section (memoized)
+const RecommendationSection = memo<{ recommendations: string[] }>(({ recommendations }) => (
   <div className="flex-1 p-4 bg-stone-50 rounded-2xl border border-stone-100">
     <span className="text-[10px] text-stone-400 uppercase font-bold tracking-widest block mb-3">
       Recommendation
@@ -237,91 +244,98 @@ const RecommendationSection: React.FC<{ recommendations: string[] }> = ({ recomm
       "
     </p>
   </div>
-);
+));
+RecommendationSection.displayName = 'RecommendationSection';
 
-// Helper: Security footer
-const SecurityFooter: React.FC<{ securityContext: AnalysisResult['securityContext'] }> = ({
-  securityContext,
-}) => {
-  if (!securityContext) return null;
+// Helper: Security footer (memoized)
+const SecurityFooter = memo<{ securityContext: AnalysisResult['securityContext'] }>(
+  ({ securityContext }) => {
+    if (!securityContext) return null;
 
-  return (
-    <div className="px-2 py-1 flex items-center justify-between text-[9px] text-stone-400 font-mono">
-      <div className="flex items-center gap-1">
-        <KeyRound className="w-3 h-3" />
-        Ephem-Key: Active
+    return (
+      <div className="px-2 py-1 flex items-center justify-between text-[9px] text-stone-400 font-mono">
+        <div className="flex items-center gap-1">
+          <KeyRound className="w-3 h-3" />
+          Ephem-Key: Active
+        </div>
+        <div>IV: {securityContext.iv.slice(0, 4).join('')}...</div>
       </div>
-      <div>IV: {securityContext.iv.slice(0, 4).join('')}...</div>
-    </div>
-  );
-};
+    );
+  },
+);
+SecurityFooter.displayName = 'SecurityFooter';
 
-// Helper: Empty state
-const EmptyState: React.FC = () => (
+// Helper: Empty state (memoized)
+const EmptyState = memo(() => (
   <div className="flex-1 flex flex-col items-center justify-center text-stone-300 gap-2">
     <Gauge className="w-8 h-8 opacity-20" />
     <span className="text-sm font-medium">Orchestrator idle</span>
   </div>
-);
+));
+EmptyState.displayName = 'EmptyState';
 
 export const DiagnosticSummary: React.FC<DiagnosticSummaryProps> = ({ result }) => {
   const [showFeedback, setShowFeedback] = useState(false);
-  const agentDB = AgentDB.getInstance();
+  const agentDB = useMemo(() => AgentDB.getInstance(), []);
 
-  const handleFeedback = async (feedback: {
-    diagnosis: string;
-    correctedDiagnosis?: string | undefined;
-    confidence: number;
-    notes: string;
-    timestamp: number;
-  }): Promise<void> => {
-    if (!result) return;
+  const handleFeedback = useCallback(
+    async (feedback: {
+      diagnosis: string;
+      correctedDiagnosis?: string | undefined;
+      confidence: number;
+      notes: string;
+      timestamp: number;
+    }): Promise<void> => {
+      if (!result) return;
 
-    const feedbackData: ClinicianFeedbackType = {
-      id: `feedback_${Math.random().toString(36).substring(2, 11)}`,
-      analysisId: result.id,
-      diagnosis: feedback.diagnosis,
-      correctedDiagnosis: feedback.correctedDiagnosis,
-      confidence: feedback.confidence,
-      notes: feedback.notes,
-      timestamp: feedback.timestamp,
-      fitzpatrickType: result.fitzpatrickType,
-      isCorrection:
-        Boolean(feedback.correctedDiagnosis) && feedback.correctedDiagnosis !== feedback.diagnosis,
-    };
+      const feedbackData: ClinicianFeedbackType = {
+        id: `feedback_${Math.random().toString(36).substring(2, 11)}`,
+        analysisId: result.id,
+        diagnosis: feedback.diagnosis,
+        correctedDiagnosis: feedback.correctedDiagnosis,
+        confidence: feedback.confidence,
+        notes: feedback.notes,
+        timestamp: feedback.timestamp,
+        fitzpatrickType: result.fitzpatrickType,
+        isCorrection:
+          Boolean(feedback.correctedDiagnosis) &&
+          feedback.correctedDiagnosis !== feedback.diagnosis,
+      };
 
-    try {
-      // Store in AgentDB for learning
-      await agentDB.storeClinicianFeedback(feedbackData);
-
-      Logger.info('DiagnosticSummary', 'Clinician feedback processed', {
-        feedbackId: feedbackData.id,
-        isCorrection: feedbackData.isCorrection,
-        fitzpatrick: feedbackData.fitzpatrickType,
-      });
-
-      // Optional: Also send to API if available
       try {
-        await fetch('/api/feedback', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(feedbackData),
+        // Store in AgentDB for learning
+        await agentDB.storeClinicianFeedback(feedbackData);
+
+        Logger.info('DiagnosticSummary', 'Clinician feedback processed', {
+          feedbackId: feedbackData.id,
+          isCorrection: feedbackData.isCorrection,
+          fitzpatrick: feedbackData.fitzpatrickType,
         });
-      } catch (apiError) {
-        Logger.warn('DiagnosticSummary', 'API feedback submission failed (non-critical)', {
-          error: apiError,
-        });
+
+        // Optional: Also send to API if available
+        try {
+          await fetch('/api/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(feedbackData),
+          });
+        } catch (apiError) {
+          Logger.warn('DiagnosticSummary', 'API feedback submission failed (non-critical)', {
+            error: apiError,
+          });
+        }
+      } catch (error) {
+        Logger.error('DiagnosticSummary', 'Failed to store feedback', { error });
       }
-    } catch (error) {
-      Logger.error('DiagnosticSummary', 'Failed to store feedback', { error });
-    }
 
-    void setTimeout(() => {
-      setShowFeedback(false);
-    }, 2000);
-  };
+      void setTimeout(() => {
+        setShowFeedback(false);
+      }, 2000);
+    },
+    [agentDB, result],
+  );
 
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     if (!result) return;
 
     // Create a secure-looking export payload
@@ -358,11 +372,15 @@ export const DiagnosticSummary: React.FC<DiagnosticSummaryProps> = ({ result }) 
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  };
+  }, [result]);
 
-  const containerClass = `glass-panel p-6 rounded-2xl flex-1 transition-all duration-700 flex flex-col ${
-    result ? 'opacity-100 scale-100' : 'opacity-40 scale-95 pointer-events-none'
-  }`;
+  const containerClass = useMemo(
+    () =>
+      `glass-panel p-6 rounded-2xl flex-1 transition-all duration-700 flex flex-col ${
+        result ? 'opacity-100 scale-100' : 'opacity-40 scale-95 pointer-events-none'
+      }`,
+    [result],
+  );
 
   return (
     <div className={containerClass}>
