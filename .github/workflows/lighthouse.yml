@@ -1,20 +1,24 @@
 name: Lighthouse CI
 
 on:
-  pull_request:
-    branches: [main]
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   lighthouse:
+    name: Lighthouse Performance Audit
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -23,30 +27,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build application
+      - name: Build production bundle
         run: npm run build
-        env:
-          NODE_ENV: production
-
-      - name: Start server
-        run: |
-          npm run preview &
-          sleep 5
-        env:
-          NODE_ENV: production
 
       - name: Run Lighthouse CI
-        uses: treosh/lighthouse-ci-action@v10
-        with:
-          urls: |
-            http://localhost:4173
-          uploadArtifacts: true
-          temporaryPublicStorage: true
-          runs: 3
-          budgetPath: ./lighthouse-budget.json
+        run: npm run lighthouse:ci
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
 
-      - name: Check Lighthouse scores
+      - name: Upload Lighthouse results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-results
+          path: lighthouse-results/
+          retention-days: 30
+
+      - name: Display Lighthouse summary
+        if: always()
         run: |
-          # This will be populated by the action above
-          # Add custom checks if needed
-          echo "✅ Lighthouse CI completed"
+          echo "📊 Lighthouse audit complete"
+          if [ -d "lighthouse-results" ]; then
+            echo "Results saved to lighthouse-results/"
+            ls -la lighthouse-results/
+          fi

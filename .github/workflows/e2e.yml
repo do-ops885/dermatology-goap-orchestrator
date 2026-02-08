@@ -7,6 +7,7 @@ on:
     branches: [main]
   schedule:
     - cron: '0 6 * * 1'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,6 +16,8 @@ jobs:
   e2e-tests:
     name: Playwright E2E Tests
     runs-on: ubuntu-latest
+    env:
+      CI: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,7 +40,10 @@ jobs:
             ${{ runner.os }}-playwright-
 
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install --with-deps chromium
+
+      - name: Build production bundle
+        run: npm run build
 
       - name: Run Playwright tests
         run: npx playwright test
