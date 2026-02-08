@@ -37,6 +37,8 @@ export default defineConfig({
     },
   },
   preview: {
+    port: 4173,
+    strictPort: true,
     headers: {
       // Content Security Policy (Production)
       'Content-Security-Policy': [

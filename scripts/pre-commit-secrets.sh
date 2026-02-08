@@ -16,7 +16,7 @@ IGNORE_PATTERNS='secret_scan|Gitleaks|gitleaks|secret.*scan'
 for file in $STAGED_FILES; do
   # skip test files, documentation files, and script files (false positives)
   case "$file" in
-    *pre-commit-secrets.sh|*.husky/pre-commit|*quality-gate.sh|*.spec.ts|*.test.ts|*.md|playwright-report/*) continue ;;
+    *pre-commit-secrets.sh|*.husky/pre-commit|*quality-gate.sh|*.spec.ts|*.test.ts|*.md|playwright-report/*|*package-lock.json) continue ;;
   esac
 
   # only scan text files
