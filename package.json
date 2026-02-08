@@ -25,7 +25,7 @@
     "bundle:size": "size-limit",
     "bundle:budget": "npm run build && size-limit --why",
     "lighthouse": "lhci autorun",
-    "lighthouse:ci": "lhci autorun --config=lighthouserc.cjs",
+    "lighthouse:ci": "lhci autorun --config=lighthouserc.json",
     "license:scan": "npx license-checker --summary",
     "security:audit": "npm audit --audit-level moderate",
     "apply:branch-protection": "bash scripts/apply-branch-protection.sh do-ops885/dermatology-goap-orchestrator main",
