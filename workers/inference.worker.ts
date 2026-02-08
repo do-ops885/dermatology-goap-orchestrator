@@ -36,6 +36,19 @@ interface InitMessage {
 // Initialize TensorFlow.js
 let model: tf.LayersModel | null = null;
 
+function isValidInferenceRequest(message: unknown): message is InferenceRequest {
+  if (typeof message !== 'object' || message === null) return false;
+
+  const maybe = message as { type?: unknown; data?: unknown; id?: unknown };
+
+  if (typeof maybe.id !== 'string') return false;
+  if (typeof maybe.type !== 'string') return false;
+  if (!['classify', 'preprocess', 'saliency'].includes(maybe.type)) return false;
+  if (typeof maybe.data !== 'object' || maybe.data === null) return false;
+
+  return true;
+}
+
 /**
  * Load ML model
  */
@@ -123,6 +136,11 @@ async function generateSaliency(imageData: ImageData): Promise<number[][]> {
  * Handle incoming messages
  */
 self.onmessage = async (event: MessageEvent<InferenceRequest>) => {
+  if (!isValidInferenceRequest(event.data)) {
+    // Ignore or report unexpected messages that do not match the expected shape
+    return;
+  }
+
   const { type, data, id } = event.data;
 
   try {
