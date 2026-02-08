@@ -163,8 +163,13 @@ class GeminiAPIClient {
     let userId = localStorage.getItem(storageKey);
 
     if (userId === null) {
-      // Generate random user ID
-      userId = `user_${Math.random().toString(36).substring(2, 15)}`;
+      // Generate cryptographically secure random user ID
+      const bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      const randomHex = Array.from(bytes)
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+      userId = `user_${randomHex}`;
       localStorage.setItem(storageKey, userId);
     }
 
