@@ -36,18 +36,21 @@ jobs:
 
       - name: Analyze bundle
         run: |
-          # Get bundle sizes
-          MAIN_SIZE=$(find dist/assets -name 'index-*.js' -exec du -h {} \; | awk '{print $1}')
-          VENDOR_SIZE=$(find dist/assets -name 'vendor-*.js' -exec du -sh {} \; | awk '{s+=$1} END {print s}')
+          # Get bundle sizes in bytes for accurate calculation
+          MAIN_SIZE_BYTES=$(find dist/assets -name 'index-*.js' -exec stat -c%s {} \; | awk '{s+=$1} END {print s}')
+          VENDOR_SIZE_BYTES=$(find dist/assets -name 'vendor-*.js' -exec stat -c%s {} \; | awk '{s+=$1} END {print s}')
+
+          # Convert to human-readable for display
+          MAIN_SIZE=$(numfmt --to=iec-i --suffix=B $MAIN_SIZE_BYTES 2>/dev/null || echo "${MAIN_SIZE_BYTES}B")
+          VENDOR_SIZE=$(numfmt --to=iec-i --suffix=B $VENDOR_SIZE_BYTES 2>/dev/null || echo "${VENDOR_SIZE_BYTES}B")
 
           echo "📦 Bundle Sizes:"
-          echo "Main: $MAIN_SIZE"
-          echo "Vendor: $VENDOR_SIZE"
+          echo "Main: $MAIN_SIZE ($MAIN_SIZE_BYTES bytes)"
+          echo "Vendor: $VENDOR_SIZE ($VENDOR_SIZE_BYTES bytes)"
 
           # Check against budget (500 kB for main)
-          MAIN_SIZE_BYTES=$(find dist/assets -name 'index-*.js' -exec du -b {} \; | awk '{print $1}')
           if [ "$MAIN_SIZE_BYTES" -gt 512000 ]; then
-            echo "❌ Main bundle exceeds 500 kB budget"
+            echo "❌ Main bundle exceeds 500 kB budget (current: $MAIN_SIZE)"
             exit 1
           fi
 
