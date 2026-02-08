@@ -26,7 +26,7 @@ export function useFairnessAnalytics() {
       }
       const patterns = await db.getAllPatterns();
 
-      const channel =
+      const channel: MessageChannel =
         typeof MessageChannel !== 'undefined'
           ? new MessageChannel()
           : ({

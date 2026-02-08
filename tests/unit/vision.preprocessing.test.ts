@@ -3,29 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { VisionSpecialist } from '../../services/vision';
 
-const createMockTensor = () => ({
-  resizeNearestNeighbor: vi.fn().mockReturnThis(),
-  toFloat: vi.fn().mockReturnThis(),
-  div: vi.fn().mockReturnThis(),
-  expandDims: vi.fn().mockReturnThis(),
-  mean: vi.fn().mockReturnThis(),
-  sub: vi.fn().mockReturnThis(),
-  mul: vi.fn().mockReturnThis(),
-  square: vi.fn().mockReturnThis(),
-  add: vi.fn().mockReturnThis(),
-  neg: vi.fn().mockReturnThis(),
-  abs: vi.fn().mockReturnThis(),
-  relu: vi.fn().mockReturnThis(),
-  min: vi.fn().mockReturnThis(),
-  max: vi.fn().mockReturnThis(),
-  dispose: vi.fn(),
-  shape: [224, 224, 3],
-});
-
-vi.mock('@tensorflow/tfjs', async () => {
-  const actual = await vi.importActual('@tensorflow/tfjs');
-
-  const createMockTensor = () => ({
+function createMockTensor() {
+  return {
     resizeNearestNeighbor: vi.fn().mockReturnThis(),
     toFloat: vi.fn().mockReturnThis(),
     div: vi.fn().mockReturnThis(),
@@ -42,7 +21,11 @@ vi.mock('@tensorflow/tfjs', async () => {
     max: vi.fn().mockReturnThis(),
     dispose: vi.fn(),
     shape: [224, 224, 3],
-  });
+  };
+}
+
+vi.mock('@tensorflow/tfjs', async () => {
+  const actual = await vi.importActual('@tensorflow/tfjs');
 
   return {
     ...actual,
