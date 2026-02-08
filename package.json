@@ -64,7 +64,7 @@
   "devDependencies": {
     "@commitlint/cli": "^20.0.0",
     "@commitlint/config-conventional": "^20.0.0",
-    "@eslint/compat": "^1.2.0",
+    "@eslint/compat": "^2.0.2",
     "@eslint/js": "^9.39.2",
     "@lhci/cli": "^0.14.0",
     "@playwright/test": "^1.57.0",
