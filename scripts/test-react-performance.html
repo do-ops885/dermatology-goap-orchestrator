@@ -223,7 +223,6 @@
         const start1 = performance.now();
         for (let i = 0; i < iterations; i++) {
           const obj = { value: i };
-          const fn = () => obj.value;
         }
         const time1 = performance.now() - start1;
 
