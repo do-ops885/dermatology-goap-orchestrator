@@ -199,7 +199,7 @@ export class AuditTrailService {
   public getChainState(): AuditChainState {
     return {
       isValid: this.auditEvents.length > 0,
-      lastHash: this.lastHash,
+      lastHash: this.lastHash ?? '',
       totalEvents: this.auditEvents.length,
       corruptionDetected: false,
     };

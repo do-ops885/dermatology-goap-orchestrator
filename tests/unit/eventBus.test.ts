@@ -310,9 +310,12 @@ describe('EventBus', () => {
         timestamp: Date.now(),
       });
 
+      const history = eventBus.getHistory('agent:start');
+      const fromTime = history[1]?.timestamp ?? now;
+
       // Replay from second event onwards
       const replayed = await eventBus.replay('agent:start', {
-        fromTime: now + 20,
+        fromTime,
       });
 
       expect(replayed).toBe(2); // Should replay last 2 events

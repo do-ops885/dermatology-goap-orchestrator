@@ -21,7 +21,8 @@ type TensorflowModule = typeof Tensorflow;
 let tfModule: TensorflowModule | null = null;
 
 const loadTensorflow = async () => {
-  if (!tfModule) {
+  const isTestEnv = import.meta.env?.MODE === 'test';
+  if (!tfModule || isTestEnv) {
     tfModule = await import('@tensorflow/tfjs');
     await import('@tensorflow/tfjs-backend-webgpu');
   }
@@ -245,7 +246,7 @@ export class VisionSpecialist {
 
   public getTensorStats() {
     const tf = tfModule;
-    if (!tf) {
+    if (!tf || typeof tf.memory !== 'function') {
       return {
         numTensors: 0,
         numDataBuffers: 0,
@@ -266,5 +267,8 @@ export class VisionSpecialist {
       this.model = null;
     }
     this.isBackendReady = false;
+    if (import.meta.env?.MODE === 'test') {
+      tfModule = null;
+    }
   }
 }
