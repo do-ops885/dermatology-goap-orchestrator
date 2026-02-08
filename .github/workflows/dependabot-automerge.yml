@@ -5,7 +5,7 @@ on:
     types: [opened, synchronize]
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
   checks: read
 
@@ -16,6 +16,6 @@ jobs:
     steps:
       - name: Enable Auto-Merge
         run: |
-          gh pr edit "${{ github.event.pull_request.number }}" --add-automerge
+          gh pr merge "${{ github.event.pull_request.number }}" --auto --squash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

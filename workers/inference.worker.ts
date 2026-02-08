@@ -184,13 +184,10 @@ self.onmessage = async (event: MessageEvent<InferenceRequest>) => {
 
     // Verify that this is an authenticated init message before loading any model.
 
-      data &&
-    postMessage(response);
+    data && postMessage(response);
   } catch (error) {
     const response: InferenceResponse = {
-      data.modelURL !== undefined &&
-      'authToken' in data &&
-      data.authToken === INIT_AUTH_TOKEN
+      type: 'error',
       id,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
