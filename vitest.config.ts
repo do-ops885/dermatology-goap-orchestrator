@@ -52,6 +52,7 @@ export default defineConfig({
       worker_threads: path.resolve(__dirname, './stubs/worker_threads'),
       child_process: path.resolve(__dirname, './stubs/child_process'),
       'fs/promises': path.resolve(__dirname, './stubs/fs/promises.js'),
+      agentdb: path.resolve(__dirname, './stubs/agentdb.js'),
     },
   },
 });
