@@ -197,7 +197,7 @@ describe('useClinicalAnalysis - Initial State', () => {
     vi.clearAllTimers();
   });
 
-  it('should initialize with default state values', () => {
+  it('should initialize with default state values', async () => {
     const { result } = renderHook(() => useClinicalAnalysis());
 
     expect(result.current.file).toBeNull();
@@ -214,6 +214,10 @@ describe('useClinicalAnalysis - Initial State', () => {
     expect(result.current.searchQuery).toBe('');
     expect(result.current.trace).toBeNull();
     expect(result.current.currentAgent).toBeUndefined();
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
   });
 
   it('should have dbReady transition to true after initialization', async () => {

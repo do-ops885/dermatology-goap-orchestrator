@@ -16,18 +16,20 @@ interface MockTensor {
   dispose: () => void;
 }
 
-const createMockTensor = (): MockTensor => ({
-  square: vi.fn().mockReturnThis(),
-  add: vi.fn().mockReturnThis(),
-  neg: vi.fn().mockReturnThis(),
-  mul: vi.fn().mockReturnThis(),
-  sub: vi.fn().mockReturnThis(),
-  abs: vi.fn().mockReturnThis(),
-  relu: vi.fn().mockReturnThis(),
-  min: vi.fn().mockReturnThis(),
-  max: vi.fn().mockReturnThis(),
-  dispose: vi.fn(),
-});
+function createMockTensor(): MockTensor {
+  return {
+    square: vi.fn().mockReturnThis(),
+    add: vi.fn().mockReturnThis(),
+    neg: vi.fn().mockReturnThis(),
+    mul: vi.fn().mockReturnThis(),
+    sub: vi.fn().mockReturnThis(),
+    abs: vi.fn().mockReturnThis(),
+    relu: vi.fn().mockReturnThis(),
+    min: vi.fn().mockReturnThis(),
+    max: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+  };
+}
 
 vi.mock('@tensorflow/tfjs', async () => {
   const actual = await vi.importActual('@tensorflow/tfjs');
@@ -98,6 +100,11 @@ describe('Vision Memory Safety', () => {
     });
     mockModelDispose = vi.fn();
 
+    (tf.memory as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      numTensors: 0,
+      numDataBuffers: 0,
+      numBytes: 0,
+    });
     (tf.browser.fromPixels as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
       resizeNearestNeighbor: vi.fn().mockReturnValue({
         toFloat: vi.fn().mockReturnValue({
