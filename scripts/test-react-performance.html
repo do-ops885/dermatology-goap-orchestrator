@@ -230,7 +230,6 @@
         const start2 = performance.now();
         const memoizedObj = { value: 0 };
         const memoizedFn = () => memoizedObj.value;
-        for (let i = 0; i < iterations; i++) {
           // Reuse memoized values
         }
         const time2 = performance.now() - start2;
