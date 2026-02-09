@@ -303,7 +303,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     expect(growthRatio).toBeLessThan(0.5);
   });
 
-  test('Scenario E: GOAP Orchestration Trace & Agent Execution', async ({ page }) => {
+  test('Scenario F: GOAP Orchestration Trace & Agent Execution', async ({ page }) => {
     await page.goto('/');
 
     // Upload image
@@ -356,7 +356,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     expect(goapLogText).toMatch(/run_[a-z0-9]+/); // Trace ID format: run_xxxxx
   });
 
-  test('Scenario E: Orchestration Trace & Replan', async ({ page }) => {
+  test('Scenario G: Orchestration Trace & Replan', async ({ page }) => {
     // This test verifies that the GOAP agent produces proper traces and can replan
 
     const buffer = Buffer.from(TEST_IMAGE_BASE64, 'base64');
@@ -414,7 +414,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     await expect(auditLoggedIndicator).toBeVisible({ timeout: 5000 });
   });
 
-  test('Scenario F: Safety Calibration Routing on Low Confidence', async ({ page }) => {
+  test('Scenario H: Safety Calibration Routing on Low Confidence', async ({ page }) => {
     // Override mock to return low confidence
     await page.route(API_ROUTE_PATTERN, async (route) => {
       const requestBody = JSON.parse(route.request().postData() ?? '{}');

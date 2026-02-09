@@ -6,7 +6,11 @@ module.exports = {
       settings: {
         preset: 'desktop',
         maxWaitForLoad: 120000,
+        maxWaitForFcp: 90000,
         chromeFlags: '--no-sandbox --headless --disable-gpu --disable-dev-shm-usage',
+        // Wait longer for React SPA to hydrate
+        pauseAfterFcpMs: 5000,
+        pauseAfterLoadMs: 10000,
       },
     },
     assert: {
