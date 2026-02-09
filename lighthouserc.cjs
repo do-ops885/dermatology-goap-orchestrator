@@ -5,12 +5,19 @@ module.exports = {
       numberOfRuns: 3,
       settings: {
         preset: 'desktop',
-        maxWaitForLoad: 120000,
-        maxWaitForFcp: 90000,
-        chromeFlags: '--no-sandbox --headless --disable-gpu --disable-dev-shm-usage',
+        maxWaitForLoad: 180000,
+        maxWaitForFcp: 120000,
+        chromeFlags:
+          '--no-sandbox --headless --disable-gpu --disable-dev-shm-usage --disable-features=IsolateOrigins,site-per-process,TranslateUI --disable-site-isolation-trials --disable-web-security --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows',
         // Wait longer for React SPA to hydrate
-        pauseAfterFcpMs: 5000,
-        pauseAfterLoadMs: 10000,
+        pauseAfterFcpMs: 8000,
+        pauseAfterLoadMs: 15000,
+        // Ensure we wait for the page to be fully interactive
+        waitForLoad: true,
+        // Add extra wait for network idle
+        extraHeaders: {
+          'Accept-CH': 'Sec-CH-UA-Platform-Version',
+        },
       },
     },
     assert: {

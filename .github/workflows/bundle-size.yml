@@ -40,6 +40,7 @@ jobs:
         continue-on-error: true
 
       - name: Analyze bundle
+        id: analyze
         run: |
           # Get bundle sizes in bytes for accurate calculation
           MAIN_SIZE_BYTES=$(find dist/assets -name 'index-*.js' -exec stat -c%s {} \; | awk '{s+=$1} END {print s}')
@@ -53,33 +54,113 @@ jobs:
           echo "Main: $MAIN_SIZE ($MAIN_SIZE_BYTES bytes)"
           echo "Vendor: $VENDOR_SIZE ($VENDOR_SIZE_BYTES bytes)"
 
+          # Set outputs for later steps
+          echo "main_size=$MAIN_SIZE" >> $GITHUB_OUTPUT
+          echo "main_size_bytes=$MAIN_SIZE_BYTES" >> $GITHUB_OUTPUT
+          echo "vendor_size=$VENDOR_SIZE" >> $GITHUB_OUTPUT
+          echo "vendor_size_bytes=$VENDOR_SIZE_BYTES" >> $GITHUB_OUTPUT
+
           # Check against budget (500 kB for main)
           if [ "$MAIN_SIZE_BYTES" -gt 512000 ]; then
             echo "❌ Main bundle exceeds 500 kB budget (current: $MAIN_SIZE)"
+            echo "within_budget=false" >> $GITHUB_OUTPUT
             exit 1
           fi
 
           echo "✅ Bundle size within budget"
+          echo "within_budget=true" >> $GITHUB_OUTPUT
+
+      - name: Generate bundle report
+        if: github.event_name == 'pull_request'
+        id: report
+        run: |
+          # Generate bundle size report
+          REPORT="## 📦 Bundle Size Report
+
+          ### Summary
+          - Main bundle: ${{ steps.analyze.outputs.main_size }} (${{ steps.analyze.outputs.main_size_bytes }} bytes)
+          - Vendor bundle: ${{ steps.analyze.outputs.vendor_size }} (${{ steps.analyze.outputs.vendor_size_bytes }} bytes)
+          - Status: ${{ steps.analyze.outputs.within_budget == 'true' && '✅ Within budget' || '❌ Exceeds budget' }}
+
+          ### Detailed Breakdown
+          "
+
+          # Add detailed file list
+          for f in dist/assets/*.js; do
+            if [ -f "$f" ]; then
+              SIZE=$(stat -c%s "$f")
+              SIZE_KB=$(echo "scale=2; $SIZE / 1024" | bc 2>/dev/null || echo "$((SIZE / 1024))")
+              REPORT="${REPORT}
+          - $(basename "$f"): ${SIZE_KB} kB"
+            fi
+          done
+
+          # Save report for PR comment
+          echo "report<<EOF" >> $GITHUB_OUTPUT
+          echo "$REPORT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Comment PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
+        continue-on-error: true
         with:
+          retries: 3
+          retry-exempt-status-codes: 400,401,403,404,422
           script: |
             const fs = require('fs');
-            const files = fs.readdirSync('dist/assets');
-            const sizes = files
-              .filter(f => f.endsWith('.js'))
-              .map(f => {
-                const stats = fs.statSync(`dist/assets/${f}`);
+            const path = require('path');
+
+            // Build the comment body
+            let commentBody = '## 📦 Bundle Size Report\n\n';
+
+            try {
+              const files = fs.readdirSync('dist/assets').filter(f => f.endsWith('.js'));
+              const sizes = files.map(f => {
+                const stats = fs.statSync(path.join('dist/assets', f));
                 return `- ${f}: ${(stats.size / 1024).toFixed(2)} kB`;
               });
+              commentBody += sizes.join('\n');
+            } catch (error) {
+              console.log('Warning: Could not read bundle files:', error.message);
+              commentBody += '⚠️ Could not read bundle file details\n';
+            }
 
-            const comment = `## 📦 Bundle Size Report\n\n${sizes.join('\n')}`;
+            // Add summary info
+            const mainSize = '${{ steps.analyze.outputs.main_size }}' || 'N/A';
+            const vendorSize = '${{ steps.analyze.outputs.vendor_size }}' || 'N/A';
+            const withinBudget = '${{ steps.analyze.outputs.within_budget }}' === 'true';
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
+            commentBody += `\n\n### Summary\n`;
+            commentBody += `- Main bundle: ${mainSize}\n`;
+            commentBody += `- Vendor bundle: ${vendorSize}\n`;
+            commentBody += `- Status: ${withinBudget ? '✅ Within budget' : '❌ Exceeds budget'}\n`;
+
+            // Try to post the comment with retries
+            let lastError;
+            for (let attempt = 1; attempt <= 3; attempt++) {
+              try {
+                console.log(`Attempting to post PR comment (attempt ${attempt})...`);
+                await github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: commentBody
+                });
+                console.log('✅ PR comment posted successfully');
+                return;
+              } catch (error) {
+                lastError = error;
+                console.log(`⚠️ Attempt ${attempt} failed: ${error.message}`);
+                if (attempt < 3) {
+                  const delay = attempt * 2000; // 2s, 4s, 6s
+                  console.log(`Waiting ${delay}ms before retry...`);
+                  await new Promise(resolve => setTimeout(resolve, delay));
+                }
+              }
+            }
+
+            console.log('❌ Failed to post PR comment after 3 attempts');
+            console.log('Last error:', lastError.message);
+            // Don't fail the workflow if commenting fails
+            console.log('Continuing without PR comment...');

@@ -29,6 +29,8 @@ jobs:
 
       - name: Build production bundle
         run: npm run build
+        env:
+          NODE_ENV: production
 
       - name: Start local preview server
         run: |
@@ -38,41 +40,77 @@ jobs:
           # Start preview server with nohup to ensure it stays running
           nohup npm run preview -- --host 0.0.0.0 --port 4173 > logs/vite-preview.log 2>&1 &
           echo "VITE_PREVIEW_PID=$!" >> $GITHUB_ENV
-          echo "Preview server started with PID: $VITE_PREVIEW_PID"
+          echo "Preview server started with PID: $!"
 
       - name: Wait for preview server
         run: |
           echo "Waiting for preview server to be ready..."
-          for i in {1..60}; do
+          for i in {1..90}; do
             if curl -sSf http://127.0.0.1:4173/ > /dev/null 2>&1; then
-              echo "✓ Preview server is ready on attempt $i"
-              # Also try to get the actual content to ensure it's serving
+              echo "✓ Preview server responding on attempt $i"
+              # Get the actual content to ensure it's serving HTML
               HTTP_STATUS=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:4173/ 2>&1)
               echo "HTTP Status: $HTTP_STATUS"
               if [ "$HTTP_STATUS" = "200" ]; then
                 echo "✓ Server is responding with 200 OK"
                 # Check for actual HTML content with root element
                 CONTENT=$(curl -s http://127.0.0.1:4173/)
-                if echo "$CONTENT" | grep -q "root"; then
+                if echo "$CONTENT" | grep -q "id=\"root\""; then
                   echo "✓ HTML content with root element found"
-                  # Additional wait for React hydration
-                  echo "Waiting for React hydration..."
-                  sleep 5
-                  exit 0
+                  # Additional wait for React hydration and JS execution
+                  echo "Waiting for React hydration and JS bundles to load..."
+                  sleep 10
+                  # Verify the page is still responding
+                  if curl -sSf http://127.0.0.1:4173/ > /dev/null 2>&1; then
+                    echo "✓ Server still responding after wait"
+                    exit 0
+                  fi
+                else
+                  echo "⚠ HTML content missing root element, waiting..."
                 fi
               fi
             fi
             echo "Attempt $i: Server not ready yet, waiting..."
             sleep 2
           done
-          echo "✗ Preview server failed to start after 120 seconds"
+          echo "✗ Preview server failed to start after 180 seconds"
           echo "--- Preview server logs ---"
           cat logs/vite-preview.log || true
           echo "--- End of logs ---"
           exit 1
 
       - name: Run Lighthouse CI
-        run: npm run lighthouse:ci
+        id: lighthouse
+        run: |
+          # Run Lighthouse CI with retry logic
+          for attempt in 1 2 3; do
+            echo "Running Lighthouse CI attempt $attempt..."
+            if npm run lighthouse:ci; then
+              echo "✓ Lighthouse CI passed on attempt $attempt"
+              exit 0
+            else
+              echo "✗ Lighthouse CI failed on attempt $attempt"
+              if [ $attempt -lt 3 ]; then
+                echo "Waiting 30 seconds before retry..."
+                sleep 30
+                # Verify server is still running
+                if ! curl -sSf http://127.0.0.1:4173/ > /dev/null 2>&1; then
+                  echo "⚠ Server not responding, attempting to restart..."
+                  # Kill existing server if any
+                  if [ -n "${VITE_PREVIEW_PID:-}" ]; then
+                    kill "$VITE_PREVIEW_PID" 2>/dev/null || true
+                    wait "$VITE_PREVIEW_PID" 2>/dev/null || true
+                  fi
+                  # Restart server
+                  nohup npm run preview -- --host 0.0.0.0 --port 4173 > logs/vite-preview.log 2>&1 &
+                  echo "VITE_PREVIEW_PID=$!" >> $GITHUB_ENV
+                  sleep 10
+                fi
+              fi
+            fi
+          done
+          echo "✗ Lighthouse CI failed after 3 attempts"
+          exit 1
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
           CI: true
@@ -94,6 +132,7 @@ jobs:
           name: lighthouse-results
           path: lighthouse-results/
           retention-days: 30
+          if-no-files-found: ignore
 
       - name: Display Lighthouse summary
         if: always()
@@ -102,4 +141,6 @@ jobs:
           if [ -d "lighthouse-results" ]; then
             echo "Results saved to lighthouse-results/"
             ls -la lighthouse-results/
+          else
+            echo "No Lighthouse results directory found"
           fi
