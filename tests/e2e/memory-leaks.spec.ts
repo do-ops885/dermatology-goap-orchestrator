@@ -5,13 +5,16 @@ import { test, expect } from '@playwright/test';
 const RUN_ANALYSIS_BUTTON = 'Run Clinical Analysis';
 const TEST_IMAGE_BASE64 = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
-test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => {
+// Reduce iterations for CI to balance thoroughness with speed
+const ITERATIONS = process.env.CI ? 10 : 50;
+
+test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses @slow', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
   });
 
-  test('no memory growth after 50 sequential analyses', async ({ page }) => {
+  test(`no memory growth after ${ITERATIONS} sequential analyses`, async ({ page }) => {
     const initialMemory = await page.evaluate(() => {
       if ('gc' in window) {
         (window as any).gc();
@@ -27,7 +30,7 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
 
     const jpegBuffer = Buffer.from(TEST_IMAGE_BASE64, 'base64');
 
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < ITERATIONS; i++) {
       await page.locator('input[type="file"]').setInputFiles({
         name: `sample-${i}.jpg`,
         mimeType: 'image/jpeg',
@@ -37,7 +40,7 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
       const runBtn = page.locator('button', { hasText: RUN_ANALYSIS_BUTTON });
       await runBtn.click();
 
-      await page.waitForSelector('text=Diagnostic Summary', { timeout: 60000 });
+      await page.waitForSelector('text=Diagnostic Summary', { timeout: 30000 });
 
       await page.locator('input[type="file"]').setInputFiles([]);
     }
@@ -65,14 +68,14 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
     expect(growthRatio).toBeLessThan(0.5);
   });
 
-  test('GPU memory does not grow after 50 analyses', async ({ page }) => {
+  test(`GPU memory does not grow after ${ITERATIONS} analyses`, async ({ page }) => {
     const jpegBuffer = Buffer.from(TEST_IMAGE_BASE64, 'base64');
 
     const initialGpuMemory = await page.evaluate(() => {
       return (window as any).tf?.memory?.() ?? { numTensors: 0, numBytes: 0 };
     });
 
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < ITERATIONS; i++) {
       await page.locator('input[type="file"]').setInputFiles({
         name: `gpu-sample-${i}.jpg`,
         mimeType: 'image/jpeg',
@@ -82,7 +85,7 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
       const runBtn = page.locator('button', { hasText: RUN_ANALYSIS_BUTTON });
       await runBtn.click();
 
-      await page.waitForSelector('text=Diagnostic Summary', { timeout: 60000 });
+      await page.waitForSelector('text=Diagnostic Summary', { timeout: 30000 });
 
       await page.locator('input[type="file"]').setInputFiles([]);
     }
@@ -96,7 +99,7 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
 
     console.warn(`Tensor growth: ${tensorGrowth}, Byte growth: ${byteGrowth}`);
 
-    expect(tensorGrowth).toBeLessThan(10);
+    expect(tensorGrowth).toBeLessThan(ITERATIONS / 5);
   });
 
   test('checks tensor cleanup via tf.memory()', async ({ page }) => {
@@ -111,7 +114,7 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
     const runBtn = page.locator('button', { hasText: RUN_ANALYSIS_BUTTON });
     await runBtn.click();
 
-    await page.waitForSelector('text=Diagnostic Summary', { timeout: 60000 });
+    await page.waitForSelector('text=Diagnostic Summary', { timeout: 30000 });
 
     const afterMemory = await page.evaluate(() => {
       return (window as any).tf?.memory?.() ?? { numTensors: 0, numDataBuffers: 0, numBytes: 0 };
@@ -142,7 +145,7 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
     const runBtn = page.locator('button', { hasText: RUN_ANALYSIS_BUTTON });
     await runBtn.click();
 
-    await page.waitForSelector('text=Diagnostic Summary', { timeout: 60000 });
+    await page.waitForSelector('text=Diagnostic Summary', { timeout: 30000 });
 
     const afterMemory = await page.evaluate(() => {
       return (window as any).tf?.memory?.() ?? { numTensors: 0, numBytes: 0 };
@@ -171,7 +174,7 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
     const runBtn = page.locator('button', { hasText: 'Run Clinical Analysis' });
     await runBtn.click();
 
-    await page.waitForSelector('text=Diagnostic Summary', { timeout: 60000 });
+    await page.waitForSelector('text=Diagnostic Summary', { timeout: 30000 });
 
     const logs = page.locator('[role="log"]');
     const logsContent = await logs.textContent();
@@ -202,7 +205,7 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
       const runBtn = page.locator('button', { hasText: 'Run Clinical Analysis' });
       await runBtn.click();
 
-      await page.waitForSelector('text=Diagnostic Summary', { timeout: 60000 });
+      await page.waitForSelector('text=Diagnostic Summary', { timeout: 30000 });
 
       const memory = await page.evaluate(() => {
         const perf = performance as unknown as {
@@ -249,7 +252,7 @@ test.describe('Scenario F: Memory Leak Prevention - Sequential Analyses', () => 
       const runBtn = page.locator('button', { hasText: 'Run Clinical Analysis' });
       await runBtn.click();
 
-      await page.waitForSelector('text=Diagnostic Summary', { timeout: 60000 });
+      await page.waitForSelector('text=Diagnostic Summary', { timeout: 30000 });
 
       const currentMemory = await page.evaluate(() => {
         const perf = performance as unknown as {

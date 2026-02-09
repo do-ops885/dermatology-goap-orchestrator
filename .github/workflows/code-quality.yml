@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+# Reliability: Cancel outdated runs to save resources
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: write
@@ -14,47 +19,72 @@ jobs:
   sonarqube:
     name: SonarCloud Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          retry: 3
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
+        timeout-minutes: 5
 
       - name: Install dependencies
         run: npm ci
+        timeout-minutes: 5
 
       - name: Run tests with coverage
         run: npm test -- --coverage
+        timeout-minutes: 5
+
+      - name: Verify coverage report
+        run: |
+          if [ -f "./coverage/lcov.info" ]; then
+            echo "✓ LCOV coverage report found"
+            ls -la ./coverage/
+          else
+            echo "⚠ LCOV coverage report not found"
+          fi
+        continue-on-error: true
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v5.0.0
+        uses: SonarSource/sonarqube-scan-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         continue-on-error: true
+        timeout-minutes: 5
+        with:
+          args: >
+            -Dsonar.projectKey=do-ops885_dermatology-goap-orchestrator
+            -Dsonar.organization=do-ops885
 
   complexity-check:
     name: Code Complexity
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          retry: 3
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
+        timeout-minutes: 5
 
       - name: Install dependencies
         run: npm ci
+        timeout-minutes: 5
 
       - name: Check file sizes (Max 500 LOC)
         run: |
@@ -65,3 +95,4 @@ jobs:
               exit 1
             fi
           done
+        timeout-minutes: 2

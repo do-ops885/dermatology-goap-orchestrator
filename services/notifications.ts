@@ -44,16 +44,23 @@ export class NotificationService {
       listener(notification);
     });
 
-    const agentDB = await import('./agentDB');
-    await agentDB.default.getInstance().logAuditEvent({
-      type: 'CRITICAL_ALERT',
-      hash: notification.id, // Use notification ID as hash for simplicity
-      prev_hash: '',
-      agent_trace: [],
-      safety_level: 'HIGH',
-      notificationId: notification.id,
-      ...params,
-    });
+    try {
+      const agentDB = await import('./agentDB');
+      const dbInstance = agentDB.default?.getInstance?.();
+      if (dbInstance?.logAuditEvent != null) {
+        await dbInstance.logAuditEvent({
+          type: 'CRITICAL_ALERT',
+          hash: notification.id, // Use notification ID as hash for simplicity
+          prev_hash: '',
+          agent_trace: [],
+          safety_level: 'HIGH',
+          notificationId: notification.id,
+          ...params,
+        });
+      }
+    } catch (error) {
+      Logger.warn('ClinicianNotification', 'Audit log unavailable', { error });
+    }
 
     return notification;
   }

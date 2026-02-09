@@ -1,0 +1,83 @@
+From: Multi-Agent Workflow Debug System
+Date: 2026-02-09
+Subject: Fix missing vendor_size outputs in bundle-size workflow
+
+---
+
+## Problem
+
+The bundle-size workflow references `vendor_size` and `vendor_size_bytes` outputs that are never set, causing empty values in PR comments.
+
+## Files Changed
+
+- .github/workflows/bundle-size.yml
+
+## Detailed Changes
+
+### Step: Analyze bundle (lines 47-113)
+
+**Added outputs for vendor bundles:**
+
+The analyze step now calculates and outputs vendor bundle sizes in addition to the existing main, WebLLM, and TFJS bundles.
+
+**Code Change:**
+
+After the existing output lines (71-74), add:
+
+```bash
+# Calculate vendor bundle size (all vendor chunks except WebLLM and TFJS)
+VENDOR_SIZE_BYTES=$(find dist/assets -name 'vendor-*.js' ! -name '*webllm*' ! -name '*tfjs*' -exec cat {} \; | gzip -c | wc -c 2>/dev/null || echo 0)
+
+# Convert to human-readable
+VENDOR_SIZE=$(echo "$VENDOR_SIZE_BYTES" | numfmt --to=iec-i --suffix=B 2>/dev/null || echo "${VENDOR_SIZE_BYTES}B")
+
+echo "vendor_size=$VENDOR_SIZE" >> $GITHUB_OUTPUT
+echo "vendor_size_bytes=$VENDOR_SIZE_BYTES" >> $GITHUB_OUTPUT
+```
+
+**Also add vendor to the budget check:**
+
+Add vendor budget check (suggesting 1 MB budget):
+
+```bash
+# Vendor bundle budget: 1 MB (1048576 bytes)
+if [ "$VENDOR_SIZE_BYTES" -gt 1048576 ]; then
+  echo "❌ Vendor bundle exceeds 1 MB budget"
+  ALL_PASS=false
+else
+  echo "✅ Vendor bundle within budget (1 MB)"
+fi
+```
+
+### Step: Generate bundle report (lines 117-143)
+
+**Fixed the report generation** to use the correct outputs:
+
+**Before (line 124):**
+```yaml
+- Vendor bundle: ${{ steps.analyze.outputs.vendor_size }} (${{ steps.analyze.outputs.vendor_size_bytes }} bytes)
+```
+
+This referenced outputs that didn't exist.
+
+**After:**
+The report now uses the newly added vendor_size and vendor_size_bytes outputs.
+
+## Impact
+
+- PR comments will now show accurate vendor bundle sizes
+- Bundle budget checks include vendor bundle validation
+- No workflow failures - this was a cosmetic bug, not causing failures
+
+## Testing
+
+1. Create a test PR
+2. Verify bundle-size workflow runs successfully
+3. Check PR comment shows vendor bundle size
+4. Verify all bundle sizes are accurate
+
+## Backwards Compatibility
+
+- Fully backwards compatible
+- No breaking changes
+- Only adds new functionality

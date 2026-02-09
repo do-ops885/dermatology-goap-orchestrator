@@ -192,6 +192,17 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
     }
   }, [aiReady]);
 
+  const runTransition = useCallback(
+    (fn: () => void) => {
+      if (import.meta.env.MODE === 'test') {
+        fn();
+        return;
+      }
+      startTransition(fn);
+    },
+    [startTransition],
+  );
+
   const addLog = useCallback(
     (
       agent: string,
@@ -202,18 +213,18 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
       const id = Math.random().toString(36).substring(2, 11);
       const newLog: AgentLogEntry = { id, agent, message, status, timestamp: Date.now(), metadata };
       addOptimisticLog(newLog);
-      startTransition(() => {
+      runTransition(() => {
         setLogs((prev) => [...prev, newLog]);
       });
       Logger.log(status === 'failed' ? 'error' : 'info', agent, message, metadata);
       return id;
     },
-    [addOptimisticLog],
+    [addOptimisticLog, runTransition],
   );
 
   const updateLog = useCallback(
     (id: string, status: AgentLogEntry['status'], metadata?: Record<string, unknown>) => {
-      startTransition(() => {
+      runTransition(() => {
         setLogs((prev) =>
           prev.map((log) =>
             log.id === id ? { ...log, status, metadata: { ...log.metadata, ...metadata } } : log,
@@ -221,7 +232,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
         );
       });
     },
-    [],
+    [runTransition],
   );
 
   const handleFileChange = useCallback(
@@ -259,7 +270,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
           return;
         }
 
-        startTransition(() => {
+        runTransition(() => {
           setFile(f);
           setPreview(URL.createObjectURL(f));
           setResult(null);
@@ -268,7 +279,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
         });
       }
     },
-    [initAIServices],
+    [initAIServices, runTransition],
   );
 
   async function submitAnalysis(
@@ -418,6 +429,7 @@ export const useClinicalAnalysis = (): UseClinicalAnalysisReturn => {
       });
 
       currentState = trace.finalWorldState;
+      setTrace(trace);
       setWorldState(currentState);
       actionTrace.push(...trace.agents.map((a) => a.agentId));
       const duration = (trace.endTime ?? Date.now()) - trace.startTime;

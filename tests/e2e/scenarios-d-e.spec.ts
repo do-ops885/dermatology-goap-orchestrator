@@ -132,7 +132,7 @@ test.describe('E2E Scenarios D-E: Offline Mode & Orchestration Trace', () => {
       await runBtn.click();
 
       await expect(page.locator('h2', { hasText: DIAGNOSTIC_SUMMARY })).toBeVisible({
-        timeout: 60000,
+        timeout: 45000,
       });
 
       const logs = page.locator('[role="log"]');

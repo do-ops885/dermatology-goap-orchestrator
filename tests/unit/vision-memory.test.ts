@@ -16,24 +16,23 @@ interface MockTensor {
   dispose: () => void;
 }
 
+function createMockTensor(): MockTensor {
+  return {
+    square: vi.fn().mockReturnThis(),
+    add: vi.fn().mockReturnThis(),
+    neg: vi.fn().mockReturnThis(),
+    mul: vi.fn().mockReturnThis(),
+    sub: vi.fn().mockReturnThis(),
+    abs: vi.fn().mockReturnThis(),
+    relu: vi.fn().mockReturnThis(),
+    min: vi.fn().mockReturnThis(),
+    max: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+  };
+}
+
 vi.mock('@tensorflow/tfjs', async () => {
   const actual = await vi.importActual('@tensorflow/tfjs');
-
-  const createMockTensor = (): MockTensor => {
-    const mockTensor: MockTensor = {
-      square: vi.fn().mockReturnThis(),
-      add: vi.fn().mockReturnThis(),
-      neg: vi.fn().mockReturnThis(),
-      mul: vi.fn().mockReturnThis(),
-      sub: vi.fn().mockReturnThis(),
-      abs: vi.fn().mockReturnThis(),
-      relu: vi.fn().mockReturnThis(),
-      min: vi.fn().mockReturnThis(),
-      max: vi.fn().mockReturnThis(),
-      dispose: vi.fn(),
-    };
-    return mockTensor;
-  };
 
   return {
     ...actual,
@@ -101,6 +100,29 @@ describe('Vision Memory Safety', () => {
     });
     mockModelDispose = vi.fn();
 
+    (tf.memory as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      numTensors: 0,
+      numDataBuffers: 0,
+      numBytes: 0,
+    });
+    (tf.browser.fromPixels as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      resizeNearestNeighbor: vi.fn().mockReturnValue({
+        toFloat: vi.fn().mockReturnValue({
+          div: vi.fn().mockReturnValue({
+            expandDims: vi.fn(),
+          }),
+        }),
+      }),
+      toFloat: vi.fn().mockReturnValue({
+        div: vi.fn().mockReturnValue({
+          shape: [224, 224, 3],
+          mean: vi.fn().mockReturnValue(createMockTensor()),
+          dispose: vi.fn(),
+        }),
+        dispose: vi.fn(),
+      }),
+      dispose: vi.fn(),
+    });
     (tf.loadGraphModel as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       predict: mockPredict,
       dispose: mockModelDispose,

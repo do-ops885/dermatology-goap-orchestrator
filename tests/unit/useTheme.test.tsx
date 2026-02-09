@@ -121,7 +121,9 @@ describe('useTheme', () => {
     const { result } = renderHook(() => useTheme(), { wrapper });
 
     const setThemeFn1 = result.current.setTheme;
-    result.current.setTheme('dark');
+    act(() => {
+      result.current.setTheme('dark');
+    });
     const setThemeFn2 = result.current.setTheme;
 
     expect(setThemeFn1).toBe(setThemeFn2);

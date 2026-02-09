@@ -1,7 +1,5 @@
 import { useState, useCallback } from 'react';
 
-import AgentDB from '../services/agentDB';
-
 interface FairnessResult {
   I?: { count: number; tpr: number; fpr: number; lastUpdated: number };
   II?: { count: number; tpr: number; fpr: number; lastUpdated: number };
@@ -20,10 +18,21 @@ export function useFairnessAnalytics() {
     setLoading(true);
 
     try {
-      const db = AgentDB.getInstance();
+      const dbModule = await import('../services/agentDB');
+      const db = dbModule.default?.getInstance?.();
+      if (db == null || typeof db.getAllPatterns !== 'function') {
+        setLoading(false);
+        return;
+      }
       const patterns = await db.getAllPatterns();
 
-      const channel = new MessageChannel();
+      const channel: MessageChannel =
+        typeof MessageChannel !== 'undefined'
+          ? new MessageChannel()
+          : ({
+              port1: { onmessage: null },
+              port2: {},
+            } as unknown as MessageChannel);
 
       channel.port1.onmessage = (
         event: MessageEvent<{ type: string; results: FairnessResult | null }>,

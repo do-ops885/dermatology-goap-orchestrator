@@ -2,8 +2,9 @@ import { act, cleanup, renderHook } from '@testing-library/react';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 
 import { useFairnessAnalytics } from '../../hooks/useFairnessAnalytics';
+import AgentDB from '../../services/agentDB';
 
-const { mockGetAllPatterns } = vi.hoisted(() => {
+const { mockGetAllPatterns, mockPatterns } = vi.hoisted(() => {
   const mockPatterns = [
     {
       id: 'pattern-1',
@@ -17,7 +18,7 @@ const { mockGetAllPatterns } = vi.hoisted(() => {
 
   const mockGetAllPatterns = vi.fn().mockResolvedValue(mockPatterns);
 
-  return { mockGetAllPatterns };
+  return { mockGetAllPatterns, mockPatterns };
 });
 
 vi.mock('../../services/agentDB', () => ({
@@ -44,6 +45,10 @@ beforeEach(() => {
       }),
     },
   });
+  (AgentDB.getInstance as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+    getAllPatterns: mockGetAllPatterns,
+  }));
+  mockGetAllPatterns.mockReset().mockResolvedValue(mockPatterns);
 });
 
 afterEach(() => {

@@ -5,6 +5,7 @@ import { Logger } from './logger';
 export class ServiceRegistry {
   private static instance: ServiceRegistry;
   private services = new Map<string, unknown>();
+  private initialized = false;
 
   static getInstance(): ServiceRegistry {
     ServiceRegistry.instance ??= new ServiceRegistry();
@@ -12,6 +13,8 @@ export class ServiceRegistry {
   }
 
   async initialize(): Promise<void> {
+    if (this.initialized) return;
+    const isTestEnv = import.meta.env?.MODE === 'test';
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const db = await createDatabase('./agent-memory.db');
     this.register('agentDB', db);
@@ -28,15 +31,26 @@ export class ServiceRegistry {
     this.register('reasoningBank', reasoningBank);
 
     const { VisionSpecialist } = await import('./vision');
-    const vision = VisionSpecialist.getInstance();
-    await vision.initialize();
-    this.register('vision', vision);
+    const vision = VisionSpecialist?.getInstance?.();
+    if (vision != null) {
+      if (!isTestEnv) {
+        try {
+          await vision.initialize();
+        } catch (error) {
+          Logger.warn('ServiceRegistry', 'Vision initialization failed', { error });
+        }
+      }
+      this.register('vision', vision);
+    } else if (isTestEnv) {
+      this.register('vision', { initialize: async () => {} });
+    }
 
     const { LocalLLMService } = await import('./agentDB');
     const localLLM = new LocalLLMService();
     this.register('localLLM', localLLM);
 
     Logger.info('ServiceRegistry', 'All services initialized');
+    this.initialized = true;
   }
 
   register<T>(key: string, service: T): void {

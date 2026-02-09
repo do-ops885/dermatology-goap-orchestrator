@@ -1,9 +1,9 @@
+import { createDatabase } from 'agentdb';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { Logger } from '../../services/logger';
 import { ServiceRegistry } from '../../services/serviceRegistry';
 
-// Mock all external dependencies
 vi.mock('../../services/logger', () => ({
   Logger: {
     info: vi.fn(),
@@ -12,17 +12,25 @@ vi.mock('../../services/logger', () => ({
   },
 }));
 
-vi.mock('agentdb', () => ({
-  createDatabase: vi.fn().mockResolvedValue({ mock: 'database' }),
-  EmbeddingService: class MockEmbeddingService {
-    initialize = vi.fn().mockResolvedValue(undefined);
-  },
-  ReasoningBank: class MockReasoningBank {
-    constructor() {
-      return { mock: 'reasoningBank' } as any;
-    }
-  },
-}));
+vi.mock('agentdb', async () => {
+  const actual = await vi.importActual('agentdb');
+  return {
+    ...actual,
+    createDatabase: vi.fn().mockResolvedValue({
+      mock: 'database',
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }),
+    EmbeddingService: class MockEmbeddingService {
+      initialize = vi.fn().mockResolvedValue(undefined);
+    },
+    ReasoningBank: class MockReasoningBank {
+      constructor() {
+        return { mock: 'reasoningBank' } as any;
+      }
+    },
+  };
+});
 
 vi.mock('../../services/vision', () => ({
   VisionSpecialist: {
@@ -47,9 +55,11 @@ describe('ServiceRegistry', () => {
   let registry: ServiceRegistry;
 
   beforeEach(() => {
-    // Get a fresh instance for each test
     registry = ServiceRegistry.getInstance();
     vi.clearAllMocks();
+    (createDatabase as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      mock: 'database',
+    });
   });
 
   afterEach(() => {

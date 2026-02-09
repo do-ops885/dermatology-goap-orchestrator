@@ -3,10 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { VisionSpecialist } from '../../services/vision';
 
-vi.mock('@tensorflow/tfjs', async () => {
-  const actual = await vi.importActual('@tensorflow/tfjs');
-
-  const createMockTensor = () => ({
+function createMockTensor() {
+  return {
     resizeNearestNeighbor: vi.fn().mockReturnThis(),
     toFloat: vi.fn().mockReturnThis(),
     div: vi.fn().mockReturnThis(),
@@ -23,7 +21,11 @@ vi.mock('@tensorflow/tfjs', async () => {
     max: vi.fn().mockReturnThis(),
     dispose: vi.fn(),
     shape: [224, 224, 3],
-  });
+  };
+}
+
+vi.mock('@tensorflow/tfjs', async () => {
+  const actual = await vi.importActual('@tensorflow/tfjs');
 
   return {
     ...actual,
@@ -68,6 +70,9 @@ describe('VisionSpecialist - Initialization & Singleton', () => {
 
     vision.dispose();
 
+    (tf.browser.fromPixels as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      return createMockTensor();
+    });
     (tf.findBackend as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
     (tf.setBackend as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
     (tf.loadGraphModel as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
@@ -144,6 +149,9 @@ describe('VisionSpecialist - Backend Selection', () => {
     vision = VisionSpecialist.getInstance();
     vi.clearAllMocks();
     vision.dispose();
+    (tf.browser.fromPixels as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      return createMockTensor();
+    });
     (tf.findBackend as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
     (tf.setBackend as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
     (tf.loadGraphModel as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
@@ -208,6 +216,9 @@ describe('VisionSpecialist - Heatmap & Tensor Stats', () => {
     vision = VisionSpecialist.getInstance();
     vi.clearAllMocks();
     vision.dispose();
+    (tf.browser.fromPixels as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      return createMockTensor();
+    });
     (tf.findBackend as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
     (tf.setBackend as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
     (tf.loadGraphModel as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({

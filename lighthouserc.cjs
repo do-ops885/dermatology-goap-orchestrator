@@ -5,8 +5,23 @@ module.exports = {
       numberOfRuns: 3,
       settings: {
         preset: 'desktop',
-        maxWaitForLoad: 120000,
-        chromeFlags: '--no-sandbox --headless --disable-gpu --disable-dev-shm-usage',
+        maxWaitForLoad: 180000,
+        maxWaitForFcp: 120000,
+        chromeFlags:
+          '--no-sandbox --headless --disable-gpu --disable-dev-shm-usage --disable-features=IsolateOrigins,site-per-process,TranslateUI --disable-site-isolation-trials --disable-web-security --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows',
+        // Wait longer for React SPA to hydrate - increased for ML model loading
+        pauseAfterFcpMs: 15000,
+        pauseAfterLoadMs: 20000,
+        // Wait for React to render content
+        waitFor: '#root',
+        // Ensure we wait for the page to be fully interactive
+        waitForLoad: true,
+        // Add extra wait for network idle
+        extraHeaders: {
+          'Accept-CH': 'Sec-CH-UA-Platform-Version',
+        },
+        // Skip certain audits that may fail in CI
+        skipAudits: ['full-page-screenshot'],
       },
     },
     assert: {

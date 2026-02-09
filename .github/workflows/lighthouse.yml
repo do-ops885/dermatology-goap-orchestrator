@@ -7,6 +7,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Reliability: Cancel outdated runs to save resources
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -14,42 +19,122 @@ jobs:
   lighthouse:
     name: Lighthouse Performance Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          retry: 3
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
+        timeout-minutes: 5
 
       - name: Install dependencies
         run: npm ci
+        timeout-minutes: 5
 
       - name: Build production bundle
         run: npm run build
+        timeout-minutes: 5
+        env:
+          NODE_ENV: production
 
       - name: Start local preview server
         run: |
-          npm run preview -- --host 0.0.0.0 --port 4173 > /tmp/vite-preview.log 2>&1 &
+          # Create logs directory
+          mkdir -p logs
+
+          # Start preview server with nohup to ensure it stays running
+          nohup npm run preview -- --host 0.0.0.0 --port 4173 > logs/vite-preview.log 2>&1 &
           echo "VITE_PREVIEW_PID=$!" >> $GITHUB_ENV
+          echo "Preview server started with PID: $!"
+        timeout-minutes: 1
 
       - name: Wait for preview server
         run: |
-          for i in {1..30}; do
-            if curl -sSf http://127.0.0.1:4173 > /dev/null; then
-              echo "Preview server is ready"
-              exit 0
+          echo "Waiting for preview server to be ready..."
+          for i in {1..120}; do
+            if curl -sSf http://127.0.0.1:4173/ > /dev/null 2>&1; then
+              echo "✓ Preview server responding on attempt $i"
+              # Get the actual content to ensure it's serving HTML
+              HTTP_STATUS=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:4173/ 2>&1)
+              echo "HTTP Status: $HTTP_STATUS"
+              if [ "$HTTP_STATUS" = "200" ]; then
+                echo "✓ Server is responding with 200 OK"
+                # Check for actual HTML content with root element
+                CONTENT=$(curl -s http://127.0.0.1:4173/)
+                if echo "$CONTENT" | grep -q "id=\"root\""; then
+                  echo "✓ HTML content with root element found"
+                  # Extended wait for React hydration and ML models
+                  echo "Waiting for React hydration, JS bundles, and ML models to load..."
+                  sleep 20
+                  # Verify the page is still responding
+                  if curl -sSf http://127.0.0.1:4173/ > /dev/null 2>&1; then
+                    echo "✓ Server still responding after extended wait"
+                    # Additional verification that root element still exists
+                    CONTENT_AFTER=$(curl -s http://127.0.0.1:4173/)
+                    if echo "$CONTENT_AFTER" | grep -q "id=\"root\""; then
+                      echo "✓ Root element confirmed after wait period"
+                      exit 0
+                    else
+                      echo "⚠ Root element missing after wait, continuing to wait..."
+                    fi
+                  fi
+                else
+                  echo "⚠ HTML content missing root element, waiting..."
+                  # Debug: show first 500 chars
+                  echo "Content preview:"
+                  echo "$CONTENT" | head -c 500
+                fi
+              fi
             fi
+            echo "Attempt $i: Server not ready yet, waiting..."
             sleep 2
           done
-          echo "Preview server failed to start"
-          tail -n +1 /tmp/vite-preview.log || true
+          echo "✗ Preview server failed to start after 240 seconds"
+          echo "--- Preview server logs ---"
+          cat logs/vite-preview.log || true
+          echo "--- End of logs ---"
           exit 1
+        timeout-minutes: 5
 
       - name: Run Lighthouse CI
-        run: npm run lighthouse:ci
+        id: lighthouse
+        run: |
+          # Run Lighthouse CI with retry logic
+          for attempt in 1 2 3; do
+            echo "Running Lighthouse CI attempt $attempt..."
+            if npm run lighthouse:ci; then
+              echo "✓ Lighthouse CI passed on attempt $attempt"
+              exit 0
+            else
+              echo "✗ Lighthouse CI failed on attempt $attempt"
+              if [ $attempt -lt 3 ]; then
+                echo "Waiting 30 seconds before retry..."
+                sleep 30
+                # Verify server is still running
+                if ! curl -sSf http://127.0.0.1:4173/ > /dev/null 2>&1; then
+                  echo "⚠ Server not responding, attempting to restart..."
+                  # Kill existing server if any
+                  if [ -n "${VITE_PREVIEW_PID:-}" ]; then
+                    kill "$VITE_PREVIEW_PID" 2>/dev/null || true
+                    wait "$VITE_PREVIEW_PID" 2>/dev/null || true
+                  fi
+                  # Restart server
+                  nohup npm run preview -- --host 0.0.0.0 --port 4173 > logs/vite-preview.log 2>&1 &
+                  echo "VITE_PREVIEW_PID=$!" >> $GITHUB_ENV
+                  sleep 10
+                fi
+              fi
+            fi
+          done
+          echo "✗ Lighthouse CI failed after 3 attempts"
+          exit 1
+        timeout-minutes: 10
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
           CI: true
@@ -58,7 +143,10 @@ jobs:
         if: always()
         run: |
           if [ -n "${VITE_PREVIEW_PID:-}" ]; then
+            echo "Stopping preview server (PID: $VITE_PREVIEW_PID)"
             kill "$VITE_PREVIEW_PID" 2>/dev/null || true
+            wait "$VITE_PREVIEW_PID" 2>/dev/null || true
+            echo "Preview server stopped"
           fi
 
       - name: Upload Lighthouse results
@@ -68,6 +156,7 @@ jobs:
           name: lighthouse-results
           path: lighthouse-results/
           retention-days: 30
+          if-no-files-found: ignore
 
       - name: Display Lighthouse summary
         if: always()
@@ -76,4 +165,6 @@ jobs:
           if [ -d "lighthouse-results" ]; then
             echo "Results saved to lighthouse-results/"
             ls -la lighthouse-results/
+          else
+            echo "No Lighthouse results directory found"
           fi

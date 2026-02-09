@@ -87,7 +87,7 @@ test.describe('E2E Scenarios A-B: Complete Pipeline & Safety Routing', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test.describe('SCENARIO A: Happy Path - Full 16-Agent Pipeline', () => {
+  test.describe('SCENARIO A: Happy Path - Full 16-Agent Pipeline @slow', () => {
     test('executes complete pipeline with valid JPEG, verifies audit_logged: true', async ({
       page,
     }) => {
@@ -129,7 +129,7 @@ test.describe('E2E Scenarios A-B: Complete Pipeline & Safety Routing', () => {
       ];
 
       await expect(page.locator('h2', { hasText: DIAGNOSTIC_SUMMARY })).toBeVisible({
-        timeout: 90000,
+        timeout: 60000,
       });
 
       const endTime = Date.now();
