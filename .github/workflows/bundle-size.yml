@@ -6,6 +6,11 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   bundle-size:
     runs-on: ubuntu-latest
@@ -40,6 +45,10 @@ jobs:
           MAIN_SIZE_BYTES=$(find dist/assets -name 'index-*.js' -exec stat -c%s {} \; | awk '{s+=$1} END {print s}')
           VENDOR_SIZE_BYTES=$(find dist/assets -name 'vendor-*.js' -exec stat -c%s {} \; | awk '{s+=$1} END {print s}')
 
+          # Handle empty results
+          MAIN_SIZE_BYTES=${MAIN_SIZE_BYTES:-0}
+          VENDOR_SIZE_BYTES=${VENDOR_SIZE_BYTES:-0}
+
           # Convert to human-readable for display
           MAIN_SIZE=$(numfmt --to=iec-i --suffix=B $MAIN_SIZE_BYTES 2>/dev/null || echo "${MAIN_SIZE_BYTES}B")
           VENDOR_SIZE=$(numfmt --to=iec-i --suffix=B $VENDOR_SIZE_BYTES 2>/dev/null || echo "${VENDOR_SIZE_BYTES}B")
@@ -57,7 +66,8 @@ jobs:
           echo "✅ Bundle size within budget"
 
       - name: Comment PR
-        if: github.event_name == 'pull_request'
+        # Skip commenting for Dependabot PRs due to permission restrictions
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
         uses: actions/github-script@v7
         with:
           script: |
