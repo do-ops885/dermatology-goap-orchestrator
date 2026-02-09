@@ -67,11 +67,19 @@ jobs:
           echo "  TensorFlow.js: $TFJS_SIZE ($TFJS_SIZE_BYTES bytes)"
           echo ""
 
+          # Calculate vendor bundle size (all vendor chunks except WebLLM and TFJS)
+          VENDOR_SIZE_BYTES=$(find dist/assets -name 'vendor-*.js' ! -name '*webllm*' ! -name '*tfjs*' -exec cat {} \; | gzip -c | wc -c 2>/dev/null || echo 0)
+
+          # Convert to human-readable
+          VENDOR_SIZE=$(echo "$VENDOR_SIZE_BYTES" | numfmt --to=iec-i --suffix=B 2>/dev/null || echo "${VENDOR_SIZE_BYTES}B")
+
           # Set outputs
           echo "main_size=$MAIN_SIZE" >> $GITHUB_OUTPUT
           echo "main_size_bytes=$MAIN_SIZE_BYTES" >> $GITHUB_OUTPUT
           echo "webllm_size=$WEBLLM_SIZE" >> $GITHUB_OUTPUT
           echo "tfjs_size=$TFJS_SIZE" >> $GITHUB_OUTPUT
+          echo "vendor_size=$VENDOR_SIZE" >> $GITHUB_OUTPUT
+          echo "vendor_size_bytes=$VENDOR_SIZE_BYTES" >> $GITHUB_OUTPUT
 
           # Check budgets (from package.json size-limit configuration)
           # Main bundle budget: 500 kB (512000 bytes)
@@ -99,6 +107,14 @@ jobs:
             ALL_PASS=false
           else
             echo "✅ TensorFlow.js bundle within budget (3 MB)"
+          fi
+
+          # Vendor bundle budget: 1 MB (1048576 bytes)
+          if [ "$VENDOR_SIZE_BYTES" -gt 1048576 ]; then
+            echo "❌ Vendor bundle exceeds 1 MB budget"
+            ALL_PASS=false
+          else
+            echo "✅ Vendor bundle within budget (1 MB)"
           fi
 
           if [ "$ALL_PASS" = true ]; then
