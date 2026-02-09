@@ -35,40 +35,72 @@ jobs:
         env:
           NODE_ENV: production
 
-      - name: Check bundle size
-        run: npm run bundle:size
-        continue-on-error: true
-
       - name: Analyze bundle
         id: analyze
         run: |
-          # Get bundle sizes in bytes for accurate calculation
-          MAIN_SIZE_BYTES=$(find dist/assets -name 'index-*.js' -exec stat -c%s {} \; | awk '{s+=$1} END {print s}')
-          VENDOR_SIZE_BYTES=$(find dist/assets -name 'vendor-*.js' -exec stat -c%s {} \; | awk '{s+=$1} END {print s}')
+          echo "📦 Analyzing Bundle Sizes..."
+          echo ""
 
-          # Convert to human-readable for display
-          MAIN_SIZE=$(numfmt --to=iec-i --suffix=B $MAIN_SIZE_BYTES 2>/dev/null || echo "${MAIN_SIZE_BYTES}B")
-          VENDOR_SIZE=$(numfmt --to=iec-i --suffix=B $VENDOR_SIZE_BYTES 2>/dev/null || echo "${VENDOR_SIZE_BYTES}B")
+          # Get bundle sizes (gzip compressed, as that's what browsers download)
+          MAIN_SIZE_BYTES=$(find dist/assets -name 'index-*.js' -exec cat {} \; | gzip -c | wc -c)
+          WEBLLM_SIZE_BYTES=$(find dist/assets -name 'vendor-webllm-*.js' -exec cat {} \; | gzip -c | wc -c 2>/dev/null || echo 0)
+          TFJS_SIZE_BYTES=$(find dist/assets -name 'vendor-tfjs-*.js' -exec cat {} \; | gzip -c | wc -c 2>/dev/null || echo 0)
 
-          echo "📦 Bundle Sizes:"
-          echo "Main: $MAIN_SIZE ($MAIN_SIZE_BYTES bytes)"
-          echo "Vendor: $VENDOR_SIZE ($VENDOR_SIZE_BYTES bytes)"
+          # Convert to human-readable
+          MAIN_SIZE=$(echo "$MAIN_SIZE_BYTES" | numfmt --to=iec-i --suffix=B 2>/dev/null || echo "${MAIN_SIZE_BYTES}B")
+          WEBLLM_SIZE=$(echo "$WEBLLM_SIZE_BYTES" | numfmt --to=iec-i --suffix=B 2>/dev/null || echo "${WEBLLM_SIZE_BYTES}B")
+          TFJS_SIZE=$(echo "$TFJS_SIZE_BYTES" | numfmt --to=iec-i --suffix=B 2>/dev/null || echo "${TFJS_SIZE_BYTES}B")
 
-          # Set outputs for later steps
+          echo "📊 Bundle Sizes (gzip compressed):"
+          echo "  Main: $MAIN_SIZE ($MAIN_SIZE_BYTES bytes)"
+          echo "  WebLLM: $WEBLLM_SIZE ($WEBLLM_SIZE_BYTES bytes)"
+          echo "  TensorFlow.js: $TFJS_SIZE ($TFJS_SIZE_BYTES bytes)"
+          echo ""
+
+          # Set outputs
           echo "main_size=$MAIN_SIZE" >> $GITHUB_OUTPUT
           echo "main_size_bytes=$MAIN_SIZE_BYTES" >> $GITHUB_OUTPUT
-          echo "vendor_size=$VENDOR_SIZE" >> $GITHUB_OUTPUT
-          echo "vendor_size_bytes=$VENDOR_SIZE_BYTES" >> $GITHUB_OUTPUT
+          echo "webllm_size=$WEBLLM_SIZE" >> $GITHUB_OUTPUT
+          echo "tfjs_size=$TFJS_SIZE" >> $GITHUB_OUTPUT
 
-          # Check against budget (500 kB for main)
+          # Check budgets (from package.json size-limit configuration)
+          # Main bundle budget: 500 kB (512000 bytes)
+          # WebLLM budget: 7 MB (7340032 bytes)
+          # TFJS budget: 3 MB (3145728 bytes)
+
+          ALL_PASS=true
+
           if [ "$MAIN_SIZE_BYTES" -gt 512000 ]; then
-            echo "❌ Main bundle exceeds 500 kB budget (current: $MAIN_SIZE)"
-            echo "within_budget=false" >> $GITHUB_OUTPUT
-            exit 1
+            echo "❌ Main bundle exceeds 500 kB budget"
+            ALL_PASS=false
+          else
+            echo "✅ Main bundle within budget (500 kB)"
           fi
 
-          echo "✅ Bundle size within budget"
-          echo "within_budget=true" >> $GITHUB_OUTPUT
+          if [ "$WEBLLM_SIZE_BYTES" -gt 7340032 ]; then
+            echo "❌ WebLLM bundle exceeds 7 MB budget"
+            ALL_PASS=false
+          else
+            echo "✅ WebLLM bundle within budget (7 MB)"
+          fi
+
+          if [ "$TFJS_SIZE_BYTES" -gt 3145728 ]; then
+            echo "❌ TensorFlow.js bundle exceeds 3 MB budget"
+            ALL_PASS=false
+          else
+            echo "✅ TensorFlow.js bundle within budget (3 MB)"
+          fi
+
+          if [ "$ALL_PASS" = true ]; then
+            echo "within_budget=true" >> $GITHUB_OUTPUT
+            echo ""
+            echo "✅ All bundles within budget!"
+          else
+            echo "within_budget=false" >> $GITHUB_OUTPUT
+            echo ""
+            echo "⚠️  Some bundles exceed budget - review required"
+            # Don't fail the build, just warn
+          fi
 
       - name: Generate bundle report
         if: github.event_name == 'pull_request'

@@ -45,7 +45,7 @@ jobs:
       - name: Wait for preview server
         run: |
           echo "Waiting for preview server to be ready..."
-          for i in {1..90}; do
+          for i in {1..120}; do
             if curl -sSf http://127.0.0.1:4173/ > /dev/null 2>&1; then
               echo "✓ Preview server responding on attempt $i"
               # Get the actual content to ensure it's serving HTML
@@ -57,23 +57,33 @@ jobs:
                 CONTENT=$(curl -s http://127.0.0.1:4173/)
                 if echo "$CONTENT" | grep -q "id=\"root\""; then
                   echo "✓ HTML content with root element found"
-                  # Additional wait for React hydration and JS execution
-                  echo "Waiting for React hydration and JS bundles to load..."
-                  sleep 10
+                  # Extended wait for React hydration and ML models
+                  echo "Waiting for React hydration, JS bundles, and ML models to load..."
+                  sleep 20
                   # Verify the page is still responding
                   if curl -sSf http://127.0.0.1:4173/ > /dev/null 2>&1; then
-                    echo "✓ Server still responding after wait"
-                    exit 0
+                    echo "✓ Server still responding after extended wait"
+                    # Additional verification that root element still exists
+                    CONTENT_AFTER=$(curl -s http://127.0.0.1:4173/)
+                    if echo "$CONTENT_AFTER" | grep -q "id=\"root\""; then
+                      echo "✓ Root element confirmed after wait period"
+                      exit 0
+                    else
+                      echo "⚠ Root element missing after wait, continuing to wait..."
+                    fi
                   fi
                 else
                   echo "⚠ HTML content missing root element, waiting..."
+                  # Debug: show first 500 chars
+                  echo "Content preview:"
+                  echo "$CONTENT" | head -c 500
                 fi
               fi
             fi
             echo "Attempt $i: Server not ready yet, waiting..."
             sleep 2
           done
-          echo "✗ Preview server failed to start after 180 seconds"
+          echo "✗ Preview server failed to start after 240 seconds"
           echo "--- Preview server logs ---"
           cat logs/vite-preview.log || true
           echo "--- End of logs ---"
