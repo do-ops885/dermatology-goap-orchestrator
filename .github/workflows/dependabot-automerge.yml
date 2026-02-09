@@ -20,6 +20,11 @@ jobs:
     timeout-minutes: 5
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
       - name: Enable Auto-Merge
         timeout-minutes: 3
         run: |
