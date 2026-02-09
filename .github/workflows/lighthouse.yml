@@ -31,21 +31,94 @@ jobs:
         run: npm run build
 
       - name: Start local preview server
+        id: start-server
         run: |
-          npm run preview -- --host 0.0.0.0 --port 4173 > /tmp/vite-preview.log 2>&1 &
-          echo "VITE_PREVIEW_PID=$!" >> $GITHUB_ENV
+          # Create a dedicated log file for server output
+          SERVER_LOG="/tmp/vite-preview.log"
+          touch "$SERVER_LOG"
+          
+          # Start the preview server and capture the actual server PID
+          # Use exec to ensure the node process is the direct child
+          exec npm run preview -- --host 0.0.0.0 --port 4173 > "$SERVER_LOG" 2>&1 &
+          SERVER_PID=$!
+          
+          # Export PID for cleanup
+          echo "VITE_PREVIEW_PID=$SERVER_PID" >> "$GITHUB_ENV"
+          echo "SERVER_LOG=$SERVER_LOG" >> "$GITHUB_ENV"
+          
+          # Give the process a moment to start or fail immediately
+          sleep 2
+          
+          # Verify the process actually started
+          if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+            echo "❌ Server process failed to start"
+            echo "=== Server Output ==="
+            cat "$SERVER_LOG" || echo "No log output"
+            exit 1
+          fi
+          
+          echo "✅ Server process started with PID: $SERVER_PID"
 
-      - name: Wait for preview server
+      - name: Wait for preview server with retry
         run: |
-          for i in {1..30}; do
-            if curl -sSf http://127.0.0.1:4173 > /dev/null; then
-              echo "Preview server is ready"
+          MAX_RETRIES=30
+          RETRY_DELAY=2
+          SERVER_URL="http://127.0.0.1:4173"
+          
+          # Function to check server health
+          check_server() {
+            # Check HTTP status and ensure we get a 200 response
+            # Also verify content type indicates HTML (not an error page)
+            local response
+            response=$(curl -sS -w "\nHTTP_CODE:%{http_code}\nCONTENT_TYPE:%{content_type}" "$SERVER_URL" 2>&1)
+            local exit_code=$?
+            
+            if [ $exit_code -ne 0 ]; then
+              echo "  Connection failed: $response"
+              return 1
+            fi
+            
+            local http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+            local content_type=$(echo "$response" | grep "CONTENT_TYPE:" | cut -d: -f2-)
+            
+            if [ "$http_code" != "200" ]; then
+              echo "  HTTP status: $http_code (expected 200)"
+              return 1
+            fi
+            
+            if ! echo "$content_type" | grep -qi "text/html"; then
+              echo "  Unexpected content type: $content_type"
+              return 1
+            fi
+            
+            return 0
+          }
+          
+          # Wait for server to be ready
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "⏳ Checking server readiness (attempt $i/$MAX_RETRIES)..."
+            
+            # First check if the process is still running
+            if [ -n "${VITE_PREVIEW_PID:-}" ]; then
+              if ! kill -0 "$VITE_PREVIEW_PID" 2>/dev/null; then
+                echo "❌ Server process died unexpectedly"
+                echo "=== Server Output ==="
+                cat "${SERVER_LOG}" || echo "No log output"
+                exit 1
+              fi
+            fi
+            
+            if check_server; then
+              echo "✅ Preview server is ready and serving content"
               exit 0
             fi
-            sleep 2
+            
+            sleep $RETRY_DELAY
           done
-          echo "Preview server failed to start"
-          tail -n +1 /tmp/vite-preview.log || true
+          
+          echo "❌ Preview server failed to start within $((MAX_RETRIES * RETRY_DELAY)) seconds"
+          echo "=== Server Output ==="
+          cat "${SERVER_LOG}" || echo "No log output"
           exit 1
 
       - name: Run Lighthouse CI
@@ -58,7 +131,28 @@ jobs:
         if: always()
         run: |
           if [ -n "${VITE_PREVIEW_PID:-}" ]; then
+            echo "🛑 Stopping preview server (PID: $VITE_PREVIEW_PID)..."
+            
+            # Try graceful shutdown first
             kill "$VITE_PREVIEW_PID" 2>/dev/null || true
+            
+            # Wait for process to terminate (max 5 seconds)
+            for i in {1..5}; do
+              if ! kill -0 "$VITE_PREVIEW_PID" 2>/dev/null; then
+                echo "✅ Server stopped gracefully"
+                break
+              fi
+              sleep 1
+            done
+            
+            # Force kill if still running
+            if kill -0 "$VITE_PREVIEW_PID" 2>/dev/null; then
+              echo "⚠️ Force killing server..."
+              kill -9 "$VITE_PREVIEW_PID" 2>/dev/null || true
+            fi
+            
+            # Clean up any remaining processes on port 4173
+            pkill -f "vite preview.*4173" 2>/dev/null || true
           fi
 
       - name: Upload Lighthouse results
@@ -76,4 +170,18 @@ jobs:
           if [ -d "lighthouse-results" ]; then
             echo "Results saved to lighthouse-results/"
             ls -la lighthouse-results/
+            
+            # Display summary if available
+            for json_file in lighthouse-results/*.json; do
+              if [ -f "$json_file" ]; then
+                echo ""
+                echo "=== $(basename "$json_file") ==="
+                # Extract and display scores if jq is available
+                if command -v jq >/dev/null 2>&1; then
+                  jq -r '.categories | to_entries[] | "  \(.key): \(.value.score * 100 | floor)%"' "$json_file" 2>/dev/null || echo "  (Could not parse JSON)"
+                fi
+              fi
+            done
+          else
+            echo "⚠️ No lighthouse-results directory found"
           fi
