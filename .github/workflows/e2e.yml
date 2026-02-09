@@ -10,7 +10,7 @@ on:
 
 # Reliability: Cancel outdated runs to save resources
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.shard || 'scheduled' }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -22,6 +22,11 @@ jobs:
     name: E2E Tests (Shard ${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
     timeout-minutes: 12
+
+    # Shard-level concurrency to cancel outdated shards individually
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.shard }}
+      cancel-in-progress: true
 
     strategy:
       fail-fast: false
