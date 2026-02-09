@@ -36,19 +36,19 @@ jobs:
           # Create a dedicated log file for server output
           SERVER_LOG="/tmp/vite-preview.log"
           touch "$SERVER_LOG"
-          
+
           # Start the preview server and capture the actual server PID
           # Use exec to ensure the node process is the direct child
           exec npm run preview -- --host 0.0.0.0 --port 4173 > "$SERVER_LOG" 2>&1 &
           SERVER_PID=$!
-          
+
           # Export PID for cleanup
           echo "VITE_PREVIEW_PID=$SERVER_PID" >> "$GITHUB_ENV"
           echo "SERVER_LOG=$SERVER_LOG" >> "$GITHUB_ENV"
-          
+
           # Give the process a moment to start or fail immediately
           sleep 2
-          
+
           # Verify the process actually started
           if ! kill -0 "$SERVER_PID" 2>/dev/null; then
             echo "❌ Server process failed to start"
@@ -56,7 +56,7 @@ jobs:
             cat "$SERVER_LOG" || echo "No log output"
             exit 1
           fi
-          
+
           echo "✅ Server process started with PID: $SERVER_PID"
 
       - name: Wait for preview server with retry
@@ -64,7 +64,7 @@ jobs:
           MAX_RETRIES=30
           RETRY_DELAY=2
           SERVER_URL="http://127.0.0.1:4173"
-          
+
           # Function to check server health
           check_server() {
             # Check HTTP status and ensure we get a 200 response
@@ -93,7 +93,7 @@ jobs:
             
             return 0
           }
-          
+
           # Wait for server to be ready
           for i in $(seq 1 $MAX_RETRIES); do
             echo "⏳ Checking server readiness (attempt $i/$MAX_RETRIES)..."
@@ -115,7 +115,7 @@ jobs:
             
             sleep $RETRY_DELAY
           done
-          
+
           echo "❌ Preview server failed to start within $((MAX_RETRIES * RETRY_DELAY)) seconds"
           echo "=== Server Output ==="
           cat "${SERVER_LOG}" || echo "No log output"
