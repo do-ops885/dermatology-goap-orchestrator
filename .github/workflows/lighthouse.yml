@@ -48,16 +48,18 @@ jobs:
           echo "Waiting for preview server to be ready..."
           for i in {1..60}; do
             if curl -sSf http://127.0.0.1:4173/ > /dev/null 2>&1; then
-              echo "✓ Preview server is ready on attempt $i"
-              # Also try to get the actual content to ensure it's serving
+              echo "✓ Preview server responding on attempt $i"
               HTTP_STATUS=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:4173/ 2>&1)
               echo "HTTP Status: $HTTP_STATUS"
               if [ "$HTTP_STATUS" = "200" ]; then
-                echo "✓ Server is responding with 200 OK"
-                # Verify content is being served
-                CONTENT=$(curl -s http://127.0.0.1:4173/ | head -20)
+                echo "✓ Server responding with 200 OK"
+                # Check for actual HTML content with root element
+                CONTENT=$(curl -s http://127.0.0.1:4173/)
                 if echo "$CONTENT" | grep -q "root"; then
                   echo "✓ HTML content with root element found"
+                  # Additional wait for JS hydration
+                  echo "Waiting for React hydration..."
+                  sleep 5
                   exit 0
                 fi
               fi
@@ -76,8 +78,6 @@ jobs:
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
           CI: true
-        # Allow failure for now while we tune the configuration
-        continue-on-error: true
 
       - name: Stop preview server
         if: always()

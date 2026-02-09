@@ -5,14 +5,26 @@ module.exports = {
       numberOfRuns: 1,
       settings: {
         preset: 'desktop',
-        maxWaitForLoad: 120000,
         chromeFlags:
           '--no-sandbox --headless --disable-gpu --disable-dev-shm-usage --disable-extensions',
         // Disable service workers for consistent results
         disableStorageReset: false,
         // Wait longer for JS apps to render
-        maxWaitForFcp: 60000,
         maxWaitForLoad: 120000,
+        maxWaitForFcp: 90000,
+        // Increase default wait times for JS-heavy apps
+        pauseAfterFcpMs: 5000,
+        pauseAfterLoadMs: 10000,
+        // Network throttling settings for consistent results
+        throttlingMethod: 'simulate',
+        throttling: {
+          rttMs: 40,
+          throughputKbps: 10240,
+          cpuSlowdownMultiplier: 1,
+          requestLatencyMs: 0,
+          downloadThroughputKbps: 0,
+          uploadThroughputKbps: 0,
+        },
       },
     },
     assert: {
