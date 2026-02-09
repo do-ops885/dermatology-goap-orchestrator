@@ -29,7 +29,11 @@
     "license:scan": "npx license-checker --summary",
     "security:audit": "npm audit --audit-level moderate",
     "apply:branch-protection": "bash scripts/apply-branch-protection.sh do-ops885/dermatology-goap-orchestrator main",
-    "agentdb:init": "npx agentdb init"
+    "agentdb:init": "npx agentdb init",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui",
+    "test:e2e:debug": "npx playwright test --debug",
+    "test:e2e:ci": "npx playwright test --reporter=list --workers=4 --fully-parallel"
   },
   "engines": {
     "node": ">=20"

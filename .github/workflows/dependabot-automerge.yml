@@ -4,6 +4,11 @@ on:
   pull_request:
     types: [opened, synchronize]
 
+# Reliability: Allow concurrent runs for different PRs, cancel for same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   pull-requests: write
@@ -12,9 +17,11 @@ permissions:
 jobs:
   dependabot-automerge:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
       - name: Enable Auto-Merge
+        timeout-minutes: 3
         run: |
           gh pr merge "${{ github.event.pull_request.number }}" --auto --squash
         env:

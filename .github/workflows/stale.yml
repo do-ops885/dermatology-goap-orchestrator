@@ -5,6 +5,11 @@ on:
     - cron: '30 5 * * 1'
   workflow_dispatch:
 
+# Reliability: Prevent concurrent stale runs
+concurrency:
+  group: ${{ github.workflow }}-stale
+  cancel-in-progress: false
+
 permissions:
   issues: write
   pull-requests: write
@@ -12,8 +17,10 @@ permissions:
 jobs:
   stale:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/stale@v9
+        timeout-minutes: 8
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 14

@@ -135,7 +135,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
 
     // 6. Verify Results
     await expect(page.locator('h2', { hasText: DIAGNOSTIC_SUMMARY })).toBeVisible({
-      timeout: 20000,
+      timeout: 15000,
     });
     await expect(page.locator('text=Type III')).toBeVisible();
     await expect(page.locator('text=Fairness Guard')).toBeVisible();
@@ -243,7 +243,7 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     });
   });
 
-  test('Scenario E: Memory Leak Prevention - Sequential Analyses', async ({ page }) => {
+  test('Scenario E: Memory Leak Prevention - Sequential Analyses @slow', async ({ page }) => {
     // Track initial memory state if available
     const initialMemoryCheck = await page.evaluate(() => {
       if ('gc' in window) {

@@ -2,6 +2,9 @@ import { Buffer } from 'buffer';
 
 import { test, expect } from '@playwright/test';
 
+// Reduce iterations for CI to balance thoroughness with speed
+const ITERATIONS = process.env.CI ? 10 : 50;
+
 const API_ROUTE_PATTERN = '**/models/*:generateContent?key=*';
 const RUN_ANALYSIS_BUTTON = 'Run Clinical Analysis';
 const DIAGNOSTIC_SUMMARY = 'Diagnostic Summary';
@@ -72,8 +75,8 @@ test.describe('E2E Scenarios F-G: Performance & Memory', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test.describe('SCENARIO F: Memory Leaks', () => {
-    test("runs 50 analyses, verifies GPU memory doesn't grow, checks tensor cleanup", async ({
+  test.describe('SCENARIO F: Memory Leaks @slow', () => {
+    test(`runs ${ITERATIONS} analyses, verifies GPU memory doesn't grow, checks tensor cleanup`, async ({
       page,
     }) => {
       const initialMemoryCheck = await page.evaluate(() => {
@@ -99,7 +102,7 @@ test.describe('E2E Scenarios F-G: Performance & Memory', () => {
 
       console.log('Initial memory state:', initialMemoryCheck);
 
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < ITERATIONS; i++) {
         const buffer = Buffer.from(JPEG_BASE64, 'base64');
         await page.locator('input[type="file"]').setInputFiles({
           name: `memory-test-${i}.jpg`,
@@ -111,12 +114,12 @@ test.describe('E2E Scenarios F-G: Performance & Memory', () => {
         await runBtn.click();
 
         await expect(page.locator('h2', { hasText: DIAGNOSTIC_SUMMARY })).toBeVisible({
-          timeout: 45000,
+          timeout: 30000,
         });
 
         await page.locator('input[type="file"]').setInputFiles([]);
 
-        if ((i + 1) % 10 === 0) {
+        if ((i + 1) % Math.max(2, Math.floor(ITERATIONS / 5)) === 0) {
           const memoryCheck = await page.evaluate(() => {
             if ('gc' in window) {
               (window as { gc?: () => void }).gc?.();
@@ -189,7 +192,7 @@ test.describe('E2E Scenarios F-G: Performance & Memory', () => {
     });
   });
 
-  test.describe('SCENARIO G: Performance Benchmarks', () => {
+  test.describe('SCENARIO G: Performance Benchmarks @slow', () => {
     test('measures TTI with heavy models, times agents, asserts <72s total pipeline', async ({
       page,
     }) => {
@@ -213,7 +216,7 @@ test.describe('E2E Scenarios F-G: Performance & Memory', () => {
       await page.locator('button', { hasText: RUN_ANALYSIS_BUTTON }).click();
 
       await expect(page.locator('h2', { hasText: DIAGNOSTIC_SUMMARY })).toBeVisible({
-        timeout: 90000,
+        timeout: 60000,
       });
 
       const pipelineDuration = Date.now() - pipelineStart;

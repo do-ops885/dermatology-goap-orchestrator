@@ -5,6 +5,11 @@ on:
   schedule:
     - cron: '0 0 * * 0'
 
+# Reliability: Prevent concurrent lockfile maintenance runs
+concurrency:
+  group: ${{ github.workflow }}-lockfile
+  cancel-in-progress: false
+
 permissions:
   contents: write
   pull-requests: write
@@ -12,22 +17,28 @@ permissions:
 jobs:
   lockfile-maintenance:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          retry: 3
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
+        timeout-minutes: 5
 
       - name: Update lockfile
         run: npm update
+        timeout-minutes: 10
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
+        timeout-minutes: 3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'chore(deps): update lockfile'
