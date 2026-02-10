@@ -23,7 +23,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          retry: 3
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
