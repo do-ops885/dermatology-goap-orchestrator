@@ -20,6 +20,8 @@ test.describe('Accessibility - Components', () => {
   });
 
   test('AgentFlow has proper status announcements', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
     await page.locator('input[type="file"]').setInputFiles('test-fixtures/sample.jpg');
     await page.click('button:has-text("Analyze")');
 

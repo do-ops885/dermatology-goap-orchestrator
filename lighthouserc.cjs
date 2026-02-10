@@ -7,11 +7,12 @@ module.exports = {
         preset: 'desktop',
         maxWaitForLoad: 180000,
         maxWaitForFcp: 120000,
+        // Simplified chromeFlags for CI headless Chrome - removed --disable-web-security, added --disable-setuid-sandbox
         chromeFlags:
-          '--no-sandbox --headless --disable-gpu --disable-dev-shm-usage --disable-features=IsolateOrigins,site-per-process,TranslateUI --disable-site-isolation-trials --disable-web-security --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows',
-        // Wait longer for React SPA to hydrate - increased for ML model loading
-        pauseAfterFcpMs: 15000,
-        pauseAfterLoadMs: 20000,
+          '--no-sandbox --disable-setuid-sandbox --headless --disable-gpu --disable-dev-shm-usage',
+        // Extended wait times for React SPA hydration and ML model loading
+        pauseAfterFcpMs: 25000,
+        pauseAfterLoadMs: 30000,
         // Wait for React to render content
         waitFor: '#root',
         // Ensure we wait for the page to be fully interactive

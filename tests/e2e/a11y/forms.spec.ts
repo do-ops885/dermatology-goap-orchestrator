@@ -7,8 +7,9 @@ import type { AxeResults } from 'axe-core';
 test.describe('Accessibility - Forms', () => {
   test('File input has proper label', async ({ page }) => {
     await page.goto('/');
+    await page.waitForLoadState('networkidle');
 
-    page.locator('input[type="file"]');
+    await page.locator('input[type="file"]').waitFor({ state: 'attached' });
 
     const results = await axe.evaluate(page, {
       include: 'input[type="file"]',
@@ -20,9 +21,11 @@ test.describe('Accessibility - Forms', () => {
   });
 
   test('Feedback form is accessible', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
     await page.click('button:has-text("Provide Feedback")');
 
-    page.locator('form');
+    await page.locator('form').waitFor({ state: 'visible' });
 
     const results = await axe.evaluate(page, {
       include: 'form',
@@ -32,9 +35,11 @@ test.describe('Accessibility - Forms', () => {
   });
 
   test('Confidence slider has proper labels', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
     await page.click('button:has-text("Provide Feedback")');
 
-    page.locator('input[type="range"]');
+    await page.locator('input[type="range"]').waitFor({ state: 'visible' });
 
     const results = await axe.evaluate(page, {
       include: 'input[type="range"]',

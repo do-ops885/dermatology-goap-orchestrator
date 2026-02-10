@@ -53,6 +53,12 @@ export function Header({ dbReady }: HeaderProps) {
 
   return (
     <header className="max-w-7xl mx-auto w-full flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-terracotta-600 focus:text-white focus:rounded-lg focus:font-bold focus:text-sm"
+      >
+        Skip to main content
+      </a>
       <div>
         <div className="flex items-center gap-2 mb-2">
           <Stethoscope className="w-5 h-5 text-terracotta-600" />

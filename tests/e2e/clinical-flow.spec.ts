@@ -108,8 +108,9 @@ test.describe('Clinical AI Orchestrator E2E', () => {
     // 1. Create a dummy image file in memory
     const buffer = Buffer.from(TEST_IMAGE_BASE64, 'base64');
 
-    // 2. Upload Image
+    // 2. Wait for and upload Image
     const fileInput = page.locator('input[type="file"]');
+    await fileInput.waitFor({ state: 'attached', timeout: 10000 });
     await fileInput.setInputFiles({
       name: 'skin-sample.jpg',
       mimeType: 'image/jpeg',

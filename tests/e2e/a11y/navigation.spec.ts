@@ -5,6 +5,7 @@ import { axe } from './test-utils';
 test.describe('Accessibility - Navigation', () => {
   test('Skip to main content link exists', async ({ page }) => {
     await page.goto('/');
+    await page.waitForLoadState('networkidle');
 
     const skipLink = page.locator('a:has-text("Skip to main content")');
     await expect(skipLink).toBeVisible();
@@ -12,9 +13,11 @@ test.describe('Accessibility - Navigation', () => {
 
   test('Focus order is logical', async ({ page }) => {
     await page.goto('/');
+    await page.waitForLoadState('networkidle');
 
     // Get all focusable elements
-    const focusableSelector = 'a[href], button, input, select, textarea, [tabindex]';
+    const focusableSelector =
+      'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])';
     const focusableElements = await page.locator(focusableSelector).all();
 
     // Check that focusable elements exist
@@ -23,6 +26,7 @@ test.describe('Accessibility - Navigation', () => {
 
   test('All interactive elements have focus visible', async ({ page }) => {
     await page.goto('/');
+    await page.waitForLoadState('networkidle');
 
     const results = await axe.evaluate(page, {
       include: 'main',

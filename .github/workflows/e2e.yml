@@ -10,7 +10,7 @@ on:
 
 # Reliability: Cancel outdated runs to save resources
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.shard || 'scheduled' }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -31,8 +31,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          retry: 3
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
@@ -88,8 +86,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          retry: 3
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
