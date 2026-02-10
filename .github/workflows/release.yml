@@ -37,6 +37,7 @@ jobs:
         timeout-minutes: 5
 
       - name: Build
+        id: build
         run: npm run build
         timeout-minutes: 5
 
@@ -63,6 +64,7 @@ jobs:
           fi
 
       - name: Create Release
+        if: always() && steps.build.outcome == 'success'
         uses: softprops/action-gh-release@v2
         timeout-minutes: 5
         with:
@@ -73,3 +75,4 @@ jobs:
             dist/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
