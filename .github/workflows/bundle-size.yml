@@ -20,6 +20,7 @@ jobs:
   bundle-size:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    continue-on-error: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

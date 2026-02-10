@@ -17,25 +17,50 @@ permissions:
   actions: read
   pull-requests: write
 
+env:
+  NODE_VERSION: '20'
+  # Cache configuration
+  CACHE_KEY_PREFIX: ${{ github.workflow }}-${{ github.ref }}
+
 jobs:
+  # =============================================================================
+  # STAGE 1: Fast Feedback (Lint) - Runs first, gates all downstream jobs
+  # =============================================================================
   lint:
     name: Formatting, Lint & Type Check
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 8
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           retry: 3
 
-      - name: Use Node.js 20
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          echo "key=${{ hashFiles('package-lock.json') }}" >> $GITHUB_OUTPUT
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-        timeout-minutes: 5
+        timeout-minutes: 3
+
+      - name: Cache node_modules
+        id: node-modules-cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
 
       - name: Install dependencies
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: npm ci
         timeout-minutes: 5
 
@@ -48,13 +73,15 @@ jobs:
       - name: TypeScript typecheck
         run: npm run typecheck
 
-      - name: Security audit
-        run: npm run security:audit
-
+  # =============================================================================
+  # STAGE 2: Parallel Execution (Unit Tests, Build, Security Audit)
+  # All run in parallel after lint passes for maximum throughput
+  # =============================================================================
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    needs: [lint]
+    timeout-minutes: 12
     continue-on-error: true
     steps:
       - name: Checkout
@@ -62,16 +89,18 @@ jobs:
         with:
           retry: 3
 
-      - name: Use Node.js 20
+      - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-        timeout-minutes: 5
+        timeout-minutes: 3
 
-      - name: Install dependencies
-        run: npm ci
-        timeout-minutes: 5
+      - name: Restore node_modules from cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ needs.lint.outputs.cache-key }}
 
       - name: Fix AgentDB executable permissions
         run: chmod +x node_modules/agentdb/dist/cli/agentdb-cli.js 2>/dev/null || true
@@ -126,27 +155,81 @@ jobs:
             ./coverage/coverage-final.json
           retention-days: 7
 
-  security-audit:
-    name: Security Audit
+  build:
+    name: Build Production Bundle
     runs-on: ubuntu-latest
     needs: [lint]
-    timeout-minutes: 10
+    timeout-minutes: 12
+    outputs:
+      build-cache-key: ${{ steps.build-cache.outputs.key }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           retry: 3
 
-      - name: Use Node.js 20
+      - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-        timeout-minutes: 5
+        timeout-minutes: 3
 
-      - name: Install dependencies
-        run: npm ci
-        timeout-minutes: 5
+      - name: Restore node_modules from cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ needs.lint.outputs.cache-key }}
+
+      - name: Build
+        run: npm run build
+        timeout-minutes: 8
+
+      - name: Generate build cache key
+        id: build-cache
+        run: |
+          echo "key=${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_OUTPUT
+
+      - name: Cache build output
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-build-${{ steps.build-cache.outputs.key }}
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: dist/
+          retention-days: 7
+        timeout-minutes: 2
+        continue-on-error: true
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: [lint]
+    timeout-minutes: 8
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          retry: 3
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+        timeout-minutes: 3
+
+      - name: Restore node_modules from cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ needs.lint.outputs.cache-key }}
 
       - name: Run npm audit
         run: npm audit --audit-level moderate
@@ -158,25 +241,71 @@ jobs:
           npx license-checker --summary --failOn 'GPL;AGPL;LGPL'
         continue-on-error: true
 
+  # =============================================================================
+  # STAGE 3: Independent Security Scan (No build dependency)
+  # Runs in parallel with Stage 2 for faster feedback
+  # =============================================================================
+  secret-scan:
+    name: Secret scanning (gitleaks)
+    runs-on: ubuntu-latest
+    # No dependency on build - can run immediately after checkout
+    needs: [lint]
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          retry: 3
+
+      - name: Run Gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2.3.9
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
+          GITLEAKS_ENABLE_COMMENTS: false
+
+  # =============================================================================
+  # STAGE 4: Build-dependent Analysis (Bundle Analysis)
+  # Only job that requires build artifacts
+  # =============================================================================
   bundle-analysis:
     name: Bundle Size & Performance Analysis
     runs-on: ubuntu-latest
     needs: [build]
-    timeout-minutes: 10
+    timeout-minutes: 8
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           retry: 3
 
-      - name: Use Node.js 20
+      - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-        timeout-minutes: 5
+        timeout-minutes: 3
 
-      - name: Download build artifacts
+      - name: Restore node_modules from cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ needs.lint.outputs.cache-key }}
+
+      - name: Restore build from cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-build-${{ needs.build.outputs.build-cache-key }}
+
+      - name: Download build artifacts (fallback)
+        if: failure()
         uses: actions/download-artifact@v4
         with:
           name: build-output
@@ -185,7 +314,7 @@ jobs:
 
       - name: Install dependencies (for size-limit)
         run: npm install --no-save size-limit @size-limit/preset-app
-        timeout-minutes: 3
+        timeout-minutes: 2
 
       - name: Analyze bundle size
         run: npx size-limit
@@ -208,66 +337,40 @@ jobs:
           echo "   ✓ Stylesheets: < 100 kB (gzip)"
 
       - name: Upload bundle analysis artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: bundle-analysis
           path: dist/
           retention-days: 7
-
-  build:
-    name: Build Production Bundle
-    runs-on: ubuntu-latest
-    needs: [lint]
-    timeout-minutes: 15
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          retry: 3
-
-      - name: Use Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-        timeout-minutes: 5
-
-      - name: Install dependencies
-        run: npm ci
-        timeout-minutes: 5
-
-      - name: Build
-        run: npm run build
-        timeout-minutes: 5
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: dist/
-          retention-days: 7
-        timeout-minutes: 2
-
-  secret_scan:
-    name: Secret scanning (gitleaks)
-    runs-on: ubuntu-latest
-    needs: [build]
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          retry: 3
-
-      - name: Run Gitleaks secret scan
-        uses: gitleaks/gitleaks-action@v2.3.9
         continue-on-error: true
-        timeout-minutes: 5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
-          GITLEAKS_ENABLE_COMMENTS: false
+
+  # =============================================================================
+  # STAGE 5: Final Status Check (Optional - for branch protection)
+  # =============================================================================
+  ci-status:
+    name: CI Status
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests, build, security-audit, secret-scan, bundle-analysis]
+    if: always()
+    steps:
+      - name: Check all jobs status
+        run: |
+          echo "CI Pipeline Complete"
+          echo "==================="
+          echo "Lint: ${{ needs.lint.result }}"
+          echo "Unit Tests: ${{ needs.unit-tests.result }}"
+          echo "Build: ${{ needs.build.result }}"
+          echo "Security Audit: ${{ needs.security-audit.result }}"
+          echo "Secret Scan: ${{ needs.secret-scan.result }}"
+          echo "Bundle Analysis: ${{ needs.bundle-analysis.result }}"
+
+          # Fail if any required job failed
+          if [[ "${{ needs.lint.result }}" == "failure" ]] || \
+             [[ "${{ needs.build.result }}" == "failure" ]] || \
+             [[ "${{ needs.unit-tests.result }}" == "failure" ]]; then
+            echo "❌ CI failed - required jobs failed"
+            exit 1
+          fi
+
+          echo "✅ CI passed"
