@@ -70,7 +70,10 @@ export default function App() {
           <Header dbReady={dbReady} />
         </ErrorBoundary>
 
-        <main className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-[700px]">
+        <main
+          id="main-content"
+          className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-[700px]"
+        >
           <div className="lg:col-span-4 flex flex-col gap-6">
             <ErrorBoundary componentName="Intake Module">
               <AnalysisIntake

@@ -90,7 +90,10 @@ export default [
       '@typescript-eslint/strict-boolean-expressions': 'error',
       'security/detect-eval-with-expression': 'error',
       'security/detect-non-literal-require': 'error',
-      'security/detect-unsafe-regex': 'warn',
+      // Disabled: eslint-plugin-security@3.0.1 uses deprecated context.getSourceCode() API
+      // which is incompatible with ESLint v10. Re-enable when v4 of plugin is released.
+      // See: https://github.com/eslint-community/eslint-plugin-security/issues
+      'security/detect-unsafe-regex': 'off',
       'security/detect-buffer-noassert': 'error',
       'security/detect-child-process': 'warn',
       'security/detect-disable-mustache-escape': 'warn',
